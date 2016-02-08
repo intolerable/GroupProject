@@ -15,8 +15,6 @@ cabal-version:       >=1.10
 library
   exposed-modules:
     Emulator
-  -- other-modules:
-  -- other-extensions:
     Emulator.Memory
     Emulator.Types
   build-depends:
