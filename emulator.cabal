@@ -15,9 +15,9 @@ cabal-version:       >=1.10
 library
   exposed-modules:
     Emulator
-    Types
   -- other-modules:
   -- other-extensions:
+    Emulator.Types
   build-depends:
     base == 4.8.*,
     array,
