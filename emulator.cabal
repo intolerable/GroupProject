@@ -17,6 +17,7 @@ library
     Emulator
   -- other-modules:
   -- other-extensions:
+    Emulator.Memory
     Emulator.Types
   build-depends:
     base == 4.8.*,
