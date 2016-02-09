@@ -22,9 +22,13 @@ library
     array,
     bytestring,
     GLUT,
-    OpenGL
+    OpenGL,
+    transformers
   hs-source-dirs: src/
   default-language: Haskell2010
+  default-extensions:
+    DeriveFunctor
+    GeneralizedNewtypeDeriving
 
 executable emulator
   hs-source-dirs: ./
