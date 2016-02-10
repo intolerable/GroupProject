@@ -17,15 +17,14 @@ class Mem m where
   writeByte :: Address -> Byte -> m ()
   readByte :: Address -> m Byte
 
-  -- assume little endian
-  writeWord :: Address -> Word -> m ()
-  writeWord addr word = do
+  writeWordLE :: Address -> Word -> m ()
+  writeWordLE addr word = do
     writeByte addr (fromIntegral word)
     writeByte (addr + 1) (fromIntegral word `shiftR` 8)
     writeByte (addr + 2) (fromIntegral word `shiftR` 16)
     writeByte (addr + 3) (fromIntegral word `shiftR` 24)
-  readWord :: Address -> m Word
-  readWord addr = do
+  readWordLE :: Address -> m Word
+  readWordLE addr = do
     b1 <- fromIntegral <$> readByte addr
     b2 <- fromIntegral <$> readByte (addr + 1)
     b3 <- fromIntegral <$> readByte (addr + 2)
