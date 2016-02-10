@@ -30,12 +30,20 @@ instance Mem PureMemory where
   readByte a =
     PureMemory (gets (! a))
 
-newtype MutableMemory a = MutableMemory (MemoryIO -> IO a)
+newtype MutableMemory a = MutableMemory { runMutableMemory :: MemoryIO -> IO a }
   deriving (Functor)
 
 instance Applicative MutableMemory where
+  pure = MutableMemory . pure . pure
+  MutableMemory f <*> MutableMemory g =
+    MutableMemory (\x -> f x <*> g x)
 
 instance Monad MutableMemory where
+  return = pure
+  MutableMemory a >>= f =
+    MutableMemory $ \x -> do
+      res <- a x
+      runMutableMemory (f res) x
 
 instance Mem MutableMemory where
   writeByte a b =
