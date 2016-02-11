@@ -12,7 +12,7 @@ import Prelude hiding (Word)
 type Memory = UArray Address Byte
 type MemoryIO = IOUArray Address Byte
 
-class Mem m where
+class (Monad m) => Mem m where
 
   writeByte :: Address -> Byte -> m ()
   readByte :: Address -> m Byte
@@ -29,7 +29,7 @@ class Mem m where
     b2 <- fromIntegral <$> readByte (addr + 1)
     b3 <- fromIntegral <$> readByte (addr + 2)
     b4 <- fromIntegral <$> readByte (addr + 3)
-    b1 .|. (b2 `shiftL` 8) .|. (b3 `shiftL` 16) .|. (b4 `shiftL` 24)
+    return $ b1 .|. (b2 `shiftL` 8) .|. (b3 `shiftL` 16) .|. (b4 `shiftL` 24)
 
 newtype PureMemory a = PureMemory (State Memory a)
   deriving (Functor, Applicative, Monad)
