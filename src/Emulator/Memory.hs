@@ -4,7 +4,6 @@ import Emulator.Types
 
 import Control.Monad.Trans.State.Strict
 import Data.Array.IO
-import Data.Array.MArray
 import Data.Array.Unboxed
 import Data.Bits
 import Prelude hiding (Word)
