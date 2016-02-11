@@ -18,7 +18,7 @@ library
     Emulator.CPU
     Emulator.CPU.Instructions
     Emulator.Memory
-    Emulator.Rom
+    Emulator.ROM
     Emulator.Types
   build-depends:
     base == 4.8.*,

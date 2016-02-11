@@ -1,8 +1,8 @@
-module Emulator.Rom where
+module Emulator.ROM where
 
 import Emulator.Types
 
-data RomHeader = RomHeader {
+data ROMHeader = RomHeader {
   -- Record                  -- Offset
   rh_branchInstr     :: Address, -- 0x00: B <game_code_start>
   rh_nintendoLogo    :: [Byte],  -- 0x04: nintendo logo
