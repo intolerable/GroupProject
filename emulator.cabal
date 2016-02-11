@@ -16,6 +16,7 @@ library
   exposed-modules:
     Emulator
     Emulator.CPU
+    Emulator.CPU.Instructions
     Emulator.Memory
     Emulator.Rom
     Emulator.Types
