@@ -29,6 +29,7 @@ library
   default-extensions:
     DeriveFunctor
     GeneralizedNewtypeDeriving
+  ghc-options: -Wall
 
 executable emulator
   hs-source-dirs: ./
