@@ -16,13 +16,13 @@ class Monad m => Mem m where
   writeByte :: Address -> Byte -> m ()
   readByte :: Address -> m Byte
 
-  writeWordLE :: Address -> Word -> m ()
+  writeWordLE :: Address -> MWord -> m ()
   writeWordLE addr word = do
     writeByte addr (fromIntegral word)
     writeByte (addr + 1) (fromIntegral word `shiftR` 8)
     writeByte (addr + 2) (fromIntegral word `shiftR` 16)
     writeByte (addr + 3) (fromIntegral word `shiftR` 24)
-  readWordLE :: Address -> m Word
+  readWordLE :: Address -> m MWord
   readWordLE addr = do
     b1 <- fromIntegral <$> readByte addr
     b2 <- fromIntegral <$> readByte (addr + 1)
