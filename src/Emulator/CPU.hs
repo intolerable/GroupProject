@@ -32,6 +32,19 @@ data RegisterX =
                      -- statement.
   | CPSR RegisterVal -- Flags and CPU state register
 
+data Flags = Flags
+  { _flagsSign :: Bool
+  , _flagsZero :: Bool
+  , _flagsCarry :: Bool
+  , _flagsOverflow :: Bool
+  , _flagsStickyOverflow :: Bool
+  , _flagsIrqDisable :: Bool
+  , _flagsFiqDisable :: Bool
+  , _flagsStateBit :: Bool }
+  deriving (Show, Read, Eq)
+
+makeFields ''Flags
+
 data Registers = Registers
   { _registersR0 :: MWord
   , _registersR1 :: MWord
@@ -49,7 +62,7 @@ data Registers = Registers
   , _registersR13 :: MWord
   , _registersR14 :: MWord
   , _registersR15 :: MWord
-  , _registersCpsr :: MWord }
+  , _registersCpsr :: Flags }
   deriving (Show, Read, Eq)
 
 makeFields ''Registers
