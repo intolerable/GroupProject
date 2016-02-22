@@ -2,6 +2,8 @@ module Emulator.CPU where
 
 import Emulator.Types
 
+import Control.Lens
+
 data RegisterX =
   -- Registers R0 - R12 are all general purpose registers
   -- In non-thumb mode all registers are available for any purpose
@@ -29,3 +31,25 @@ data RegisterX =
                      -- Program counter, contains address to currently executing
                      -- statement.
   | CPSR RegisterVal -- Flags and CPU state register
+
+data Registers = Registers
+  { _registersR0 :: MWord
+  , _registersR1 :: MWord
+  , _registersR2 :: MWord
+  , _registersR3 :: MWord
+  , _registersR4 :: MWord
+  , _registersR5 :: MWord
+  , _registersR6 :: MWord
+  , _registersR7 :: MWord
+  , _registersR8 :: MWord
+  , _registersR9 :: MWord
+  , _registersR10 :: MWord
+  , _registersR11 :: MWord
+  , _registersR12 :: MWord
+  , _registersR13 :: MWord
+  , _registersR14 :: MWord
+  , _registersR15 :: MWord
+  , _registersCpsr :: MWord }
+  deriving (Show, Read, Eq)
+
+makeFields ''Registers
