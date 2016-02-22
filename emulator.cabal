@@ -47,7 +47,7 @@ executable emulator
   default-language: Haskell2010
   main-is: Main.hs
   build-depends:
-    base == 4.8.*,
+    base >= 4.7 && < 4.9,
     emulator
 
 test-suite test
