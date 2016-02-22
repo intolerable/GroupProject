@@ -1,4 +1,1 @@
-# DeathToHumans
-Final year project repository
-
-test.
+final year project emulator repository
