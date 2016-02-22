@@ -19,6 +19,7 @@ library
     Emulator.CPU.Instructions
     Emulator.Memory
     Emulator.ROM
+    Emulator.ROM.Parser
     Emulator.Types
   build-depends:
     base >= 4.6 && < 4.9,
