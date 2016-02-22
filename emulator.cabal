@@ -21,7 +21,7 @@ library
     Emulator.ROM
     Emulator.Types
   build-depends:
-    base == 4.8.*,
+    base >= 4.7 && < 4.9,
     array,
     bytestring,
     GLUT,
