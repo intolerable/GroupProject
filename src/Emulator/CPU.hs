@@ -2,7 +2,7 @@ module Emulator.CPU where
 
 import Emulator.Types
 
-data Register =
+data RegisterX =
   -- Registers R0 - R12 are all general purpose registers
   -- In non-thumb mode all registers are available for any purpose
   -- In thumb mode only registers R0 - R7 are available, whereas
