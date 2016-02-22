@@ -6,4 +6,10 @@ main :: IO ()
 main = hspec spec
 
 spec :: Spec
-spec = return ()
+spec = do
+
+  describe "PureMemory" $ do
+    return ()
+
+  describe "MutableMemory" $ do
+    return ()
