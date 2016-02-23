@@ -52,18 +52,18 @@ install:
   - cabal install --only-dependencies --enable-tests --enable-benchmarks --dry -v > installplan.txt
   - sed -i -e '1,/^Resolving /d' installplan.txt; cat installplan.txt
 
-    - if diff -u installplan.txt $HOME/.cabsnap/installplan.txt;
-      then
-        echo "cabal build-cache HIT";
-        rm -rfv .ghc;
-        cp -a $HOME/.cabsnap/ghc $HOME/.ghc;
-        cp -a $HOME/.cabsnap/lib $HOME/.cabsnap/share $HOME/.cabsnap/bin $HOME/.cabal/;
-      else
-        echo "cabal build-cache MISS";
-        rm -rf $HOME/.cabsnap;
-        mkdir -p $HOME/.ghc $HOME/.cabal/lib $HOME/.cabal/share $HOME/.cabal/bin;
-        cabal install --only-dependencies --enable-tests --enable-benchmarks;
-      fi
+  - if diff -u installplan.txt $HOME/.cabsnap/installplan.txt;
+    then
+      echo "cabal build-cache HIT";
+      rm -rfv .ghc;
+      cp -a $HOME/.cabsnap/ghc $HOME/.ghc;
+      cp -a $HOME/.cabsnap/lib $HOME/.cabsnap/share $HOME/.cabsnap/bin $HOME/.cabal/;
+    else
+      echo "cabal build-cache MISS";
+      rm -rf $HOME/.cabsnap;
+      mkdir -p $HOME/.ghc $HOME/.cabal/lib $HOME/.cabal/share $HOME/.cabal/bin;
+      cabal install --only-dependencies --enable-tests --enable-benchmarks;
+    fi
 
   - if [ ! -d $HOME/.cabsnap ];
     then
