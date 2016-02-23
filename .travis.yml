@@ -29,7 +29,7 @@ matrix:
     - env: CABALVER=head GHCVER=head
       addons:
         apt:
-          packages: [cabal-install-head, ghc-head]
+          packages: [cabal-install-head, ghc-head, freeglut3-dev]
           sources: [hvr-ghc]
 
   allow_failures:
