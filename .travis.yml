@@ -5,6 +5,12 @@ sudo: false
 notifications:
   email: false
 
+addons:
+  apt:
+    packages:
+      - freeglut3
+      - freeglut3-dev
+
 cache:
   directories:
     - $HOME/.cabsnap
