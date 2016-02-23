@@ -2,11 +2,12 @@ module Emulator.Memory where
 
 import Emulator.Types
 
+import Control.Applicative
 import Control.Monad.Trans.State.Strict
 import Data.Array.IO
 import Data.Array.Unboxed
 import Data.Bits
-import Prelude hiding (Word)
+import Prelude
 
 type Memory = UArray Address Byte
 type MemoryIO = IOUArray Address Byte
