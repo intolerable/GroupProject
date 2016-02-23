@@ -2,25 +2,35 @@ module Emulator.ROM.Parser where
 
 import Emulator.ROM
 
-import Prelude hiding (drop, splitAt, head, readFile)
-import Data.ByteString (ByteString, splitAt, drop, head, readFile)
+import Prelude hiding (readFile)
+import Data.ByteString
+import Data.Binary.Strict.Get
+import Data.Word
 
 
-readROM :: String -> IO (ROMHeader, ByteString)
+-- Given a filename, return the data and header of the ROM, or an error.
+readROM :: String -> IO (Either String (ROMHeader, ByteString))
 readROM path = do
   contents <- readFile path
-  return $ parseHeader contents
+  return $ parseROM contents
 
 
-parseHeader :: ByteString -> (ROMHeader, ByteString)
-parseHeader str = do
-  let (branch, r1) = splitAt 4 str -- Where to jump to
-  let (logo, r2) = splitAt 156 r1 -- The nintendo logo
-  let (title, r3) = splitAt 12 r2 -- Game title
-  let (gCode, r4) = splitAt 4 r3 -- Game code
-  let (maker, r5) = splitAt 2 r4 -- Maker coder
-  let (magic, r6) = splitAt 1 r5 -- magic number
-  -- Skip 13 reserved bytes + 36 multiboot bytes
-  let code = drop 49 r6
-  (ROMHeader branch logo title gCode maker (head magic), code)
+parseROM :: ByteString -> Either String (ROMHeader, ByteString)
+parseROM str =
+  case runGet parseHeader str of
+    (Right (branch, logo, title, gCode, maker, magic), remainder) ->
+      Right (ROMHeader branch logo title gCode maker magic, remainder)
+    ((Left err, _)) ->
+      Left $ "ROM parsing error: " ++ err
 
+parseHeader :: Get (ByteString, ByteString, ByteString, ByteString, ByteString, Word8)
+parseHeader = do
+  branch   <- getByteString 4   -- Branch instruction
+  logo     <- getByteString 156 -- Nintendo logo
+  title    <- getByteString 12  -- The game title
+  gameCode <- getByteString 4   -- The game's code
+  maker    <- getByteString 2   -- The maker code
+  magic    <- getWord8          -- The magic number
+  -- Skip past 13+36 reserved+multiboot bytes
+  skip 49
+  return (branch, logo, title, gameCode, maker, magic)
