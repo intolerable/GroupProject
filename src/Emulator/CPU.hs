@@ -2,7 +2,19 @@ module Emulator.CPU where
 
 import Emulator.Types
 
+import Control.Applicative
+import Data.Bits
 import Control.Lens
+import Prelude
+
+data CPUMode = User
+             | FIQ
+             | IRQ
+             | Supervisor
+             | Abort
+             | Undefined
+             | System
+  deriving (Show, Read, Eq)
 
 data RegisterX =
   -- Registers R0 - R12 are all general purpose registers
@@ -44,6 +56,21 @@ data Flags = Flags
   deriving (Show, Read, Eq)
 
 makeFields ''Flags
+
+applyFlags :: Flags -> MWord -> MWord
+applyFlags = undefined
+
+extractFlags :: MWord -> Flags
+extractFlags =
+  Flags <$> tb 31
+        <*> tb 30
+        <*> tb 29
+        <*> tb 28
+        <*> tb 27
+        <*> tb 7
+        <*> tb 6
+        <*> tb 5
+  where tb = flip testBit
 
 data Registers = Registers
   { _registersR0 :: MWord
