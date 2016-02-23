@@ -12,7 +12,7 @@ import Prelude
 type Memory = UArray Address Byte
 type MemoryIO = IOUArray Address Byte
 
-class Monad m => Mem m where
+class (Functor m, Monad m) => Mem m where
 
   writeByte :: Address -> Byte -> m ()
   readByte :: Address -> m Byte
