@@ -70,7 +70,7 @@ install:
        echo "snapshotting package-db to build-cache";
        mkdir $HOME/.cabsnap;
        cp -a $HOME/.ghc $HOME/.cabsnap/ghc;
-       cp -a $HOME/.cabal/lib $HOME/.cabal/share $HOME/.cabalbin installplan.txt $HOME/.cabsnap/;
+       cp -a $HOME/.cabal/lib $HOME/.cabal/share $HOME/.cabal/bin installplan.txt $HOME/.cabsnap/;
     fi
 
 script:
