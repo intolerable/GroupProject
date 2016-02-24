@@ -66,6 +66,10 @@ sub dest src1 src2 = do
   res2 <- use src2
   dest .= res1 - res2
 
+-- Arithmetic subtract reversed
+rsub :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> m ()
+rsub dest src1 src2 = sub dest src2 src1
+
 -- Logical AND
 and :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> m ()
 and dest src1 src2 = do
