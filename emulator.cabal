@@ -61,5 +61,9 @@ test-suite test
     base == 4.*,
     Cabal >= 1.16.0,
     emulator,
-    hspec
+    hspec,
+    lens,
+    transformers
+  default-extensions:
+    LambdaCase
   ghc-options: -Wall
