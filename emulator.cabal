@@ -17,6 +17,7 @@ library
     Emulator
     Emulator.CPU
     Emulator.CPU.Instructions
+    Emulator.CPU.Instructions.Parser
     Emulator.Memory
     Emulator.ROM
     Emulator.ROM.Parser
@@ -34,10 +35,12 @@ library
   hs-source-dirs: src/
   default-language: Haskell2010
   default-extensions:
+    DataKinds
     DeriveFunctor
     FlexibleContexts
     FlexibleInstances
     FunctionalDependencies
+    GADTs
     GeneralizedNewtypeDeriving
     MultiParamTypeClasses
     RankNTypes
