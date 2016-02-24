@@ -10,4 +10,6 @@ type MWord = Data.Word.Word32
 
 type Address = Data.Word.Word32
 
+type DWord = Data.Word.Word64
+
 type RegisterVal = Address
