@@ -47,14 +47,26 @@ add :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel
 add dest src1 src2 = do
   res1 <- use src1
   res2 <- use src2
-  dest .= res1 + res2
+  let val = res1 + res2
+  dest .= val
+  -- Update flags
+  cpsr.zero .= (val == 0)
+  cpsr.sign .= checkSign val
+  cpsr.overflow .= checkCarry res1 res2
+  cpsr.carry .= checkCarry res1 res2
+
 
 -- Arithmetic add with carry
 addc :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> m ()
 addc dest src1 src2 = do
   res1 <- use src1
   res2 <- use src2
-  dest .= res1 + res2
+  let val = res1 + res2
+  dest .= val
+  -- Update flags
+  cpsr.zero .= (val == 0)
+  cpsr.sign .= checkSign val
+  cpsr.overflow .= (checkCarry res1 res2)
   when (checkCarry res1 res2) $ do
     cpsr.carry .= True
     dest += 1
@@ -64,7 +76,14 @@ sub :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel
 sub dest src1 src2 = do
   res1 <- use src1
   res2 <- use src2
-  dest .= res1 - res2
+  let val = res1 - res2
+  dest .= val
+  -- Update flags
+  cpsr.zero .= (val == 0)
+  cpsr.sign .= checkSign val
+  -- TODO: Maybe detect this, but it's kind of contrived
+  cpsr.overflow .= False
+  cpsr.carry .= False
 
 -- Arithmetic subtract reversed
 rsub :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> m ()
@@ -75,14 +94,28 @@ and :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel
 and dest src1 src2 = do
   res1 <- use src1
   res2 <- use src2
-  dest .= res1 .&. res2
+  let val = res1 .&. res2
+  dest .= val
+  -- Update flags
+  -- FIXME: This actually should be the carry flag from the shifted register
+  -- IF the shifted register is used as an operand. Unfortunately we don't
+  -- have shifted registers yet so this can stay false for now.
+  cpsr.carry .= False
+  cpsr.zero .= (val == 0)
+  cpsr.sign .= checkSign val
 
 -- Logical Exclusive Or
 eor :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> m ()
 eor dest src1 src2 = do
   res1 <- use src1
   res2 <- use src2
-  dest .= res1 `xor` res2
+  let val = res1 `xor` res2
+  dest .= val
+  -- Update flags
+  -- FIXME: see above
+  cpsr.carry .= False
+  cpsr.zero .= (val == 0)
+  cpsr.sign .= checkSign val
 
 checkCarry :: MWord -> MWord -> Bool
 checkCarry a b = ((c .&. 0x00000000FFFFFFFF) `xor` c) /= 0
