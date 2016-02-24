@@ -44,7 +44,7 @@ data RegisterX =
                      -- statement.
   | CPSR RegisterVal -- Flags and CPU state register
 
-data Flags = Flags
+data Flags = Flags -- Status Register
   { _flagsSign :: Bool
   , _flagsZero :: Bool
   , _flagsCarry :: Bool
