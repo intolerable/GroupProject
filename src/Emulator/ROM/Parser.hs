@@ -1,4 +1,6 @@
-module Emulator.ROM.Parser (readROM) where
+module Emulator.ROM.Parser
+  ( readROM
+  , parseROM ) where
 
 import Emulator.ROM
 
