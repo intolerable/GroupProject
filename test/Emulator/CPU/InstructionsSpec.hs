@@ -1,4 +1,4 @@
-module Emulator.CPU.InstructionSpec where
+module Emulator.CPU.InstructionsSpec where
 
 import Emulator.CPU.Instructions
 import Emulator.Types
