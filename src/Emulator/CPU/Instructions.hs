@@ -3,6 +3,7 @@ module Emulator.CPU.Instructions where
 import Emulator.Types
 import Emulator.CPU
 
+import Control.Applicative
 import Control.Lens
 import Control.Monad.State.Class
 import Control.Monad
