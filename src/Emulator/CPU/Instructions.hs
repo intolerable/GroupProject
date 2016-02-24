@@ -89,3 +89,6 @@ checkCarry a b = ((c .&. 0x00000000FFFFFFFF) `xor` c) /= 0
   where
     c :: DWord
     c = fromIntegral a + fromIntegral b
+
+checkSign :: MWord -> Bool
+checkSign a = (a .&. 0x80000000) > 0
