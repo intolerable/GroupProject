@@ -10,7 +10,6 @@ import Data.Bits
 
 type RegisterLabel = Lens' Registers MWord
 
-
 -- Standard arithmetic add
 add :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> m ()
 add dest src1 src2 = do
@@ -27,7 +26,6 @@ addc dest src1 src2 = do
   when (checkCarry res1 res2) $ do
     cpsr.carry .= True
     dest += 1
-
 
 checkCarry :: MWord -> MWord -> Bool
 checkCarry a b =
