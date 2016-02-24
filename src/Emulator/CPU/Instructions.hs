@@ -12,7 +12,8 @@ import Prelude hiding (Ordering(..))
 
 type RegisterLabel = Lens' Registers MWord
 
-conditionally :: MonadState Registers m => Condition -> m a -> m ()
+conditionally :: (MonadState Registers m, Applicative m)
+              => Condition -> m a -> m ()
 conditionally cond act = do
   res <- runCondition cond
   when res $ act >> return ()
