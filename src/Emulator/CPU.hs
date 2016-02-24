@@ -94,20 +94,20 @@ data Registers = Registers
 
 makeFields ''Registers
 
+data Condition = EQ -- Equal
+               | NE -- Not equal
+               | CS -- Carry set
+               | CC -- Carry clear
+               | MI -- Negative
+               | PL -- Positive
+               | VS -- Overflow
+               | VC -- No overflow
+               | HI -- Unsigned higher
+               | LS -- Unsigned lower or same
+               | GE -- Signed greater than or equal
+               | LT -- Less than
+               | GT -- Greater than
+               | LE -- Less than or equal
+               | AL -- Always (unconditional)
+  deriving (Show, Read, Eq, Enum, Bounded)
 
-data Condition =
-  EQ    -- Equal
-  | NE  -- Not equal
-  | CS  -- Carry set
-  | CC  -- Carry clear
-  | MI  -- Negative
-  | PL  -- Positive
-  | VS  -- Overflow
-  | VC  -- No overflow
-  | HI  -- Unsigned higher
-  | LS  -- Unsigned lower or same
-  | GE  -- Signed greater than or equal
-  | LT  -- Less than
-  | GT  -- Greater than
-  | LE  -- Less than or equal
-  | AL  -- Always (unconditional)
