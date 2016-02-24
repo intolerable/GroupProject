@@ -17,7 +17,8 @@ conditionally cond act = do
   res <- runCondition cond
   when res $ act >> return ()
 
-runCondition :: MonadState Registers m => Condition -> m Bool
+runCondition :: (MonadState Registers m, Applicative m)
+             => Condition -> m Bool
 runCondition cond =
   case cond of
     EQ -> use (cpsr.zero)
