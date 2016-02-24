@@ -16,7 +16,7 @@ conditionally :: (MonadState Registers m, Applicative m)
               => Condition -> m a -> m ()
 conditionally cond act = do
   res <- runCondition cond
-  when res $ act >> return ()
+  when res $ void act
 
 runCondition :: (MonadState Registers m, Applicative m)
              => Condition -> m Bool
