@@ -28,5 +28,7 @@ addc dest src1 src2 = do
     dest += 1
 
 checkCarry :: MWord -> MWord -> Bool
-checkCarry a b =
-  popCount ((fromIntegral a + fromIntegral b) .&. (0xFFFFFFFF00000000 :: DWord)) > 0
+checkCarry a b = ((c .&. 0x00000000FFFFFFFF) `xor` c) /= 0
+  where
+    c :: DWord
+    c = fromIntegral a + fromIntegral b
