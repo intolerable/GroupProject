@@ -7,7 +7,6 @@ import Emulator.ROM
 import Control.Applicative
 import Data.Binary.Get
 import Data.ByteString.Lazy (ByteString)
-import Data.Word
 import Prelude
 import qualified Data.ByteString.Lazy as BS
 
