@@ -59,6 +59,13 @@ addc dest src1 src2 = do
     cpsr.carry .= True
     dest += 1
 
+-- Arithmetic subtract
+sub :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> m ()
+sub dest src1 src2 = do
+  res1 <- use src1
+  res2 <- use src2
+  dest .= res1 - res2
+
 -- Logical AND
 and :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> m ()
 and dest src1 src2 = do
