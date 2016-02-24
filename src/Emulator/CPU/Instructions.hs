@@ -59,6 +59,13 @@ addc dest src1 src2 = do
     cpsr.carry .= True
     dest += 1
 
+-- Logical AND
+and :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> m ()
+and dest src1 src2 = do
+  res1 <- use src1
+  res2 <- use src2
+  dest .= res1 .&. res2
+
 checkCarry :: MWord -> MWord -> Bool
 checkCarry a b = ((c .&. 0x00000000FFFFFFFF) `xor` c) /= 0
   where
