@@ -44,6 +44,7 @@ library
     GeneralizedNewtypeDeriving
     MultiParamTypeClasses
     RankNTypes
+    ScopedTypeVariables
     TemplateHaskell
   ghc-options: -Wall
 

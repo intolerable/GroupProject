@@ -118,7 +118,10 @@ data Condition = EQ -- Equal
   deriving (Show, Read, Eq, Enum, Bounded)
 
 conditionFromWord :: Byte -> Maybe Condition
-conditionFromWord b =
+conditionFromWord = fromWord
+
+fromWord :: forall a. (Enum a, Bounded a) => Byte -> Maybe a
+fromWord b =
   if fromIntegral b > maxWord then Nothing else Just $ toEnum $ fromIntegral b
     where
-      maxWord = fromEnum (maxBound :: Condition)
+      maxWord = fromEnum (maxBound :: a)
