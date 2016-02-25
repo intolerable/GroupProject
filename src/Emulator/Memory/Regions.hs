@@ -6,7 +6,7 @@ data RegionType = BIOS
 				| IORegisters
 				| PaletteRAM
 				| VRAM
-				| ObjAtrributes
+				| ObjAttributes
 				| GamePakROM
 				| GamePakSRAM
 			deriving (Show, Eq)
@@ -25,7 +25,7 @@ regions = [ (0x00000000, 0x00003FFF, BIOS),
 			(0x05000400, 0x05FFFFFF, Unused),
 			(0x06000000, 0x06017FFF, VRAM),
 			(0x06018000, 0x06FFFFFF, Unused),
-			(0x07000000, 0x070003FF, ObjAtrributes),
+			(0x07000000, 0x070003FF, ObjAttributes),
 			(0x07000400, 0x07FFFFFF, Unused),
 			(0x08000000, 0x0DFFFFFF, GamePakROM),
 			(0x0E000000, 0x0E00FFFF, GameParkSRAM),
