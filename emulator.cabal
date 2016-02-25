@@ -19,6 +19,7 @@ library
     Emulator.CPU.Instructions
     Emulator.CPU.Instructions.Parser
     Emulator.Memory
+    Emulator.Memory.Regions
     Emulator.ROM
     Emulator.ROM.Parser
     Emulator.Types
