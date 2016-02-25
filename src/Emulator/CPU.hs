@@ -125,3 +125,4 @@ data Interrupt = Reset                -- Probably won't be used
                | DataAbort            --   for virtual memory systems, which the GBA doesn't use.
                | NormalInterrupt      -- Standard interrupts
                | FastInterrupt        -- Fast (standard) interrupts
+   deriving (Show, Read, Eq)
