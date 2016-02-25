@@ -60,3 +60,11 @@ instance Mem MutableMemory where
     MutableMemory (\arr -> writeArray arr a b)
   readByte a =
     MutableMemory (\arr -> readArray arr a)
+
+type AddressSpace m = (Functor m, Monad m, Mem m)
+
+writeAddress :: AddressSpace m => Address -> Byte -> m ()
+writeAddress = undefined
+
+readAddress :: AddressSpace m => Address -> m Byte
+readAddress = undefined
