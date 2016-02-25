@@ -1,17 +1,31 @@
 module Emulator.CPU.InstructionsSpec where
 
+import Emulator.CPU
 import Emulator.CPU.Instructions
 import Emulator.Types
 
+import Control.Lens
+import Control.Monad.Trans.State
 import Data.Bits
+import Data.Default.Class
 import Test.Hspec
 import Test.Hspec.QuickCheck
+import Test.QuickCheck.Arbitrary
 
 main :: IO ()
 main = hspec spec
 
 spec :: Spec
-spec = do 
+spec = do
+
+  describe "runCondition" $ do
+
+    prop "runCondition AL ~= True" $ \x ->
+      evalState (runCondition AL) (def & cpsr .~ x) == True
+
+    it "should always run with an AL condition" $
+      evalState (runCondition AL) def `shouldBe` True
+
   describe "checkCarry" $ do
 
     prop "x + y > maxBound == checkCarry x y" $ \x y ->
@@ -36,3 +50,14 @@ spec = do
       checkSign (-1) `shouldBe` True
       checkSign (-100) `shouldBe` True
       checkSign maxBound `shouldBe` True
+
+instance Arbitrary Flags where
+  arbitrary = Flags <$> arbitrary
+                    <*> arbitrary
+                    <*> arbitrary
+                    <*> arbitrary
+                    <*> arbitrary
+                    <*> arbitrary
+                    <*> arbitrary
+                    <*> arbitrary
+  shrink = const []
