@@ -3,8 +3,8 @@ module Emulator.CPU where
 import Emulator.Types
 
 import Control.Applicative
-import Data.Bits
 import Control.Lens
+import Data.Bits
 import Data.Default.Class
 import Prelude
 
