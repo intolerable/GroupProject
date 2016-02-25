@@ -77,7 +77,7 @@ and dest src1 src2 = do
 
 -- Test instruction
 tst :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> m ()
-tst dest src1 src2 = do
+tst _ src1 src2 = do
   res1 <- use src1
   res2 <- use src2
   let val = res1 .&. res2
