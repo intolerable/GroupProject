@@ -1,5 +1,7 @@
 module Emulator.Memory.Regions where
 
+import Emulator.Types
+
 data RegionType = BIOS
 				| Unused
 				| WRAM
@@ -28,5 +30,5 @@ regions = [ (0x00000000, 0x00003FFF, BIOS),
 			(0x07000000, 0x070003FF, ObjAttributes),
 			(0x07000400, 0x07FFFFFF, Unused),
 			(0x08000000, 0x0DFFFFFF, GamePakROM),
-			(0x0E000000, 0x0E00FFFF, GameParkSRAM),
+			(0x0E000000, 0x0E00FFFF, GamePakSRAM),
 			(0x0E010000, 0xFFFFFFFF, Unused)]
