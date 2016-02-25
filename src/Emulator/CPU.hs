@@ -107,6 +107,12 @@ data Shifted a = Shifted Shift a
 data Shift = Shift
   deriving (Show, Read, Eq)
 
+fromWord :: forall a. (Enum a, Bounded a) => Byte -> Maybe a
+fromWord b =
+  if fromIntegral b > maxWord then Nothing else Just $ toEnum $ fromIntegral b
+    where
+      maxWord = fromEnum (maxBound :: a)
+
 data Condition = EQ -- Equal
                | NE -- Not equal
                | CS -- Carry set
@@ -127,11 +133,26 @@ data Condition = EQ -- Equal
 conditionFromWord :: Byte -> Maybe Condition
 conditionFromWord = fromWord
 
-fromWord :: forall a. (Enum a, Bounded a) => Byte -> Maybe a
-fromWord b =
-  if fromIntegral b > maxWord then Nothing else Just $ toEnum $ fromIntegral b
-    where
-      maxWord = fromEnum (maxBound :: a)
+data Opcode = AND -- Rd := Op1 AND Op2
+            | EOR -- Rd := Op1 EOR Op2
+            | SUB -- Rd := Op1 - Op2
+            | RSB -- Rd := Op2 - Op1
+            | ADD -- Rd := Op1 + Op2
+            | ADC -- Rd := Op1 + Op2 + C
+            | SBC -- Rd := Op1 - Op2 + C - 1
+            | RSC -- Rd := Op2 - Op1 + C - 1
+            | TST -- set condition codes on Op1 AND Op2
+            | TEQ -- set condition codes on Op1 EOR Op2
+            | CMP -- set condition codes on Op1 - Op2
+            | CMN -- set condition codes on Op1 + Op2
+            | ORR -- Rd := Op1 OR Op2
+            | MOV -- Rd := Op2
+            | BIC -- Rd := Op1 AND NOT Op2
+            | MVN -- Rd := NOT Op2
+  deriving (Show, Read, Eq, Enum, Bounded)
+
+opcodeFromWord :: Byte -> Maybe Opcode
+opcodeFromWord = fromWord
 
 data Interrupt = Reset                -- Probably won't be used
                | UndefinedInstruction -- Used if a bad instruction is found
