@@ -94,6 +94,12 @@ data Registers = Registers
 
 makeFields ''Registers
 
+data Shifted a = Shifted Shift a
+  deriving (Show, Read, Eq)
+
+data Shift = Shift
+  deriving (Show, Read, Eq)
+
 data Condition = EQ -- Equal
                | NE -- Not equal
                | CS -- Carry set
