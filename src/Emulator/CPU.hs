@@ -5,6 +5,7 @@ import Emulator.Types
 import Control.Applicative
 import Data.Bits
 import Control.Lens
+import Data.Default.Class
 import Prelude
 
 data CPUMode = User
@@ -57,6 +58,9 @@ data Flags = Flags -- Status Register
 
 makeFields ''Flags
 
+instance Default Flags where
+  def = Flags False False False False False False False False
+
 applyFlags :: Flags -> MWord -> MWord
 applyFlags = undefined
 
@@ -93,6 +97,9 @@ data Registers = Registers
   deriving (Show, Read, Eq)
 
 makeFields ''Registers
+
+instance Default Registers where
+  def = Registers 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 def
 
 data Shifted a = Shifted Shift a
   deriving (Show, Read, Eq)

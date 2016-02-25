@@ -27,6 +27,7 @@ library
     array,
     binary,
     bytestring,
+    data-default-class,
     GLUT,
     OpenGL,
     lens,
