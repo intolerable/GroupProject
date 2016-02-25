@@ -75,6 +75,20 @@ and dest src1 src2 = do
   cpsr.zero .= (val == 0)
   cpsr.sign .= checkSign val
 
+-- Test instruction
+tst :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> m ()
+tst dest src1 src2 = do
+  res1 <- use src1
+  res2 <- use src2
+  let val = res1 .&. res2
+  -- Update flags
+  -- FIXME: This actually should be the carry flag from the shifted register
+  -- IF the shifted register is used as an operand. Unfortunately we don't
+  -- have shifted registers yet so this can stay false for now.
+  cpsr.carry .= False
+  cpsr.zero .= (val == 0)
+  cpsr.sign .= checkSign val
+
 -- Logical Exclusive Or
 eor :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> m ()
 eor dest src1 src2 = do
