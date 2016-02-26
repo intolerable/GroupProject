@@ -32,3 +32,14 @@ regions = [ (0x00000000, 0x00003FFF, BIOS),
             (0x08000000, 0x0DFFFFFF, GamePakROM),
             (0x0E000000, 0x0E00FFFF, GamePakSRAM),
             (0x0E010000, 0xFFFFFFFF, Unused) ]
+
+canRead :: RegionType -> Boolean
+canRead BIOS          = False
+canRead Unused        = False
+canRead WRAM          = True
+canRead IORegisters   = True
+canRead PaletteRAM    = True
+canRead VRAM          = True
+canRead ObjAttributes = True
+canRead GamePakROM    = True
+canRead GamePakSRAM   = True
