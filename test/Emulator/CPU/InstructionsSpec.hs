@@ -4,12 +4,10 @@ import Emulator.CPU
 import Emulator.CPU.Instructions
 import Emulator.Types
 
-import Control.Applicative
 import Control.Lens
 import Control.Monad.Trans.State
 import Data.Bits
 import Data.Default.Class
-import Prelude
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck.Arbitrary

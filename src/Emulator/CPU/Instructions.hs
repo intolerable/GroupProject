@@ -3,7 +3,6 @@ module Emulator.CPU.Instructions where
 import Emulator.Types
 import Emulator.CPU
 
-import Control.Applicative
 import Control.Lens
 import Control.Monad.State.Class
 import Control.Monad
@@ -110,14 +109,12 @@ mov dest _ src2 = undefined
 -- Utils
 ---------------------
 
-conditionally :: (MonadState Registers m, Applicative m)
-              => Condition -> m a -> m ()
+conditionally :: MonadState Registers m => Condition -> m a -> m ()
 conditionally cond act = do
   res <- runCondition cond
   when res $ void act
 
-runCondition :: (MonadState Registers m, Applicative m)
-             => Condition -> m Bool
+runCondition :: MonadState Registers m => Condition -> m Bool
 runCondition cond =
   case cond of
     EQ -> use (cpsr.zero)

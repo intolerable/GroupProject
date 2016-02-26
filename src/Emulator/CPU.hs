@@ -2,11 +2,9 @@ module Emulator.CPU where
 
 import Emulator.Types
 
-import Control.Applicative
 import Control.Lens
 import Data.Bits
 import Data.Default.Class
-import Prelude
 
 data CPUMode = User
              | FIQ

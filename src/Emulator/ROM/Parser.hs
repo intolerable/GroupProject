@@ -4,10 +4,8 @@ module Emulator.ROM.Parser
 
 import Emulator.ROM
 
-import Control.Applicative
 import Data.Binary.Get
 import Data.ByteString.Lazy (ByteString)
-import Prelude
 import qualified Data.ByteString.Lazy as BS
 
 -- Given a filename, return the data and header of the ROM, or an error.
