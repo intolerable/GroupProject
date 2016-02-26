@@ -33,6 +33,17 @@ regions = [ (0x00000000, 0x00003FFF, BIOS),
             (0x0E000000, 0x0E00FFFF, GamePakSRAM),
             (0x0E010000, 0xFFFFFFFF, Unused) ]
 
+canWrite :: RegionType -> Boolean
+canWrite BIOS          = False
+canWrite Unused        = False
+canWrite WRAM          = True
+canWrite IORegisters   = True -- Can we definitely write to these??
+canWrite PaletteRAM    = True
+canWrite VRAM          = True
+canWrite ObjAttributes = True
+canWrite GamePakROM    = False
+canWrite GamePakSRAM   = True
+
 canRead :: RegionType -> Boolean
 canRead BIOS          = False
 canRead Unused        = False
