@@ -33,7 +33,8 @@ matrix:
           sources: [hvr-ghc]
 
   allow_failures:
-   - env: CABALVER=head GHCVER=head
+    - env: CABALVER=1.18 GHCVER=7.8.4
+    - env: CABALVER=head GHCVER=head
 
 before_install:
   - unset CC
