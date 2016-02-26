@@ -67,6 +67,6 @@ addressToRegionType = addrToRegion regions
       where (rangeMin, rangeMax, regionType) = r
 
 addressPermissions :: Address -> (Bool, Bool)
-addressPermissions addr = (canRead _type, canWrite _type)
+addressPermissions addr = (canRead regionType, canWrite regionType)
   where
-    _type = addressToRegionType addr
+    regionType = addressToRegionType addr
