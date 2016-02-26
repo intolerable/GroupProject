@@ -1,14 +1,11 @@
 module Emulator.Memory.RegionsSpec where
 
-
 import Emulator.Memory.Regions
 
 import Test.Hspec
 
-
 main :: IO ()
 main = hspec spec
-
 
 spec :: Spec
 spec = do
