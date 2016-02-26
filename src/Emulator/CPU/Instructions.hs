@@ -102,6 +102,9 @@ eor dest src1 src2 = do
   cpsr.zero .= (val == 0)
   cpsr.sign .= checkSign val
 
+-- Move instruction
+mov :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> m ()
+mov dest _ src2 = undefined
 
 ---------------------
 -- Utils
