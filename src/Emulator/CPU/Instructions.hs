@@ -20,11 +20,12 @@ add dest src1 src2 cCode = do
   res2 <- use src2
   let val = res1 + res2
   dest .= val
-  -- Update flags
-  cpsr.zero .= (val == 0)
-  cpsr.sign .= checkSign val
-  cpsr.overflow .= checkCarry res1 res2
-  cpsr.carry .= checkCarry res1 res2
+  -- Update flags if the condition is true
+  when cCode $ do
+    cpsr.zero .= (val == 0)
+    cpsr.sign .= checkSign val
+    cpsr.overflow .= checkCarry res1 res2
+    cpsr.carry .= checkCarry res1 res2
 
 
 -- Arithmetic add with carry
@@ -34,13 +35,14 @@ adc dest src1 src2 cCode = do
   res2 <- use src2
   let val = res1 + res2
   dest .= val
-  -- Update flags
-  cpsr.zero .= (val == 0)
-  cpsr.sign .= checkSign val
-  cpsr.overflow .= (checkCarry res1 res2)
-  when (checkCarry res1 res2) $ do
-    cpsr.carry .= True
-    dest += 1
+  -- Update flags if condition code is true
+  when cCode $ do
+    cpsr.zero .= (val == 0)
+    cpsr.sign .= checkSign val
+    cpsr.overflow .= (checkCarry res1 res2)
+    when (checkCarry res1 res2) $ do
+        cpsr.carry .= True
+        dest += 1
 
 -- Arithmetic subtract
 sub :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
@@ -49,12 +51,35 @@ sub dest src1 src2 cCode = do
   res2 <- use src2
   let val = res1 - res2
   dest .= val
-  -- Update flags
-  cpsr.zero .= (val == 0)
-  cpsr.sign .= checkSign val
-  -- TODO: Maybe detect this, but it's kind of contrived
-  cpsr.overflow .= False
-  cpsr.carry .= False
+  -- Update flags if condition code is true
+  when cCode $ do
+    cpsr.zero .= (val == 0)
+    cpsr.sign .= checkSign val
+    -- TODO: Maybe detect this, but it's kind of contrived
+    cpsr.overflow .= False
+    cpsr.carry .= False
+
+-- Subtract with carry
+sbc :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
+sbc dest src1 src2 cCode = do
+  res1 <- use src1
+  res2 <- use src2
+  let val = res1 - res2
+  dest .= val
+  -- Update flags if condition code is true
+  when cCode $ do
+    cpsr.zero .= (val == 0)
+    cpsr.sign .= checkSign val
+    -- TODO: Maybe detect this, but it's kind of contrived
+    cpsr.overflow .= False
+    cpsr.carry .= False
+    when (checkCarry res1 res2) $ do
+        cpsr.carry .= True
+        dest += 1
+
+-- Subtract with carry reversed
+rsc :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
+rsc dest src1 src2 cCode = sbc dest src2 src1 cCode
 
 -- Arithmetic subtract reversed
 rsb :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
@@ -67,13 +92,14 @@ and dest src1 src2 cCode = do
   res2 <- use src2
   let val = res1 .&. res2
   dest .= val
-  -- Update flags
-  -- FIXME: This actually should be the carry flag from the shifted register
-  -- IF the shifted register is used as an operand. Unfortunately we don't
-  -- have shifted registers yet so this can stay false for now.
-  cpsr.carry .= False
-  cpsr.zero .= (val == 0)
-  cpsr.sign .= checkSign val
+  -- Update flags if condition code is true
+  when cCode $ do
+    -- FIXME: This actually should be the carry flag from the shifted register
+    -- IF the shifted register is used as an operand. Unfortunately we don't
+    -- have shifted registers yet so this can stay false for now.
+    cpsr.carry .= False
+    cpsr.zero .= (val == 0)
+    cpsr.sign .= checkSign val
 
 -- Test instruction
 tst :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
@@ -81,13 +107,58 @@ tst _ src1 src2 cCode = do
   res1 <- use src1
   res2 <- use src2
   let val = res1 .&. res2
-  -- Update flags
-  -- FIXME: This actually should be the carry flag from the shifted register
-  -- IF the shifted register is used as an operand. Unfortunately we don't
-  -- have shifted registers yet so this can stay false for now.
-  cpsr.carry .= False
-  cpsr.zero .= (val == 0)
-  cpsr.sign .= checkSign val
+  -- Update flags if condition code is true
+  when cCode $ do
+    -- FIXME: This actually should be the carry flag from the shifted register
+    -- IF the shifted register is used as an operand. Unfortunately we don't
+    -- have shifted registers yet so this can stay false for now.
+    cpsr.carry .= False
+    cpsr.zero .= (val == 0)
+    cpsr.sign .= checkSign val
+
+-- Test exclusive (XOR)
+teq :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
+teq _ src1 src2 cCode = do
+  res1 <- use src1
+  res2 <- use src2
+  let val = res1 `xor` res2
+  -- Update flags if condition code is true
+  when cCode $ do
+    -- FIXME: This actually should be the carry flag from the shifted register
+    -- IF the shifted register is used as an operand. Unfortunately we don't
+    -- have shifted registers yet so this can stay false for now.
+    cpsr.carry .= False
+    cpsr.zero .= (val == 0)
+    cpsr.sign .= checkSign val
+
+
+-- Compare
+cmp :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
+cmp dest _ src2 cCode = do
+  res1 <- use src1
+  res2 <- use src2
+  let val = res1 - res2
+  -- Update flags if condition code is true
+  when cCode $ do
+    cpsr.zero .= (val == 0)
+    cpsr.sign .= checkSign val
+    -- TODO: Maybe detect this, but it's kind of contrived
+    cpsr.overflow .= False
+    cpsr.carry .= False
+
+-- Compare negative
+cmn :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
+cmn dest _ src2 cCode = do
+  res1 <- use src1
+  res2 <- use src2
+  let val = res1 + res2
+  -- Update flags if condition code is true
+  when cCode $ do
+    cpsr.zero .= (val == 0)
+    cpsr.sign .= checkSign val
+    -- TODO: Maybe detect this, but it's kind of contrived
+    cpsr.overflow .= False
+    cpsr.carry .= False
 
 -- Logical Exclusive Or
 eor :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
@@ -96,15 +167,18 @@ eor dest src1 src2 cCode = do
   res2 <- use src2
   let val = res1 `xor` res2
   dest .= val
-  -- Update flags
-  -- FIXME: see above
-  cpsr.carry .= False
-  cpsr.zero .= (val == 0)
-  cpsr.sign .= checkSign val
+  -- Update flags if condition code is true
+  when cCode $ do
+    -- FIXME: see above
+    cpsr.carry .= False
+    cpsr.zero .= (val == 0)
+    cpsr.sign .= checkSign val
 
 -- Move instruction
 mov :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
-mov dest _ src2 cCode = undefined
+mov dest _ src2 _ = do
+  res1 <- use src2
+  dest .= res1
 
 ---------------------
 -- Utils
