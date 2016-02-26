@@ -13,8 +13,9 @@ data RegionType = BIOS
                 | GamePakSRAM
             deriving (Show, Eq)
 
+type Region = (Address, Address, RegionType)
 
-regions :: [(Address, Address, RegionType)]
+regions :: [Region]
 regions = [ (0x00000000, 0x00003FFF, BIOS),
             (0x00004000, 0x01FFFFFF, Unused),
             (0x02000000, 0x0203FFFF, WRAM),
