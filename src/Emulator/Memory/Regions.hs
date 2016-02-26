@@ -63,5 +63,5 @@ addressToRegionType = addrToRegion regions
   where
     addrToRegion :: [Region] -> Address -> RegionType
     addrToRegion [] _ = error "Cannot find type for address. This shouldn't happen."
-    addrToRegion (r:anges) addr = if inRange (_min, _max) addr then _type else addrToRegion anges addr
-      where (_min, _max, _type) = r
+    addrToRegion (r:anges) addr = if inRange (rangeMin, rangeMax) addr then regionType else addrToRegion anges addr
+      where (rangeMin, rangeMax, regionType) = r
