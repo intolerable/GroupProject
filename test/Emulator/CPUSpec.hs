@@ -15,11 +15,11 @@ spec =
   describe "conditionFromWord" $ do
 
     it "should be able to decode basic conditions" $ do
-      conditionFromWord 0 `shouldBe` Just EQ
-      conditionFromWord 1 `shouldBe` Just NE
-      conditionFromWord 15 `shouldBe` Nothing
+      conditionFromByte 0 `shouldBe` Just EQ
+      conditionFromByte 1 `shouldBe` Just NE
+      conditionFromByte 15 `shouldBe` Nothing
 
-    prop "fromEnum . conditionFromWord == id" $ \x ->
-      case conditionFromWord x of
+    prop "fromEnum . conditionFromByte == id" $ \x ->
+      case conditionFromByte x of
         Just y -> fromEnum y == fromIntegral x
         Nothing -> True
