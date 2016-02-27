@@ -69,6 +69,9 @@ parseARM w
       x | x == 0x6000000 || x == 0x4000000 -> undefined -- Load/Store
       _ -> undefined -- BAD OPCODE!!!
 
+parseTHUMB :: HalfWord -> Either String (Instruction THUMB)
+parseTHUMB = undefined
+
 getCondition :: MWord -> Condition
 getCondition w = 
   case conditionFromByte $ fromIntegral $ (w .&. 0xF0000000) `shiftR` 28 of
