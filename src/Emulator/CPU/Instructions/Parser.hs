@@ -3,6 +3,8 @@ module Emulator.CPU.Instructions.Parser where
 import Emulator.CPU
 import Emulator.Types
 
+import Data.Bits
+
 data CPUMode = ARM | THUMB
   deriving (Show, Read, Eq)
 
@@ -49,3 +51,9 @@ data Instruction a where
   CoprocessorDataOperation :: Instruction ARM
   CoprocessorRegisterTransfer :: Instruction ARM
   SoftwareInterrupt :: Instruction ARM
+
+getCondition :: MWord -> Condition
+getCondition w = 
+  case conditionFromByte $ fromIntegral $ (w .&. 0xF0000000) `shiftR` 28 of
+    Just x -> x
+    Nothing -> error "undefined condition!"
