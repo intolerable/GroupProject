@@ -52,6 +52,23 @@ data Instruction a where
   CoprocessorRegisterTransfer :: Instruction ARM
   SoftwareInterrupt :: Instruction ARM
 
+parseARM :: MWord -> Either String (Condition, Instruction ARM)
+parseARM w 
+  | w .&. 0x0FFFFFF0 == 0b00000001001011111111111100010000 = undefined -- Definitely branch exchange instruction
+  | (w .&. 0x0C000000 == 0x00) && (testBit w 25 || w .&. 0b11110000 /= 0b10010000) = undefined -- Data Processing thing
+    --Right (getCondition w, DataProcessing _ _ _ _ _)
+  | w .&. 0x0FB00FF0 == 0x01000090 = undefined -- Single data swap
+  | otherwise = 
+    case w .&. 0x0E000000 of -- Test the identity bits
+      0x00 -> if (w .&. 0x010000F0) == 0x90 then undefined -- multiply 
+              else undefined -- halfword data transfer
+      0x08000000 -> undefined -- Block data transfer
+      0x0A000000 -> undefined -- Branch instruction
+      0x0C000000 -> undefined -- Coprocessor data transfer
+      0x0E000000 -> undefined -- Coprocessor data operation
+      x | x == 0x6000000 || x == 0x4000000 -> undefined -- Load/Store
+      _ -> undefined -- BAD OPCODE!!!
+
 getCondition :: MWord -> Condition
 getCondition w = 
   case conditionFromByte $ fromIntegral $ (w .&. 0xF0000000) `shiftR` 28 of
