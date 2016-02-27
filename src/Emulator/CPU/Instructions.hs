@@ -103,10 +103,11 @@ and dest src1 src2 cCode = do
 
 -- Test instruction
 tst :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
-tst _ src1 src2 cCode = do
+tst dest src1 src2 cCode = do
   res1 <- use src1
   res2 <- use src2
   let val = res1 .&. res2
+  dest .= val
   -- Update flags if condition code is true
   when cCode $ do
     -- FIXME: This actually should be the carry flag from the shifted register
@@ -118,10 +119,11 @@ tst _ src1 src2 cCode = do
 
 -- Test exclusive (XOR)
 teq :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
-teq _ src1 src2 cCode = do
+teq dest src1 src2 cCode = do
   res1 <- use src1
   res2 <- use src2
   let val = res1 `xor` res2
+  dest .= val
   -- Update flags if condition code is true
   when cCode $ do
     -- FIXME: This actually should be the carry flag from the shifted register
@@ -134,10 +136,11 @@ teq _ src1 src2 cCode = do
 
 -- Compare
 cmp :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
-cmp dest _ src2 cCode = do
+cmp dest src1 src2 cCode = do
   res1 <- use src1
   res2 <- use src2
   let val = res1 - res2
+  dest .= val
   -- Update flags if condition code is true
   when cCode $ do
     cpsr.zero .= (val == 0)
@@ -148,10 +151,11 @@ cmp dest _ src2 cCode = do
 
 -- Compare negative
 cmn :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
-cmn dest _ src2 cCode = do
+cmn dest src1 src2 cCode = do
   res1 <- use src1
   res2 <- use src2
   let val = res1 + res2
+  dest .= val
   -- Update flags if condition code is true
   when cCode $ do
     cpsr.zero .= (val == 0)
