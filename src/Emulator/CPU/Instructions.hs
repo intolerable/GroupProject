@@ -122,7 +122,6 @@ teq dest src1 src2 cCode = do
   res1 <- use src1
   res2 <- use src2
   let val = res1 `xor` res2
-  dest .= val
   -- Update flags if condition code is true
   when cCode $ do
     -- FIXME: This actually should be the carry flag from the shifted register
@@ -139,7 +138,6 @@ cmp dest src1 src2 cCode = do
   res1 <- use src1
   res2 <- use src2
   let val = res1 - res2
-  dest .= val
   -- Update flags if condition code is true
   when cCode $ do
     cpsr.zero .= (val == 0)
@@ -154,7 +152,6 @@ cmn dest src1 src2 cCode = do
   res1 <- use src1
   res2 <- use src2
   let val = res1 + res2
-  dest .= val
   -- Update flags if condition code is true
   when cCode $ do
     cpsr.zero .= (val == 0)
