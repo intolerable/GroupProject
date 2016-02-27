@@ -12,7 +12,10 @@ type THUMB = 'THUMB
 type Accumulate = ()
 type Link = ()
 type Offset = ()
-type RegisterName = ()
+
+newtype RegisterName = RegisterName Int
+  deriving (Show, Read, Eq, Ord)
+
 type SetCondition = ()
 type Rotated a = a
 type Signed = ()
