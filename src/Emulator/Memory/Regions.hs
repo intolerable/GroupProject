@@ -110,3 +110,4 @@ data DispRegisters = DispCntrl
                       | BLDCNT    -- Color Special Effects Selection
                       | BLGALPHA  -- Alpha Blending Coefficients
                       | BLDY      -- Brightness Coefficient
+                deriving (Show, Read, Eq)
