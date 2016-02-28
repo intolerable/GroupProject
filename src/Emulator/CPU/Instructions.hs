@@ -14,7 +14,6 @@ type SrcRegister = Getting MWord Registers MWord
 type DestRegister = ASetter' Registers MWord
 type ConditionCode = Bool
 
-
 -- Standard arithmetic add
 add :: MonadState Registers m => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
 add dest src1 src2 cCode = do
@@ -28,7 +27,6 @@ add dest src1 src2 cCode = do
     cpsr.sign .= checkSign val
     cpsr.overflow .= checkCarry res1 res2
     cpsr.carry .= checkCarry res1 res2
-
 
 -- Arithmetic add with carry
 adc :: MonadState Registers m => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
@@ -132,7 +130,6 @@ teq _ src1 src2 cCode = do
     cpsr.carry .= False
     cpsr.zero .= (val == 0)
     cpsr.sign .= checkSign val
-
 
 -- Compare
 cmp :: MonadState Registers m => a -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
