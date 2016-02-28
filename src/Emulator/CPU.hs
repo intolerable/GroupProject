@@ -99,10 +99,17 @@ makeFields ''Registers
 instance Default Registers where
   def = Registers 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 def
 
-data Shifted a = Shifted Shift a
-  deriving (Show, Read, Eq)
+data ShiftType = LogicalLeft
+               | LogicalRight
+               | ArithRight
+               | RotateRight
+  deriving (Show, Read, Eq, Enum, Bounded)
 
-data Shift = Shift
+shiftTypeFromByte :: Byte -> Maybe ShiftType
+shiftTypeFromByte = fromByte
+
+data Shifted a = AmountShift Byte ShiftType a
+               | RegisterShift a ShiftType a
   deriving (Show, Read, Eq)
 
 fromByte :: forall a. (Enum a, Bounded a) => Byte -> Maybe a
