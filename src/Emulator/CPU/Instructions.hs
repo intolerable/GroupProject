@@ -10,11 +10,13 @@ import Data.Bits
 import Prelude hiding (Ordering(..))
 
 type RegisterLabel = Lens' Registers MWord
+type SrcRegister = Getting MWord Registers MWord
+type DestRegister = ASetter' Registers MWord
 type ConditionCode = Bool
 
 
 -- Standard arithmetic add
-add :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
+add :: MonadState Registers m => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
 add dest src1 src2 cCode = do
   res1 <- use src1
   res2 <- use src2
@@ -29,7 +31,7 @@ add dest src1 src2 cCode = do
 
 
 -- Arithmetic add with carry
-adc :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
+adc :: MonadState Registers m => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
 adc dest src1 src2 cCode = do
   res1 <- use src1
   res2 <- use src2
@@ -45,7 +47,7 @@ adc dest src1 src2 cCode = do
         dest += 1
 
 -- Arithmetic subtract
-sub :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
+sub :: MonadState Registers m => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
 sub dest src1 src2 cCode = do
   res1 <- use src1
   res2 <- use src2
@@ -60,7 +62,7 @@ sub dest src1 src2 cCode = do
     cpsr.carry .= False
 
 -- Subtract with carry
-sbc :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
+sbc :: MonadState Registers m => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
 sbc dest src1 src2 cCode = do
   res1 <- use src1
   res2 <- use src2
@@ -78,15 +80,15 @@ sbc dest src1 src2 cCode = do
         dest += 1
 
 -- Subtract with carry reversed
-rsc :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
+rsc :: MonadState Registers m => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
 rsc dest src1 src2 cCode = sbc dest src2 src1 cCode
 
 -- Arithmetic subtract reversed
-rsb :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
+rsb :: MonadState Registers m => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
 rsb dest src1 src2 cCode = sub dest src2 src1 cCode
 
 -- Logical AND
-and :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
+and :: MonadState Registers m => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
 and dest src1 src2 cCode = do
   res1 <- use src1
   res2 <- use src2
@@ -102,7 +104,7 @@ and dest src1 src2 cCode = do
     cpsr.sign .= checkSign val
 
 -- Test instruction
-tst :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
+tst :: MonadState Registers m => a -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
 tst _ src1 src2 cCode = do
   res1 <- use src1
   res2 <- use src2
@@ -117,8 +119,8 @@ tst _ src1 src2 cCode = do
     cpsr.sign .= checkSign val
 
 -- Test exclusive (XOR)
-teq :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
-teq dest src1 src2 cCode = do
+teq :: MonadState Registers m => a -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
+teq _ src1 src2 cCode = do
   res1 <- use src1
   res2 <- use src2
   let val = res1 `xor` res2
@@ -133,8 +135,8 @@ teq dest src1 src2 cCode = do
 
 
 -- Compare
-cmp :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
-cmp dest src1 src2 cCode = do
+cmp :: MonadState Registers m => a -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
+cmp _ src1 src2 cCode = do
   res1 <- use src1
   res2 <- use src2
   let val = res1 - res2
@@ -147,8 +149,8 @@ cmp dest src1 src2 cCode = do
     cpsr.carry .= False
 
 -- Compare negative
-cmn :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
-cmn dest src1 src2 cCode = do
+cmn :: MonadState Registers m => a -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
+cmn _ src1 src2 cCode = do
   res1 <- use src1
   res2 <- use src2
   let val = res1 + res2
@@ -161,7 +163,7 @@ cmn dest src1 src2 cCode = do
     cpsr.carry .= False
 
 -- Logical Exclusive Or
-eor :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
+eor :: MonadState Registers m => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
 eor dest src1 src2 cCode = do
   res1 <- use src1
   res2 <- use src2
@@ -175,7 +177,7 @@ eor dest src1 src2 cCode = do
     cpsr.sign .= checkSign val
 
 -- Move instruction
-mov :: MonadState Registers m => RegisterLabel -> RegisterLabel -> RegisterLabel -> ConditionCode -> m ()
+mov :: MonadState Registers m => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
 mov dest _ src2 _ = do
   res1 <- use src2
   dest .= res1
