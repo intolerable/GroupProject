@@ -14,6 +14,9 @@ type THUMB = 'THUMB
 newtype RegisterName = RegisterName Int
   deriving (Show, Read, Eq, Ord)
 
+newtype SetCondition = SetCondition Bool
+  deriving (Show, Read, Eq)
+
 data LoadStore = Load | Store
   deriving (Show, Read, Eq)
 
@@ -24,7 +27,6 @@ data UpDown = Up | Down
   deriving (Show, Read, Eq)
 
 type WriteBack = Bool
-type SetCondition = ()
 type Rotated a = a
 type Signed = ()
 type Granularity = ()
@@ -53,14 +55,19 @@ data Instruction a where
   SoftwareInterrupt :: Instruction ARM
 
 parseARM :: MWord -> Either String (Condition, Instruction ARM)
-parseARM w 
+parseARM w
   | w .&. 0x0FFFFFF0 == 0b00000001001011111111111100010000 = undefined -- Definitely branch exchange instruction
-  | (w .&. 0x0C000000 == 0x00) && (testBit w 25 || w .&. 0b11110000 /= 0b10010000) = undefined -- Data Processing thing
-    --Right (getCondition w, DataProcessing _ _ _ _ _)
+  | (w .&. 0x0C000000 == 0x00) && (testBit w 25 || w .&. 0b11110000 /= 0b10010000) = -- Data Processing thing
+    Right (getCondition w,
+      DataProcessing (getOpcode w)
+                     (SetCondition $ w `testBit` 20)
+                     (RegisterName $ fromIntegral $ (w .&. 0x000F0000) `shiftR` 15)
+                     (RegisterName $ fromIntegral $ (w .&. 0x0000F000) `shiftR` 11)
+                     (parseShiftedRegister (w `testBit` 25) w))
   | w .&. 0x0FB00FF0 == 0x01000090 = undefined -- Single data swap
-  | otherwise = 
+  | otherwise =
     case w .&. 0x0E000000 of -- Test the identity bits
-      0x00 -> if (w .&. 0x010000F0) == 0x90 then undefined -- multiply 
+      0x00 -> if (w .&. 0x010000F0) == 0x90 then undefined -- multiply
               else undefined -- halfword data transfer
       0x08000000 -> undefined -- Block data transfer
       0x0A000000 -> undefined -- Branch instruction
@@ -73,7 +80,17 @@ parseTHUMB :: HalfWord -> Either String (Instruction THUMB)
 parseTHUMB = undefined
 
 getCondition :: MWord -> Condition
-getCondition w = 
+getCondition w =
   case conditionFromByte $ fromIntegral $ (w .&. 0xF0000000) `shiftR` 28 of
     Just x -> x
     Nothing -> error "undefined condition!"
+
+getOpcode :: MWord -> Opcode
+getOpcode w =
+  case opcodeFromByte $ fromIntegral $ (w .&. 0x01E00000) `shiftR` 20 of
+    Just x -> x
+    Nothing -> error "undefined opcode!"
+
+parseShiftedRegister :: Bool -> MWord -> Either (Shifted RegisterName) (Rotated Byte)
+parseShiftedRegister True = undefined
+parseShiftedRegister False = undefined
