@@ -1,4 +1,42 @@
-module Emulator.CPU where
+module Emulator.CPU
+  ( CPUMode(..)
+  , Flags(Flags)
+  , HasFlags(..)
+  , HasSign(..)
+  , HasZero(..)
+  , HasCarry(..)
+  , HasOverflow(..)
+  , HasStickyOverflow(..)
+  , HasIrqDisable(..)
+  , HasFiqDisable(..)
+  , HasStateBit(..)
+  , Registers(Registers)
+  , HasRegisters(..)
+  , HasR0(..)
+  , HasR1(..)
+  , HasR2(..)
+  , HasR3(..)
+  , HasR4(..)
+  , HasR5(..)
+  , HasR6(..)
+  , HasR7(..)
+  , HasR8(..)
+  , HasR9(..)
+  , HasR10(..)
+  , HasR11(..)
+  , HasR12(..)
+  , HasR13(..)
+  , HasR14(..)
+  , HasR15(..)
+  , HasCpsr(..)
+  , ShiftType(..)
+  , shiftTypeFromByte
+  , Shifted(..)
+  , Condition(..)
+  , conditionFromByte
+  , Opcode(..)
+  , opcodeFromByte
+  , Interrupt(..) ) where
 
 import Emulator.Types
 
