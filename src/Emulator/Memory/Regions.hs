@@ -13,7 +13,7 @@ data RegionType = BIOS
                 | ObjAttributes
                 | GamePakROM
                 | GamePakSRAM
-            deriving (Show, Eq)
+  deriving (Show, Eq)
 
 type Region = (Address, Address, RegionType)
 
