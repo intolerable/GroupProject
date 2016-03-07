@@ -77,4 +77,5 @@ test-suite test
     transformers
   default-extensions:
     LambdaCase
+    ScopedTypeVariables
   ghc-options: -Wall -fno-warn-orphans

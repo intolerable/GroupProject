@@ -4,7 +4,6 @@ import Emulator.CPU
 import Emulator.CPU.Instructions
 import Emulator.Types
 
-import Control.Lens
 import Control.Monad.Trans.State
 import Data.Bits
 import Data.Default.Class
@@ -20,11 +19,11 @@ spec = do
 
   describe "runCondition" $ do
 
-    prop "runCondition AL ~= True" $ \x ->
-      evalState (runCondition AL) (def & cpsr .~ x) == True
+    prop "runCondition AL ~= True" $ \(x :: Flags) ->
+      evalState (runCondition AL) x == True
 
     it "should always run with an AL condition" $
-      evalState (runCondition AL) def `shouldBe` True
+      evalState (runCondition AL) (def :: Flags) `shouldBe` True
 
   describe "checkCarry" $ do
 
