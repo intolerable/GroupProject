@@ -26,7 +26,12 @@ data Flags = Flags -- Status Register
   , _flagsStateBit :: Bool }
   deriving (Show, Read, Eq)
 
-makeFields ''Flags
+makeLensesWith defaultFieldRules ''Flags
+
+class HasFlags a where
+  flags :: Lens' a Flags
+
+instance HasFlags Flags where flags = iso id id
 
 instance Default Flags where
   def = Flags False False False False False False False False
@@ -68,8 +73,17 @@ data Registers = Registers
 
 makeFields ''Registers
 
+class HasRegisters a where
+  registers :: Lens' a Registers
+
+instance HasRegisters Registers where
+  registers = iso id id
+
 instance Default Registers where
   def = Registers 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 def
+
+instance HasFlags Registers where
+  flags = cpsr
 
 data ShiftType = LogicalLeft
                | LogicalRight
