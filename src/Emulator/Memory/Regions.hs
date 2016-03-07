@@ -72,42 +72,42 @@ addressPermissions addr = (canRead regionType, canWrite regionType)
     regionType = addressToRegionType addr
 
 data DispRegisters = DispCntrl
-                      | GreenSwap
-                      | DispStatus
-                      | VCount
-                      | BG0Cntrl
-                      | BG1Cntrl
-                      | BG2Cntrl
-                      | BG3Cntrl
-                      | BG0HOffset
-                      | BG0VOffset
-                      | BG1HOffset
-                      | BG1VOffset
-                      | BG2HOffset
-                      | BG2VOffset
-                      | BG3HOffset
-                      | BG3VOffset
-                      | BG2RotScalPA
-                      | BG2RotScalPB
-                      | BG2RotScalPC
-                      | BG2RotScalPD
-                      | BG2RefPointX
-                      | BG2RefPointY
-                      | BG3RotScalPA
-                      | BG3RotScalPB
-                      | BG3RotScalPC
-                      | BG3RotScalPD
-                      | BG3RefPointX
-                      | BG3RefPointY
-                      | WIN0H     -- Window 0 Horizontal Dimensions
-                      | WIN1H     -- Window 1 Horizontal Dimensions
-                      | WIN0V     -- Window 0 Vertical Dimensions
-                      | WIN1V     -- Window 1 Vertical Dimensions
-                      | WININ     -- Inside of Window 0 and 1
-                      | WINOUT    -- Inside of OBJ Window & Outside of Windows
-                      | MOSAIC
-                      | NotUsed   -- Does this need to be mentioned?
-                      | BLDCNT    -- Color Special Effects Selection
-                      | BLGALPHA  -- Alpha Blending Coefficients
-                      | BLDY      -- Brightness Coefficient
-                deriving (Show, Read, Eq)
+                   | GreenSwap
+                   | DispStatus
+                   | VCount
+                   | BG0Cntrl
+                   | BG1Cntrl
+                   | BG2Cntrl
+                   | BG3Cntrl
+                   | BG0HOffset
+                   | BG0VOffset
+                   | BG1HOffset
+                   | BG1VOffset
+                   | BG2HOffset
+                   | BG2VOffset
+                   | BG3HOffset
+                   | BG3VOffset
+                   | BG2RotScalPA
+                   | BG2RotScalPB
+                   | BG2RotScalPC
+                   | BG2RotScalPD
+                   | BG2RefPointX
+                   | BG2RefPointY
+                   | BG3RotScalPA
+                   | BG3RotScalPB
+                   | BG3RotScalPC
+                   | BG3RotScalPD
+                   | BG3RefPointX
+                   | BG3RefPointY
+                   | WIN0H     -- Window 0 Horizontal Dimensions
+                   | WIN1H     -- Window 1 Horizontal Dimensions
+                   | WIN0V     -- Window 0 Vertical Dimensions
+                   | WIN1V     -- Window 1 Vertical Dimensions
+                   | WININ     -- Inside of Window 0 and 1
+                   | WINOUT    -- Inside of OBJ Window & Outside of Windows
+                   | MOSAIC
+                   | NotUsed   -- Does this need to be mentioned?
+                   | BLDCNT    -- Color Special Effects Selection
+                   | BLGALPHA  -- Alpha Blending Coefficients
+                   | BLDY      -- Brightness Coefficient
+  deriving (Show, Read, Eq)
