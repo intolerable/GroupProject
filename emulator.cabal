@@ -29,6 +29,7 @@ library
     array,
     binary,
     bytestring,
+    containers,
     data-default-class,
     GLUT,
     OpenGL,

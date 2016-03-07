@@ -3,6 +3,8 @@ module Emulator.Memory.Regions where
 import Emulator.Types
 
 import Data.Ix
+import qualified Data.Map.Strict as Map
+import Data.Map.Strict (Map)
 
 data RegionType = BIOS
                 | Unused
@@ -15,26 +17,24 @@ data RegionType = BIOS
                 | GamePakSRAM
   deriving (Show, Eq)
 
-type Region = (Address, Address, RegionType)
-
-regions :: [Region]
-regions = [ (0x00000000, 0x00003FFF, BIOS),
-            (0x00004000, 0x01FFFFFF, Unused),
-            (0x02000000, 0x0203FFFF, WRAM),
-            (0x02040000, 0x02FFFFFF, Unused),
-            (0x03000000, 0x03007FFF, WRAM),
-            (0x03008000, 0x03FFFFFF, Unused),
-            (0x04000000, 0x040003FE, IORegisters),
-            (0x04000400, 0x04FFFFFF, Unused),
-            (0x05000000, 0x050003FF, PaletteRAM),
-            (0x05000400, 0x05FFFFFF, Unused),
-            (0x06000000, 0x06017FFF, VRAM),
-            (0x06018000, 0x06FFFFFF, Unused),
-            (0x07000000, 0x070003FF, ObjAttributes),
-            (0x07000400, 0x07FFFFFF, Unused),
-            (0x08000000, 0x0DFFFFFF, GamePakROM),
-            (0x0E000000, 0x0E00FFFF, GamePakSRAM),
-            (0x0E010000, 0xFFFFFFFF, Unused) ]
+regions :: Map Address RegionType
+regions = Map.fromList [ (0x00000000, BIOS),
+            (0x00004000, Unused),
+            (0x02000000, WRAM),
+            (0x02040000, Unused),
+            (0x03000000, WRAM),
+            (0x03008000, Unused),
+            (0x04000000, IORegisters),
+            (0x04000400, Unused),
+            (0x05000000, PaletteRAM),
+            (0x05000400, Unused),
+            (0x06000000, VRAM),
+            (0x06018000, Unused),
+            (0x07000000, ObjAttributes),
+            (0x07000400, Unused),
+            (0x08000000, GamePakROM),
+            (0x0E000000, GamePakSRAM),
+            (0x0E010000, Unused) ]
 
 canWrite :: RegionType -> Bool
 canWrite BIOS          = False
@@ -59,12 +59,10 @@ canRead GamePakROM    = True
 canRead GamePakSRAM   = True
 
 addressToRegionType :: Address -> RegionType
-addressToRegionType = addrToRegion regions
-  where
-    addrToRegion :: [Region] -> Address -> RegionType
-    addrToRegion [] _ = error "Cannot find type for address. This shouldn't happen."
-    addrToRegion (r:anges) addr = if inRange (rangeMin, rangeMax) addr then regionType else addrToRegion anges addr
-      where (rangeMin, rangeMax, regionType) = r
+addressToRegionType addr =
+	case Map.lookupLE addr regions of
+		Just (_, x) -> x
+		Nothing -> error "Unrecognized region"
 
 addressPermissions :: Address -> (Bool, Bool)
 addressPermissions addr = (canRead regionType, canWrite regionType)
