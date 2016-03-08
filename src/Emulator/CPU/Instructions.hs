@@ -196,7 +196,7 @@ mov dest _ src2 _ = do
 -- Utils
 ---------------------
 
-conditionally :: (HasFlags s, HasRegisters s, MonadState s m) => Condition -> m a -> m ()
+conditionally :: (HasFlags s, MonadState s m) => Condition -> m a -> m ()
 conditionally cond act = do
   res <- runCondition cond
   when res $ void act
