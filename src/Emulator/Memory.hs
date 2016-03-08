@@ -1,5 +1,6 @@
 module Emulator.Memory where
 
+import Emulator.Memory.Regions
 import Emulator.Types
 
 import Control.Monad.Trans.State.Strict
@@ -11,6 +12,17 @@ class Monad m => Mem m where
 
   writeByte :: Address -> Byte -> m ()
   readByte :: Address -> m Byte
+
+  writeHalfWordLE :: Address -> HalfWord -> m ()
+  writeHalfWordLE addr hw = do
+    writeByte addr (fromIntegral hw)
+    writeByte (addr + 1) (fromIntegral hw `shiftR` 8)
+
+  readHalfWordLE :: Address -> m HalfWord
+  readHalfWordLE addr = do
+    b1 <- fromIntegral <$> readByte addr
+    b2 <- fromIntegral <$> readByte (addr + 1)
+    return $ b1 .|. (b2 `shiftL` 8)
 
   writeWordLE :: Address -> MWord -> m ()
   writeWordLE addr word = do
@@ -58,8 +70,16 @@ instance Mem MutableMemory where
 
 type AddressSpace m = (Functor m, Monad m, Mem m)
 
-writeAddress :: AddressSpace m => Address -> Byte -> m ()
-writeAddress = undefined
+writeAddress :: AddressSpace m => Address -> HalfWord -> m ()
+writeAddress addr hw =
+  case addressToRegionType addr of
+    BIOS -> return ()
+    WRAM -> writeHalfWordLE addr hw
+    Unused -> return ()
 
-readAddress :: AddressSpace m => Address -> m Byte
-readAddress = undefined
+readAddress :: AddressSpace m => Address -> m HalfWord
+readAddress addr =
+  case addressToRegionType addr of
+    BIOS -> return 0
+    WRAM -> readHalfWordLE addr
+    Unused -> return 0
