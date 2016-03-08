@@ -18,23 +18,24 @@ data RegionType = BIOS
   deriving (Show, Eq)
 
 regions :: Map Address RegionType
-regions = Map.fromList [ (0x00000000, BIOS),
-            (0x00004000, Unused),
-            (0x02000000, WRAM),
-            (0x02040000, Unused),
-            (0x03000000, WRAM),
-            (0x03008000, Unused),
-            (0x04000000, IORegisters),
-            (0x04000400, Unused),
-            (0x05000000, PaletteRAM),
-            (0x05000400, Unused),
-            (0x06000000, VRAM),
-            (0x06018000, Unused),
-            (0x07000000, ObjAttributes),
-            (0x07000400, Unused),
-            (0x08000000, GamePakROM),
-            (0x0E000000, GamePakSRAM),
-            (0x0E010000, Unused) ]
+regions = Map.fromList
+  [ (0x00000000, BIOS)
+  , (0x00004000, Unused)
+  , (0x02000000, WRAM)
+  , (0x02040000, Unused)
+  , (0x03000000, WRAM)
+  , (0x03008000, Unused)
+  , (0x04000000, IORegisters)
+  , (0x04000400, Unused)
+  , (0x05000000, PaletteRAM)
+  , (0x05000400, Unused)
+  , (0x06000000, VRAM)
+  , (0x06018000, Unused)
+  , (0x07000000, ObjAttributes)
+  , (0x07000400, Unused)
+  , (0x08000000, GamePakROM)
+  , (0x0E000000, GamePakSRAM)
+  , (0x0E010000, Unused) ]
 
 canWrite :: RegionType -> Bool
 canWrite BIOS          = False
