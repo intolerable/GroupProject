@@ -7,9 +7,6 @@ import Data.Array.IO
 import Data.Array.Unboxed
 import Data.Bits
 
-type Memory = UArray Address Byte
-type MemoryIO = IOUArray Address Byte
-
 class Monad m => Mem m where
 
   writeByte :: Address -> Byte -> m ()
