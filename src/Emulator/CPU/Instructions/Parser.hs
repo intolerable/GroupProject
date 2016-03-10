@@ -110,10 +110,9 @@ readBranch br = Branch linkBit offset
     linkBit = testBit br 24
     offset = br .&. 0xFFFFFF
 
-
 -- Detect whether it is a Multiply or a Multiply long
 readGeneralMultiply :: MWord -> Instruction ARM
-readGeneralMultiply br 
+readGeneralMultiply br
   | isMulLong = readMultiplyLong br
   | otherwise = readMultiply br
   where
@@ -121,8 +120,8 @@ readGeneralMultiply br
 
 
 readMultiply :: MWord -> Instruction ARM
-readMultiply br = 
-  Multiply accumulate (SetCondition setCondition) (RegisterName $ fromIntegral dest) (RegisterName $ fromIntegral operand1) 
+readMultiply br =
+  Multiply accumulate (SetCondition setCondition) (RegisterName $ fromIntegral dest) (RegisterName $ fromIntegral operand1)
     (RegisterName $ fromIntegral operand2) (RegisterName $ fromIntegral operand3)
   where
     accumulate = testBit br 21
