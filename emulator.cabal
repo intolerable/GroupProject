@@ -51,6 +51,7 @@ library
     MultiParamTypeClasses
     RankNTypes
     ScopedTypeVariables
+    StandaloneDeriving
     TemplateHaskell
   ghc-options: -Wall
 
