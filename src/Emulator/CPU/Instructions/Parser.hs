@@ -26,10 +26,12 @@ data PrePost = Pre | Post
 data UpDown = Up | Down
   deriving (Show, Read, Eq)
 
+data Granularity = Byte | Word
+  deriving (Show, Read, Eq)
+
 type WriteBack = Bool
 type Rotated a = a
 type Signed = Bool
-type Granularity = ()
 type Accumulate = Bool
 type Link = Bool
 type Offset = MWord
