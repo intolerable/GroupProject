@@ -67,7 +67,7 @@ parseARM w
   | w .&. 0x0FB00FF0 == 0x01000090 = undefined -- Single data swap
   | otherwise =
     case w .&. 0x0E000000 of -- Test the identity bits
-      0x00 -> if (w .&. 0x010000F0) == 0x90 then undefined -- multiply
+      0x00 -> if (w .&. 0x010000F0) == 0x90 then Right (getCondition w, readGeneralMultiply w) -- multiply
               else undefined -- halfword data transfer
       0x08000000 -> undefined -- Block data transfer
       0x0A000000 -> Right (getCondition w, readBranch w) -- Branch instruction
@@ -105,3 +105,37 @@ readBranch br = Branch linkBit offset
   where
     linkBit = testBit br 24
     offset = br .&. 0xFFFFFF
+
+
+-- Detect whether it is a Multiply or a Multiply long
+readGeneralMultiply :: MWord -> Instruction ARM
+readGeneralMultiply br 
+  | isMulLong = readMultiplyLong br
+  | otherwise = readMultiply br
+  where
+    isMulLong = testBit br 23
+
+
+readMultiply :: MWord -> Instruction ARM
+readMultiply br = 
+  Multiply accumulate (SetCondition setCondition) (RegisterName $ fromIntegral dest) (RegisterName $ fromIntegral operand1) 
+    (RegisterName $ fromIntegral operand2) (RegisterName $ fromIntegral operand3)
+  where
+    accumulate = testBit br 21
+    setCondition = testBit br 20
+    dest = (br .&. 0xF0000) `shiftR` 16
+    operand1 = (br .&. 0xF000) `shiftR` 12
+    operand2 = (br .&. 0xF00) `shiftR` 8
+    operand3 = (br .&. 0xF)
+
+readMultiplyLong :: MWord -> Instruction ARM
+readMultiplyLong br =
+  MultiplyLong signed accumulate (SetCondition setCondition) (RegisterName $ fromIntegral destHi) (RegisterName $ fromIntegral destLo) (RegisterName $ fromIntegral operand1) (RegisterName $ fromIntegral operand2)
+  where
+    signed = testBit br 22
+    accumulate = testBit br 21
+    setCondition = testBit br 20
+    destHi = (br .&. 0xF0000) `shiftR` 16
+    destLo = (br .&. 0xF000) `shiftR` 12
+    operand1 = (br .&. 0xF00) `shiftR` 8
+    operand2 = (br .&. 0xF)
