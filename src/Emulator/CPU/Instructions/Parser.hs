@@ -56,7 +56,7 @@ data Instruction a where
 
 parseARM :: MWord -> Either String (Condition, Instruction ARM)
 parseARM w
-  | w .&. 0x0FFFFFF0 == 0b00000001001011111111111100010000 = undefined -- Definitely branch exchange instruction
+  | w .&. 0x0FFFFFF0 == 0b00000001001011111111111100010000 = Right (getCondition w, readBranchExchange w) -- Definitely branch exchange instruction
   | (w .&. 0x0C000000 == 0x00) && (testBit w 25 || w .&. 0b11110000 /= 0b10010000) = -- Data Processing thing
     Right (getCondition w,
       DataProcessing (getOpcode w)
@@ -94,3 +94,9 @@ getOpcode w =
 parseShiftedRegister :: Bool -> MWord -> Either (Shifted RegisterName) (Rotated Byte)
 parseShiftedRegister True = undefined
 parseShiftedRegister False = undefined
+
+readBranchExchange :: MWord -> Instruction ARM
+readBranchExchange br = BranchExchange $ RegisterName $ fromIntegral val
+  where
+    val = br .&. 0b1111
+
