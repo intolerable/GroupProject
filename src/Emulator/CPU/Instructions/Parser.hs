@@ -70,7 +70,7 @@ parseARM w
       0x00 -> if (w .&. 0x010000F0) == 0x90 then undefined -- multiply
               else undefined -- halfword data transfer
       0x08000000 -> undefined -- Block data transfer
-      0x0A000000 -> undefined -- Branch instruction
+      0x0A000000 -> Right (getCondition w, readBranch w) -- Branch instruction
       0x0C000000 -> undefined -- Coprocessor data transfer
       0x0E000000 -> undefined -- Coprocessor data operation
       x | x == 0x6000000 || x == 0x4000000 -> undefined -- Load/Store
@@ -100,3 +100,8 @@ readBranchExchange br = BranchExchange $ RegisterName $ fromIntegral val
   where
     val = br .&. 0b1111
 
+readBranch :: MWord -> Instruction ARM
+readBranch br = Branch linkBit offset
+  where
+    linkBit = testBit br 24
+    offset = br .&. 0xFFFFFF
