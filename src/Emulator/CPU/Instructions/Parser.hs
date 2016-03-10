@@ -155,6 +155,34 @@ readSingleDataSwap instr = SingleDataSwap granularity (RegisterName $ fromIntegr
     dest = (instr .&. 0xF000) `shiftR` 12
     src = (instr .&. 0xF)
 
+-- Actually a halfword or signed data transfer but that wouldn't make a nice function name
+readHalfwordDataTransfer :: MWord -> Instruction ARM
+readHalfwordDataTransfer instr
+  | testBit instr 22 = 
+    HalfwordDataTransferImmediate preIndex upDown writeBack load signed granularity base dest offsetImmediate
+  | otherwise = 
+    HalfwordDataTransferRegister preIndex upDown writeBack load signed granularity base dest offset
+  where
+    preIndex 
+      | testBit instr 24 = Pre
+      | otherwise = Post
+    upDown 
+      | testBit instr 23 = Up
+      | otherwise = Down
+    writeBack = testBit instr 21
+    load
+      | testBit instr 20 = Load
+      | otherwise = Store
+    base = RegisterName $ fromIntegral $ (instr .&. 0xF0000) `shiftR` 16
+    dest = RegisterName $ fromIntegral $ (instr .&. 0xF000) `shiftR` 12
+    offset = RegisterName $ fromIntegral $ (instr .&. 0xF)
+    (granularity, signed) = case (instr .&. 0x60) `shiftR` 5 of
+      0 -> (Byte, False) -- unsigned byte swap instruction
+      1 -> (HalfWord, False) -- Unsigned halfwords
+      2 -> (Byte, True) -- signed byte
+      3 -> (HalfWord, True) -- Signed halfword 
+    offsetImmediate = ((instr .&. 0xF00 )`shiftR` 4) .|. (instr .&. 0xF)
+
 parseOperand2 :: Immediate -> MWord -> Either (Shifted RegisterName) (Rotated Byte)
 parseOperand2 (Immediate False) w =
   Left $ parseShiftedRegister w
