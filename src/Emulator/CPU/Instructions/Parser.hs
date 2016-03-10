@@ -109,33 +109,33 @@ readBranch br = Branch linkBit offset
 
 -- Detect whether it is a Multiply or a Multiply long
 readGeneralMultiply :: MWord -> Instruction ARM
-readGeneralMultiply br 
-  | isMulLong = readMultiplyLong br
-  | otherwise = readMultiply br
+readGeneralMultiply instr 
+  | isMulLong = readMultiplyLong instr
+  | otherwise = readMultiply instr
   where
-    isMulLong = testBit br 23
+    isMulLong = testBit instr 23
 
 
 readMultiply :: MWord -> Instruction ARM
-readMultiply br = 
+readMultiply instr = 
   Multiply accumulate (SetCondition setCondition) (RegisterName $ fromIntegral dest) (RegisterName $ fromIntegral operand1) 
     (RegisterName $ fromIntegral operand2) (RegisterName $ fromIntegral operand3)
   where
-    accumulate = testBit br 21
-    setCondition = testBit br 20
-    dest = (br .&. 0xF0000) `shiftR` 16
-    operand1 = (br .&. 0xF000) `shiftR` 12
-    operand2 = (br .&. 0xF00) `shiftR` 8
-    operand3 = (br .&. 0xF)
+    accumulate = testBit instr 21
+    setCondition = testBit instr 20
+    dest = (instr .&. 0xF0000) `shiftR` 16
+    operand1 = (instr .&. 0xF000) `shiftR` 12
+    operand2 = (instr .&. 0xF00) `shiftR` 8
+    operand3 = (instr .&. 0xF)
 
 readMultiplyLong :: MWord -> Instruction ARM
-readMultiplyLong br =
+readMultiplyLong instr =
   MultiplyLong signed accumulate (SetCondition setCondition) (RegisterName $ fromIntegral destHi) (RegisterName $ fromIntegral destLo) (RegisterName $ fromIntegral operand1) (RegisterName $ fromIntegral operand2)
   where
-    signed = testBit br 22
-    accumulate = testBit br 21
-    setCondition = testBit br 20
-    destHi = (br .&. 0xF0000) `shiftR` 16
-    destLo = (br .&. 0xF000) `shiftR` 12
-    operand1 = (br .&. 0xF00) `shiftR` 8
-    operand2 = (br .&. 0xF)
+    signed = testBit instr 22
+    accumulate = testBit instr 21
+    setCondition = testBit instr 20
+    destHi = (instr .&. 0xF0000) `shiftR` 16
+    destLo = (instr .&. 0xF000) `shiftR` 12
+    operand1 = (instr .&. 0xF00) `shiftR` 8
+    operand2 = (instr .&. 0xF)
