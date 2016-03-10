@@ -27,7 +27,7 @@ data PrePost = Pre | Post
 data UpDown = Up | Down
   deriving (Show, Read, Eq)
 
-data Granularity = Byte | Word
+data Granularity = Byte | Word | HalfWord
   deriving (Show, Read, Eq)
 
 newtype Immediate = Immediate Bool
