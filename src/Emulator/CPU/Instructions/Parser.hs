@@ -28,9 +28,9 @@ data UpDown = Up | Down
 
 type WriteBack = Bool
 type Rotated a = a
-type Signed = ()
+type Signed = Bool
 type Granularity = ()
-type Accumulate = ()
+type Accumulate = Bool
 type Link = Bool
 type Offset = MWord
 type ForceUserMode = ()
