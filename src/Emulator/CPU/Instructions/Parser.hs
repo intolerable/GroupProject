@@ -66,7 +66,7 @@ parseARM w
                      (RegisterName $ fromIntegral $ (w .&. 0x000F0000) `shiftR` 15)
                      (RegisterName $ fromIntegral $ (w .&. 0x0000F000) `shiftR` 11)
                      (parseShiftedRegister (w `testBit` 25) w))
-  | w .&. 0x0FB00FF0 == 0x01000090 = undefined -- Single data swap
+  | w .&. 0x0FB00FF0 == 0x01000090 = Right (getCondition w, readSingleDataSwap w) -- Single data swap
   | otherwise =
     case w .&. 0x0E000000 of -- Test the identity bits
       0x00 -> if (w .&. 0x010000F0) == 0x90 then Right (getCondition w, readGeneralMultiply w) -- multiply
@@ -141,3 +141,13 @@ readMultiplyLong instr =
     destLo = (instr .&. 0xF000) `shiftR` 12
     operand1 = (instr .&. 0xF00) `shiftR` 8
     operand2 = (instr .&. 0xF)
+
+readSingleDataSwap :: MWord -> Instruction ARM
+readSingleDataSwap instr = SingleDataSwap granularity (RegisterName $ fromIntegral base) (RegisterName $ fromIntegral dest) (RegisterName $ fromIntegral src)
+  where
+    granularity
+      | testBit instr 22 = Byte
+      | otherwise = Word
+    base = (instr .&. 0xF0000) `shiftR` 16
+    dest = (instr .&. 0xF000) `shiftR` 12
+    src = (instr .&. 0xF)
