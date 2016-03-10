@@ -31,8 +31,8 @@ type Rotated a = a
 type Signed = ()
 type Granularity = ()
 type Accumulate = ()
-type Link = ()
-type Offset = ()
+type Link = Bool
+type Offset = MWord
 type ForceUserMode = ()
 type RegisterList = ()
 
