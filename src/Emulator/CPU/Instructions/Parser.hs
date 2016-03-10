@@ -4,6 +4,7 @@ import Emulator.CPU
 import Emulator.Types
 
 import Data.Bits
+import Data.Maybe
 
 data CPUMode = ARM | THUMB
   deriving (Show, Read, Eq)
@@ -26,8 +27,13 @@ data PrePost = Pre | Post
 data UpDown = Up | Down
   deriving (Show, Read, Eq)
 
+newtype Immediate = Immediate Bool
+  deriving (Show, Read, Eq)
+
+data Rotated a = Rotated Int a
+  deriving (Show, Read, Eq)
+
 type WriteBack = Bool
-type Rotated a = a
 type Signed = Bool
 type Granularity = ()
 type Accumulate = Bool
@@ -65,7 +71,7 @@ parseARM w
                      (SetCondition $ w `testBit` 20)
                      (RegisterName $ fromIntegral $ (w .&. 0x000F0000) `shiftR` 15)
                      (RegisterName $ fromIntegral $ (w .&. 0x0000F000) `shiftR` 11)
-                     (parseShiftedRegister (w `testBit` 25) w))
+                     (parseOperand2 (Immediate $ w `testBit` 25) w))
   | w .&. 0x0FB00FF0 == 0x01000090 = undefined -- Single data swap
   | otherwise =
     case w .&. 0x0E000000 of -- Test the identity bits
@@ -92,10 +98,6 @@ getOpcode w =
   case opcodeFromByte $ fromIntegral $ (w .&. 0x01E00000) `shiftR` 20 of
     Just x -> x
     Nothing -> error "undefined opcode!"
-
-parseShiftedRegister :: Bool -> MWord -> Either (Shifted RegisterName) (Rotated Byte)
-parseShiftedRegister True = undefined
-parseShiftedRegister False = undefined
 
 readBranchExchange :: MWord -> Instruction ARM
 readBranchExchange br = BranchExchange $ RegisterName $ fromIntegral val
@@ -141,3 +143,21 @@ readMultiplyLong br =
     destLo = (br .&. 0xF000) `shiftR` 12
     operand1 = (br .&. 0xF00) `shiftR` 8
     operand2 = (br .&. 0xF)
+
+parseOperand2 :: Immediate -> MWord -> Either (Shifted RegisterName) (Rotated Byte)
+parseOperand2 (Immediate False) w =
+  Left $ parseShiftedRegister w
+parseOperand2 (Immediate True) w =
+  Right $ Rotated (fromIntegral $ w .&. 0xF00 `shiftR` 8) (fromIntegral w)
+
+parseShiftedRegister :: MWord -> Shifted RegisterName
+parseShiftedRegister w =
+  case w `testBit` 4 of
+    True ->
+      RegisterShift (RegisterName $ fromIntegral $ w .&. 0xF00 `shiftR` 8) shiftType registerName
+    False ->
+      AmountShift (fromIntegral $ w .&. 0xF80 `shiftR` 7) shiftType registerName
+  where
+    registerName = RegisterName $ fromIntegral $ w .&. 0xF
+    shiftType = fromMaybe (error "Undefined shift type") $
+      shiftTypeFromByte $ fromIntegral $ w .&. 0x60 `shiftR` 5
