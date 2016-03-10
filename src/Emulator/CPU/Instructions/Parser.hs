@@ -78,7 +78,7 @@ parseARM w
   | otherwise =
     case w .&. 0x0E000000 of -- Test the identity bits
       0x00 -> if (w .&. 0x010000F0) == 0x90 then Right (getCondition w, readGeneralMultiply w) -- multiply
-              else undefined -- halfword data transfer
+              else Right (getCondition w, readHalfWordDataTransfer w)-- halfword data transfer
       0x08000000 -> undefined -- Block data transfer
       0x0A000000 -> Right (getCondition w, readBranch w) -- Branch instruction
       0x0C000000 -> undefined -- Coprocessor data transfer
@@ -156,8 +156,8 @@ readSingleDataSwap instr = SingleDataSwap granularity (RegisterName $ fromIntegr
     src = (instr .&. 0xF)
 
 -- Actually a halfword or signed data transfer but that wouldn't make a nice function name
-readHalfwordDataTransfer :: MWord -> Instruction ARM
-readHalfwordDataTransfer instr
+readHalfWordDataTransfer :: MWord -> Instruction ARM
+readHalfWordDataTransfer instr
   | testBit instr 22 = 
     HalfwordDataTransferImmediate preIndex upDown writeBack load signed granularity base dest offsetImmediate
   | otherwise = 
