@@ -43,14 +43,12 @@ data Instruction a where
   MultiplyLong :: Signed -> Accumulate -> SetCondition -> RegisterName -> RegisterName -> RegisterName -> RegisterName -> Instruction ARM
   SingleDataSwap :: Granularity -> RegisterName -> RegisterName -> RegisterName -> Instruction ARM
   BranchExchange :: RegisterName -> Instruction ARM
-  BranchExchangeLink :: Link -> RegisterName -> Instruction ARM
   HalfwordDataTransferRegister :: PrePost -> UpDown -> WriteBack -> LoadStore -> Signed -> Granularity -> RegisterName -> RegisterName -> RegisterName -> Instruction ARM
   HalfwordDataTransferImmediate :: PrePost -> UpDown -> WriteBack -> LoadStore -> Signed -> Granularity -> RegisterName -> RegisterName -> Offset -> Instruction ARM
   SingleDataTransfer :: PrePost -> UpDown -> Granularity -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> Instruction ARM
   Undefined :: Instruction ARM
   BlockDataTransfer :: PrePost -> UpDown -> ForceUserMode -> WriteBack -> LoadStore -> RegisterName -> RegisterList -> Instruction ARM
-  BranchLink :: Link -> Offset -> Instruction ARM
-  Branch :: Offset -> Instruction ARM
+  Branch :: Link -> Offset -> Instruction ARM
   CoprocessorDataTransfer :: Instruction ARM
   CoprocessorDataOperation :: Instruction ARM
   CoprocessorRegisterTransfer :: Instruction ARM
