@@ -41,8 +41,8 @@ type Signed = Bool
 type Accumulate = Bool
 type Link = Bool
 type Offset = MWord
-type ForceUserMode = ()
-type RegisterList = ()
+type ForceUserMode = Bool
+type RegisterList = [RegisterName]
 
 data Instruction a where
   DataProcessing :: Opcode -> SetCondition -> RegisterName -> RegisterName -> Either (Shifted RegisterName) (Rotated Byte) -> Instruction ARM
