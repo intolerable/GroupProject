@@ -222,3 +222,12 @@ parseShiftedRegister w =
     registerName = RegisterName $ fromIntegral $ w .&. 0xF
     shiftType = fromMaybe (error "Undefined shift type") $
       shiftTypeFromByte $ fromIntegral $ w .&. 0x60 `shiftR` 5
+
+parseRegisterList :: MWord -> RegisterList
+parseRegisterList w' = parseRegisterList' w' 0 []
+  where
+    parseRegisterList' :: MWord -> Int -> RegisterList -> RegisterList
+    parseRegisterList' _ 16 list = list 
+    parseRegisterList' w n list 
+      | testBit w n = parseRegisterList' w n $ (RegisterName n) : list
+      | otherwise = parseRegisterList' w n list
