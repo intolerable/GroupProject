@@ -80,6 +80,8 @@ test-suite test
     QuickCheck,
     transformers
   default-extensions:
+    BinaryLiterals
     LambdaCase
     ScopedTypeVariables
+    TemplateHaskell
   ghc-options: -Wall -fno-warn-orphans
