@@ -72,8 +72,8 @@ parseARM w
     Right (getCondition w,
       DataProcessing (getOpcode w)
                      (SetCondition $ w `testBit` 20)
-                     (RegisterName $ fromIntegral $ (w .&. 0x000F0000) `shiftR` 15)
-                     (RegisterName $ fromIntegral $ (w .&. 0x0000F000) `shiftR` 11)
+                     (RegisterName $ fromIntegral $ (w .&. 0x000F0000) `shiftR` 16)
+                     (RegisterName $ fromIntegral $ (w .&. 0x0000F000) `shiftR` 12)
                      (parseOperand2 (Immediate $ w `testBit` 25) w))
   | w .&. 0x0FB00FF0 == 0x01000090 = Right (getCondition w, readSingleDataSwap w) -- Single data swap
   | w .&. 0xF000000 == 0xF000000 = Right (getCondition w, SoftwareInterrupt) -- Software interrupt
@@ -99,7 +99,7 @@ getCondition w =
 
 getOpcode :: MWord -> Opcode
 getOpcode w =
-  case opcodeFromByte $ fromIntegral $ (w .&. 0x01E00000) `shiftR` 20 of
+  case opcodeFromByte $ fromIntegral $ (w .&. 0x1E00000) `shiftR` 21 of
     Just x -> x
     Nothing -> error "undefined opcode!"
 
@@ -228,7 +228,7 @@ parseOperand2 :: Immediate -> MWord -> Either (Shifted RegisterName) (Rotated By
 parseOperand2 (Immediate False) w =
   Left $ parseShiftedRegister w
 parseOperand2 (Immediate True) w =
-  Right $ Rotated (fromIntegral $ w .&. 0xF00 `shiftR` 8) (fromIntegral w)
+  Right $ Rotated (fromIntegral $ w .&. 0xF00 `shiftR` 8) (fromIntegral (w .&. 0xFF))
 
 parseShiftedRegister :: MWord -> Shifted RegisterName
 parseShiftedRegister w =
