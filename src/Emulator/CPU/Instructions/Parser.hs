@@ -63,6 +63,7 @@ data Instruction a where
   SoftwareInterrupt :: Instruction ARM
 
 deriving instance Show (Instruction a)
+deriving instance Eq (Instruction a)
 
 parseARM :: MWord -> Either String (Condition, Instruction ARM)
 parseARM w
