@@ -112,7 +112,7 @@ readBranch :: MWord -> Instruction ARM
 readBranch br = Branch linkBit offset
   where
     linkBit = testBit br 24
-    offset = br .&. 0xFFFFFF
+    offset = ((br .&. 0xFFFFFF) `shiftL` 2)
 
 -- Detect whether it is a Multiply or a Multiply long
 readGeneralMultiply :: MWord -> Instruction ARM
