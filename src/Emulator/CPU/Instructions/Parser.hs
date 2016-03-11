@@ -83,7 +83,7 @@ parseARM w
       0x0A000000 -> Right (getCondition w, readBranch w) -- Branch instruction
       0x0C000000 -> undefined -- Coprocessor data transfer
       0x0E000000 -> undefined -- Coprocessor data operation
-      x | x == 0x6000000 || x == 0x4000000 -> undefined -- Load/Store
+      x | x == 0x6000000 || x == 0x4000000 -> Right (getCondition w, readLoadStore w) -- Load/Store
       _ -> undefined -- BAD OPCODE!!!
 
 parseTHUMB :: HalfWord -> Either String (Instruction THUMB)
@@ -182,6 +182,28 @@ readHalfWordDataTransfer instr
       2 -> (Byte, True) -- signed byte
       3 -> (HalfWord, True) -- Signed halfword 
     offsetImmediate = ((instr .&. 0xF00 )`shiftR` 4) .|. (instr .&. 0xF)
+
+readLoadStore :: MWord -> Instruction ARM
+readLoadStore instr = SingleDataTransfer prePost upDown granularity writeBack loadStore base dest offset
+  where
+    prePost
+      | testBit instr 24 = Pre
+      | otherwise = Post
+    upDown
+      | testBit instr 23 = Up
+      | otherwise = Down
+    granularity
+      | testBit instr 22 = Byte
+      | otherwise = Word
+    writeBack = testBit instr 21
+    loadStore
+      | testBit instr 20 = Load
+      | otherwise = Store
+    base = RegisterName $ fromIntegral $ (instr .&. 0xF0000) `shiftR` 16
+    dest = RegisterName $ fromIntegral $ (instr .&. 0xF000) `shiftR` 12
+    offset 
+      | testBit instr 25 = Left $ parseShiftedRegister instr -- Shifted register
+      | otherwise = Right (instr .&. 0xFFF) --immediate offset
 
 parseOperand2 :: Immediate -> MWord -> Either (Shifted RegisterName) (Rotated Byte)
 parseOperand2 (Immediate False) w =
