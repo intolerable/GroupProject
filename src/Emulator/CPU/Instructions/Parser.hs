@@ -68,7 +68,7 @@ deriving instance Eq (Instruction a)
 parseARM :: MWord -> Either String (Condition, Instruction ARM)
 parseARM w
   | w .&. 0x0FFFFFF0 == 0x12FFF10 = Right (getCondition w, readBranchExchange w) -- Definitely branch exchange instruction
-  | (w .&. 0x0C000000 == 0x00) && (testBit w 25 || w .&. 0b11110000 /= 0b10010000) = -- Data Processing thing
+  | (w .&. 0x0C000000 == 0x00) && (testBit w 25 || (w .&. 0b10010000) /= 0b10010000) = -- Data Processing thing
     Right (getCondition w,
       DataProcessing (getOpcode w)
                      (SetCondition $ w `testBit` 20)
