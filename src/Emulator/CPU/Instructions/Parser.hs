@@ -79,7 +79,7 @@ parseARM w
     case w .&. 0x0E000000 of -- Test the identity bits
       0x00 -> if (w .&. 0x010000F0) == 0x90 then Right (getCondition w, readGeneralMultiply w) -- multiply
               else Right (getCondition w, readHalfWordDataTransfer w)-- halfword data transfer
-      0x08000000 -> undefined -- Block data transfer
+      0x08000000 -> Right (getCondition w, readBlockDataTransfer w) -- Block data transfer
       0x0A000000 -> Right (getCondition w, readBranch w) -- Branch instruction
       0x0C000000 -> undefined -- Coprocessor data transfer
       0x0E000000 -> undefined -- Coprocessor data operation
@@ -204,6 +204,23 @@ readLoadStore instr = SingleDataTransfer prePost upDown granularity writeBack lo
     offset 
       | testBit instr 25 = Left $ parseShiftedRegister instr -- Shifted register
       | otherwise = Right (instr .&. 0xFFF) --immediate offset
+
+readBlockDataTransfer :: MWord -> Instruction ARM
+readBlockDataTransfer instr = BlockDataTransfer prePost upDown forceUser writeBack loadStore base regList
+  where
+    prePost
+      | testBit instr 24 = Pre
+      | otherwise = Post
+    upDown
+      | testBit instr 23 = Up
+      | otherwise = Down
+    forceUser = testBit instr 22
+    writeBack = testBit instr 21
+    loadStore
+      | testBit instr 20 = Load
+      | otherwise = Store
+    base = RegisterName $ fromIntegral $ (instr .&. 0xF0000) `shiftR` 16
+    regList = parseRegisterList (instr .&. 0xFFFF)
 
 parseOperand2 :: Immediate -> MWord -> Either (Shifted RegisterName) (Rotated Byte)
 parseOperand2 (Immediate False) w =
