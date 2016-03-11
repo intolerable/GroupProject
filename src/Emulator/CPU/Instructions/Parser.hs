@@ -1,6 +1,6 @@
 module Emulator.CPU.Instructions.Parser where
 
-import Emulator.CPU
+import Emulator.CPU hiding (SoftwareInterrupt)
 import Emulator.Types
 
 import Data.Bits
@@ -75,6 +75,7 @@ parseARM w
                      (RegisterName $ fromIntegral $ (w .&. 0x0000F000) `shiftR` 11)
                      (parseOperand2 (Immediate $ w `testBit` 25) w))
   | w .&. 0x0FB00FF0 == 0x01000090 = Right (getCondition w, readSingleDataSwap w) -- Single data swap
+  | w .&. 0xF000000 == 0xF000000 = Right (getCondition w, SoftwareInterrupt) -- Software interrupt
   | otherwise =
     case w .&. 0x0E000000 of -- Test the identity bits
       0x00 -> if (w .&. 0x010000F0) == 0x90 then Right (getCondition w, readGeneralMultiply w) -- multiply
