@@ -21,3 +21,6 @@ spec = do
       parseARM 0xE5810000 `shouldBe` Right (AL, SingleDataTransfer Pre Up Word False Store (RegisterName 1) (RegisterName 0) (Right   0))
       parseARM 0xE12FFF11 `shouldBe` Right (AL, BranchExchange (RegisterName 1))
       parseARM 0xE1D310B8 `shouldBe` Right (AL, HalfwordDataTransferImmediate Pre Up False Load False HalfWord (RegisterName 3) (RegisterName 1) 8)
+      parseARM 0xE2833C02 `shouldBe` Right (AL, DataProcessing ADD (SetCondition False) (RegisterName 3) (RegisterName 3) $ Right (Rotated 24 2))
+      parseARM 0xE3A00000 `shouldBe` Right (AL, DataProcessing MOV (SetCondition False) (RegisterName 0) (RegisterName 0) $ Right (Rotated 0 0))
+      parseARM 0xE2110040 `shouldBe` Right (AL, DataProcessing AND (SetCondition True) (RegisterName 1) (RegisterName 0) $ Right (Rotated 0 64))
