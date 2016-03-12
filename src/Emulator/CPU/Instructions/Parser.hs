@@ -116,7 +116,7 @@ readBranch br = Branch linkBit offset
 
 -- Detect whether it is a Multiply or a Multiply long
 readGeneralMultiply :: MWord -> Instruction ARM
-readGeneralMultiply instr 
+readGeneralMultiply instr
   | isMulLong = readMultiplyLong instr
   | otherwise = readMultiply instr
   where
@@ -124,8 +124,8 @@ readGeneralMultiply instr
 
 
 readMultiply :: MWord -> Instruction ARM
-readMultiply instr = 
-  Multiply accumulate (SetCondition setCondition) (RegisterName $ fromIntegral dest) (RegisterName $ fromIntegral operand1) 
+readMultiply instr =
+  Multiply accumulate (SetCondition setCondition) (RegisterName $ fromIntegral dest) (RegisterName $ fromIntegral operand1)
     (RegisterName $ fromIntegral operand2) (RegisterName $ fromIntegral operand3)
   where
     accumulate = testBit instr 21
@@ -160,15 +160,15 @@ readSingleDataSwap instr = SingleDataSwap granularity (RegisterName $ fromIntegr
 -- Actually a halfword or signed data transfer but that wouldn't make a nice function name
 readHalfWordDataTransfer :: MWord -> Instruction ARM
 readHalfWordDataTransfer instr
-  | testBit instr 22 = 
+  | testBit instr 22 =
     HalfwordDataTransferImmediate preIndex upDown writeBack load signed granularity base dest offsetImmediate
-  | otherwise = 
+  | otherwise =
     HalfwordDataTransferRegister preIndex upDown writeBack load signed granularity base dest offset
   where
-    preIndex 
+    preIndex
       | testBit instr 24 = Pre
       | otherwise = Post
-    upDown 
+    upDown
       | testBit instr 23 = Up
       | otherwise = Down
     writeBack = testBit instr 21
@@ -203,7 +203,7 @@ readLoadStore instr = SingleDataTransfer prePost upDown granularity writeBack lo
       | otherwise = Store
     base = RegisterName $ fromIntegral $ (instr .&. 0xF0000) `shiftR` 16
     dest = RegisterName $ fromIntegral $ (instr .&. 0xF000) `shiftR` 12
-    offset 
+    offset
       | testBit instr 25 = Left $ parseShiftedRegister instr -- Shifted register
       | otherwise = Right (instr .&. 0xFFF) --immediate offset
 
@@ -247,7 +247,7 @@ parseRegisterList :: MWord -> RegisterList
 parseRegisterList w' = parseRegisterList' w' 0 []
   where
     parseRegisterList' :: MWord -> Int -> RegisterList -> RegisterList
-    parseRegisterList' _ 16 list = list 
-    parseRegisterList' w n list 
+    parseRegisterList' _ 16 list = list
+    parseRegisterList' w n list
       | testBit w n = parseRegisterList' w (n+1) $ (RegisterName n) : list
       | otherwise = parseRegisterList' w (n+1) list
