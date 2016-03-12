@@ -228,7 +228,8 @@ parseOperand2 :: Immediate -> MWord -> Either (Shifted RegisterName) (Rotated By
 parseOperand2 (Immediate False) w =
   Left $ parseShiftedRegister w
 parseOperand2 (Immediate True) w =
-  Right $ Rotated (fromIntegral $ w .&. 0xF00 `shiftR` 8) (fromIntegral (w .&. 0xFF))
+  -- The value must be rotated left 2*the shift value in instruction
+  Right $ Rotated (fromIntegral $ 2*((w .&. 0xF00) `shiftR` 8)) (fromIntegral (w .&. 0xFF))
 
 parseShiftedRegister :: MWord -> Shifted RegisterName
 parseShiftedRegister w =
