@@ -249,5 +249,5 @@ parseRegisterList w' = parseRegisterList' w' 0 []
     parseRegisterList' :: MWord -> Int -> RegisterList -> RegisterList
     parseRegisterList' _ 16 list = list 
     parseRegisterList' w n list 
-      | testBit w n = parseRegisterList' w n $ (RegisterName n) : list
-      | otherwise = parseRegisterList' w n list
+      | testBit w n = parseRegisterList' w (n+1) $ (RegisterName n) : list
+      | otherwise = parseRegisterList' w (n+1) list
