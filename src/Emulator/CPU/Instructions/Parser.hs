@@ -6,6 +6,7 @@ import Utilities.Parser.TemplateHaskell
 
 import Data.Bits
 import Data.Maybe
+import Numeric (showHex)
 
 data CPUMode = ARM | THUMB
   deriving (Show, Read, Eq)
@@ -84,10 +85,10 @@ parseARM w
               else Right (getCondition w, readHalfWordDataTransfer w)-- halfword data transfer
       0x08000000 -> Right (getCondition w, readBlockDataTransfer w) -- Block data transfer
       0x0A000000 -> Right (getCondition w, readBranch w) -- Branch instruction
-      0x0C000000 -> undefined -- Coprocessor data transfer
-      0x0E000000 -> undefined -- Coprocessor data operation
+      0x0C000000 -> error "Unimplemented instruction - CoprocessorDataTransfer" -- Coprocessor data transfer
+      0x0E000000 -> error "Unimplemented instruction - CoprocessorDataOperation" -- Coprocessor data operation
       x | x == 0x6000000 || x == 0x4000000 -> Right (getCondition w, readLoadStore w) -- Load/Store
-      _ -> undefined -- BAD OPCODE!!!
+      _ -> error ("Undefined opcode: 0x" ++ (showHex w ""))
 
 parseTHUMB :: HalfWord -> Either String (Instruction THUMB)
 parseTHUMB = undefined
