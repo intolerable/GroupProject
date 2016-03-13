@@ -42,6 +42,7 @@ import Emulator.Types
 
 import Control.Lens
 import Data.Bits
+import Data.Bits.Lens
 import Data.Default.Class
 
 data CPUMode = User
@@ -75,7 +76,15 @@ instance Default Flags where
   def = Flags False False False False False False False False
 
 applyFlags :: Flags -> MWord -> MWord
-applyFlags = undefined
+applyFlags f w =
+  w & bitAt 31 .~ (f ^. sign)
+    & bitAt 30 .~ (f ^. zero)
+    & bitAt 29 .~ (f ^. carry)
+    & bitAt 28 .~ (f ^. overflow)
+    & bitAt 27 .~ (f ^. stickyOverflow)
+    & bitAt 7 .~ (f ^. irqDisable)
+    & bitAt 6 .~ (f ^. fiqDisable)
+    & bitAt 5 .~ (f ^. stateBit)
 
 extractFlags :: MWord -> Flags
 extractFlags =
