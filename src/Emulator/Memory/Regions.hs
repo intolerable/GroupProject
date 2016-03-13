@@ -2,7 +2,6 @@ module Emulator.Memory.Regions where
 
 import Emulator.Types
 
-import Data.Ix
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
 
