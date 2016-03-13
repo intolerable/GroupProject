@@ -1,11 +1,13 @@
 module Utilities.Parser.TemplateHaskell where
 
+import Control.Monad
 import Data.Bits
 import Language.Haskell.TH
 
 -- $(bitmask x y) :: (Integral a, Bits a, Num b) => a -> b
 bitmask :: Word -> Word -> Q Exp
 bitmask x y = do
+  when (y > x) $ fail "Invalid bitmask: the lower bound for a bitmask must be less than its upper bound."
   varName <- newName "w"
   -- \w -> fromIntegral ((w .&. mask x y) `shiftR` y)
   return $ LamE [VarP varName] $
