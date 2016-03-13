@@ -2,6 +2,7 @@ module Emulator.CPU.Instructions.Parser where
 
 import Emulator.CPU hiding (SoftwareInterrupt)
 import Emulator.Types
+import Utilities.Parser.TemplateHaskell
 
 import Data.Bits
 import Data.Maybe
@@ -67,7 +68,7 @@ deriving instance Eq (Instruction a)
 
 parseARM :: MWord -> Either String (Condition, Instruction ARM)
 parseARM w
-  | w .&. 0x0FFFFFF0 == 0x12FFF10 = Right (getCondition w, readBranchExchange w) -- Definitely branch exchange instruction
+  | w .&. 0x0FFFFFF0 == 0x012FFF10 = Right (getCondition w, readBranchExchange w) -- Definitely branch exchange instruction
   | (w .&. 0x0C000000 == 0x00) && (testBit w 25 || (w .&. 0b10010000) /= 0b10010000) = -- Data Processing thing
     Right (getCondition w,
       DataProcessing (getOpcode w)
@@ -76,7 +77,7 @@ parseARM w
                      (RegisterName $ fromIntegral $ (w .&. 0x0000F000) `shiftR` 12)
                      (parseOperand2 (Immediate $ w `testBit` 25) w))
   | w .&. 0x0FB00FF0 == 0x01000090 = Right (getCondition w, readSingleDataSwap w) -- Single data swap
-  | w .&. 0xF000000 == 0xF000000 = Right (getCondition w, SoftwareInterrupt) -- Software interrupt
+  | $(bitmask 27 24) w == 0b1111 = Right (getCondition w, SoftwareInterrupt) -- Software interrupt
   | otherwise =
     case w .&. 0x0E000000 of -- Test the identity bits
       0x00 -> if (w .&. 0x010000F0) == 0x90 then Right (getCondition w, readGeneralMultiply w) -- multiply
@@ -93,20 +94,19 @@ parseTHUMB = undefined
 
 getCondition :: MWord -> Condition
 getCondition w =
-  case conditionFromByte $ fromIntegral $ (w .&. 0xF0000000) `shiftR` 28 of
+  case conditionFromByte $ fromIntegral $ $(bitmask 31 28) w of
     Just x -> x
     Nothing -> error "undefined condition!"
 
 getOpcode :: MWord -> Opcode
 getOpcode w =
-  case opcodeFromByte $ fromIntegral $ (w .&. 0x1E00000) `shiftR` 21 of
+  case opcodeFromByte $ fromIntegral $ $(bitmask 24 21) w of
     Just x -> x
     Nothing -> error "undefined opcode!"
 
 readBranchExchange :: MWord -> Instruction ARM
-readBranchExchange br = BranchExchange $ RegisterName $ fromIntegral val
-  where
-    val = br .&. 0b1111
+readBranchExchange w =
+  BranchExchange $ RegisterName $ fromIntegral $ $(bitmask 3 0) w
 
 readBranch :: MWord -> Instruction ARM
 readBranch br = Branch linkBit offset
@@ -116,46 +116,53 @@ readBranch br = Branch linkBit offset
 
 -- Detect whether it is a Multiply or a Multiply long
 readGeneralMultiply :: MWord -> Instruction ARM
-readGeneralMultiply instr
-  | isMulLong = readMultiplyLong instr
-  | otherwise = readMultiply instr
-  where
-    isMulLong = testBit instr 23
+readGeneralMultiply instr =
+  if isMulLong then readMultiplyLong instr else readMultiply instr
+    where
+      isMulLong = testBit instr 23
 
 
 readMultiply :: MWord -> Instruction ARM
 readMultiply instr =
   Multiply accumulate (SetCondition setCondition) (RegisterName $ fromIntegral dest) (RegisterName $ fromIntegral operand1)
     (RegisterName $ fromIntegral operand2) (RegisterName $ fromIntegral operand3)
-  where
-    accumulate = testBit instr 21
-    setCondition = testBit instr 20
-    dest = (instr .&. 0xF0000) `shiftR` 16
-    operand1 = (instr .&. 0xF000) `shiftR` 12
-    operand2 = (instr .&. 0xF00) `shiftR` 8
-    operand3 = (instr .&. 0xF)
+    where
+      accumulate = testBit instr 21
+      setCondition = testBit instr 20
+      dest = $(bitmask 19 16) instr
+      operand1 = $(bitmask 15 12) instr
+      operand2 = $(bitmask 11 8) instr
+      operand3 = $(bitmask 3 0) instr
 
 readMultiplyLong :: MWord -> Instruction ARM
 readMultiplyLong instr =
-  MultiplyLong signed accumulate (SetCondition setCondition) (RegisterName $ fromIntegral destHi) (RegisterName $ fromIntegral destLo) (RegisterName $ fromIntegral operand1) (RegisterName $ fromIntegral operand2)
-  where
-    signed = testBit instr 22
-    accumulate = testBit instr 21
-    setCondition = testBit instr 20
-    destHi = (instr .&. 0xF0000) `shiftR` 16
-    destLo = (instr .&. 0xF000) `shiftR` 12
-    operand1 = (instr .&. 0xF00) `shiftR` 8
-    operand2 = (instr .&. 0xF)
+  MultiplyLong signed
+               accumulate
+               (SetCondition setCondition)
+               (RegisterName $ fromIntegral destHi)
+               (RegisterName $ fromIntegral destLo)
+               (RegisterName $ fromIntegral operand1)
+               (RegisterName $ fromIntegral operand2)
+    where
+      signed = testBit instr 22
+      accumulate = testBit instr 21
+      setCondition = testBit instr 20
+      destHi = $(bitmask 19 16) instr
+      destLo = $(bitmask 15 12) instr
+      operand1 = $(bitmask 11 8) instr
+      operand2 = $(bitmask 3 0) instr
 
 readSingleDataSwap :: MWord -> Instruction ARM
-readSingleDataSwap instr = SingleDataSwap granularity (RegisterName $ fromIntegral base) (RegisterName $ fromIntegral dest) (RegisterName $ fromIntegral src)
-  where
-    granularity
-      | testBit instr 22 = Byte
-      | otherwise = Word
-    base = (instr .&. 0xF0000) `shiftR` 16
-    dest = (instr .&. 0xF000) `shiftR` 12
-    src = (instr .&. 0xF)
+readSingleDataSwap instr =
+  SingleDataSwap granularity
+                 (RegisterName $ fromIntegral base)
+                 (RegisterName $ fromIntegral dest)
+                 (RegisterName $ fromIntegral src)
+    where
+      granularity = if instr `testBit` 22 then Byte else Word
+      base = $(bitmask 19 16) instr
+      dest = $(bitmask 15 12) instr
+      src = $(bitmask 3 0) instr
 
 -- Actually a halfword or signed data transfer but that wouldn't make a nice function name
 readHalfWordDataTransfer :: MWord -> Instruction ARM
@@ -165,64 +172,44 @@ readHalfWordDataTransfer instr
   | otherwise =
     HalfwordDataTransferRegister preIndex upDown writeBack load signed granularity base dest offset
   where
-    preIndex
-      | testBit instr 24 = Pre
-      | otherwise = Post
-    upDown
-      | testBit instr 23 = Up
-      | otherwise = Down
+    preIndex = if instr `testBit` 24 then Pre else Post
+    upDown = if instr `testBit` 23 then Up else Down
     writeBack = testBit instr 21
-    load
-      | testBit instr 20 = Load
-      | otherwise = Store
+    load = if instr `testBit` 20 then Load else Store
     base = RegisterName $ fromIntegral $ (instr .&. 0xF0000) `shiftR` 16
     dest = RegisterName $ fromIntegral $ (instr .&. 0xF000) `shiftR` 12
     offset = RegisterName $ fromIntegral $ (instr .&. 0xF)
-    (granularity, signed) = case (instr .&. 0x60) `shiftR` 5 of
-      0 -> (Byte, False) -- unsigned byte swap instruction
-      1 -> (HalfWord, False) -- Unsigned halfwords
-      2 -> (Byte, True) -- signed byte
-      3 -> (HalfWord, True) -- Signed halfword 
-    offsetImmediate = ((instr .&. 0xF00 )`shiftR` 4) .|. (instr .&. 0xF)
+    granularity = if instr `testBit` 5 then HalfWord else Byte
+    signed = instr `testBit` 6
+    offsetImmediate =
+      ($(bitmask 11 8) instr `shiftL` 4) .|. $(bitmask 3 0) instr
 
 readLoadStore :: MWord -> Instruction ARM
-readLoadStore instr = SingleDataTransfer prePost upDown granularity writeBack loadStore base dest offset
-  where
-    prePost
-      | testBit instr 24 = Pre
-      | otherwise = Post
-    upDown
-      | testBit instr 23 = Up
-      | otherwise = Down
-    granularity
-      | testBit instr 22 = Byte
-      | otherwise = Word
-    writeBack = testBit instr 21
-    loadStore
-      | testBit instr 20 = Load
-      | otherwise = Store
-    base = RegisterName $ fromIntegral $ (instr .&. 0xF0000) `shiftR` 16
-    dest = RegisterName $ fromIntegral $ (instr .&. 0xF000) `shiftR` 12
-    offset
-      | testBit instr 25 = Left $ parseShiftedRegister instr -- Shifted register
-      | otherwise = Right (instr .&. 0xFFF) --immediate offset
+readLoadStore instr =
+  SingleDataTransfer prePost upDown granularity writeBack loadStore base dest offset
+    where
+      prePost = if instr `testBit` 24 then Pre else Post
+      upDown = if instr `testBit` 23 then Up else Down
+      granularity = if instr `testBit` 22 then Byte else Word
+      writeBack = testBit instr 21
+      loadStore = if instr `testBit` 20 then Load else Store
+      base = RegisterName $ fromIntegral $ $(bitmask 19 16) instr
+      dest = RegisterName $ fromIntegral $ $(bitmask 15 12) instr
+      offset = if instr `testBit` 25
+        then Left $ parseShiftedRegister instr
+        else Right $ $(bitmask 11 0) instr
 
 readBlockDataTransfer :: MWord -> Instruction ARM
-readBlockDataTransfer instr = BlockDataTransfer prePost upDown forceUser writeBack loadStore base regList
-  where
-    prePost
-      | testBit instr 24 = Pre
-      | otherwise = Post
-    upDown
-      | testBit instr 23 = Up
-      | otherwise = Down
-    forceUser = testBit instr 22
-    writeBack = testBit instr 21
-    loadStore
-      | testBit instr 20 = Load
-      | otherwise = Store
-    base = RegisterName $ fromIntegral $ (instr .&. 0xF0000) `shiftR` 16
-    regList = parseRegisterList (instr .&. 0xFFFF)
+readBlockDataTransfer instr =
+  BlockDataTransfer prePost upDown forceUser writeBack loadStore base regList
+    where
+      prePost = if instr `testBit` 24 then Pre else Post
+      upDown = if instr `testBit` 23 then Up else Down
+      forceUser = testBit instr 22
+      writeBack = testBit instr 21
+      loadStore = if instr `testBit` 20 then Load else Store
+      base = RegisterName $ fromIntegral $ $(bitmask 19 16) instr
+      regList = parseRegisterList $ $(bitmask 15 0) instr
 
 parseOperand2 :: Immediate -> MWord -> Either (Shifted RegisterName) (Rotated Byte)
 parseOperand2 (Immediate False) w =
@@ -235,13 +222,13 @@ parseShiftedRegister :: MWord -> Shifted RegisterName
 parseShiftedRegister w =
   case w `testBit` 4 of
     True ->
-      RegisterShift (RegisterName $ fromIntegral $ w .&. 0xF00 `shiftR` 8) shiftType registerName
+      RegisterShift (RegisterName $ fromIntegral $ $(bitmask 11 8) w) shiftType registerName
     False ->
-      AmountShift (fromIntegral $ w .&. 0xF80 `shiftR` 7) shiftType registerName
-  where
-    registerName = RegisterName $ fromIntegral $ w .&. 0xF
-    shiftType = fromMaybe (error "Undefined shift type") $
-      shiftTypeFromByte $ fromIntegral $ w .&. 0x60 `shiftR` 5
+      AmountShift (fromIntegral $ $(bitmask 11 7) w) shiftType registerName
+    where
+      registerName = RegisterName $ fromIntegral $ $(bitmask 3 0) w
+      shiftType = fromMaybe (error "Undefined shift type") $
+        shiftTypeFromByte $ fromIntegral $ $(bitmask 6 5) w
 
 parseRegisterList :: MWord -> RegisterList
 parseRegisterList w' = parseRegisterList' w' 0 []
