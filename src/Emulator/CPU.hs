@@ -10,6 +10,8 @@ module Emulator.CPU
   , HasIrqDisable(..)
   , HasFiqDisable(..)
   , HasStateBit(..)
+  , applyFlags
+  , extractFlags
   , Registers(Registers)
   , HasRegisters(..)
   , HasR0(..)
