@@ -76,6 +76,7 @@ writeAddress addr hw =
     BIOS -> return ()
     WRAM -> writeHalfWordLE addr hw
     Unused -> return ()
+    _ -> undefined
 
 readAddress :: AddressSpace m => Address -> m HalfWord
 readAddress addr =
@@ -83,3 +84,4 @@ readAddress addr =
     BIOS -> return 0
     WRAM -> readHalfWordLE addr
     Unused -> return 0
+    _ -> undefined
