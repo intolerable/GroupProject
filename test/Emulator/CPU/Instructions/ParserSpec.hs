@@ -1,6 +1,6 @@
 module Emulator.CPU.Instructions.ParserSpec where
 
-import Emulator.CPU
+import Emulator.CPU hiding (SoftwareInterrupt)
 import Emulator.CPU.Instructions.Parser
 
 import Test.Hspec
@@ -24,3 +24,4 @@ spec = do
       parseARM 0xE2833C02 `shouldBe` Right (AL, DataProcessing ADD (SetCondition False) (RegisterName 3) (RegisterName 3) $ Right (Rotated 24 2))
       parseARM 0xE3A00000 `shouldBe` Right (AL, DataProcessing MOV (SetCondition False) (RegisterName 0) (RegisterName 0) $ Right (Rotated 0 0))
       parseARM 0xE2110040 `shouldBe` Right (AL, DataProcessing AND (SetCondition True) (RegisterName 1) (RegisterName 0) $ Right (Rotated 0 64))
+      parseARM 0xEF000000 `shouldBe` Right (AL, SoftwareInterrupt)
