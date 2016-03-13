@@ -61,9 +61,9 @@ canRead GamePakSRAM   = True
 
 addressToRegionType :: Address -> RegionType
 addressToRegionType addr =
-	case Map.lookupLE addr regions of
-		Just (_, x) -> x
-		Nothing -> error "Unrecognized region"
+  case Map.lookupLE addr regions of
+    Just (_, x) -> x
+    Nothing -> error "Unrecognized region"
 
 addressPermissions :: Address -> (Bool, Bool)
 addressPermissions addr = (canRead regionType, canWrite regionType)
