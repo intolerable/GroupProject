@@ -128,9 +128,6 @@ parseARM w
       x | x == 0x6000000 || x == 0x4000000 -> Right (getCondition w, readLoadStore w) -- Load/Store
       _ -> error ("Undefined opcode: 0x" ++ (showHex w ""))
 
-parseTHUMB :: HalfWord -> Either String (Instruction THUMB)
-parseTHUMB = undefined
-
 getCondition :: MWord -> Condition
 getCondition w =
   case conditionFromByte $ fromIntegral $ $(bitmask 31 28) w of

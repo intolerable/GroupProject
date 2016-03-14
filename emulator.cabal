@@ -18,6 +18,7 @@ library
     Emulator.CPU
     Emulator.CPU.Instructions
     Emulator.CPU.Instructions.Parser
+    Emulator.CPU.Instructions.ThumbParser
     Emulator.Memory
     Emulator.Memory.IORegisters
     Emulator.Memory.Regions
