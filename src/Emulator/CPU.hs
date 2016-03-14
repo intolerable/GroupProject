@@ -38,7 +38,8 @@ module Emulator.CPU
   , conditionFromByte
   , Opcode(..)
   , opcodeFromByte
-  , Interrupt(..) ) where
+  , Interrupt(..)
+  , ThumbOpcode(..) ) where
 
 import Emulator.Types
 
@@ -193,6 +194,25 @@ data Opcode = AND -- Rd := Op1 AND Op2
 
 opcodeFromByte :: Byte -> Maybe Opcode
 opcodeFromByte = fromByte
+
+data ThumbOpcode = T_AND
+                 | T_EOR
+                 | T_LSL
+                 | T_LSR
+                 | T_ASR
+                 | T_ADC
+                 | T_SBC
+                 | T_ROR
+                 | T_TST
+                 | T_NEG
+                 | T_CMP 
+                 | T_CMN
+                 | T_ORR
+                 | T_MUL
+                 | T_BIC
+                 | T_MVN
+                 | T_MOV -- Not an ALU opcode, but a THUMB one
+  deriving (Show, Read, Eq, Enum, Bounded)
 
 data Interrupt = Reset                -- Probably won't be used
                | UndefinedInstruction -- Used if a bad instruction is found

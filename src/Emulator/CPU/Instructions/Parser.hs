@@ -29,6 +29,12 @@ data PrePost = Pre | Post
 data UpDown = Up | Down
   deriving (Show, Read, Eq)
 
+data AddSub = Add | Subtract
+  deriving (Show, Read, Eq)
+
+data LowHigh = Low | High
+  deriving (Show, Read, Eq)
+
 data Granularity = Byte | Word | HalfWord
   deriving (Show, Read, Eq)
 
@@ -38,11 +44,18 @@ newtype Immediate = Immediate Bool
 data Rotated a = Rotated Int a
   deriving (Show, Read, Eq)
 
+data BaseSource = SP | PC
+  deriving (Show, Read, Eq)
+
 type WriteBack = Bool
 type Signed = Bool
 type Accumulate = Bool
 type Link = Bool
+type HighReg = Bool
+type SignExtended = Bool
+type StoreLR = Bool
 type Offset = MWord
+type Value = Int -- Value is used for signed values in instructions
 type ForceUserMode = Bool
 type RegisterList = [RegisterName]
 
@@ -63,6 +76,31 @@ data Instruction a where
   CoprocessorDataOperation :: Instruction ARM
   CoprocessorRegisterTransfer :: Instruction ARM
   SoftwareInterrupt :: Instruction ARM
+  -- Thumb instructions --
+  MoveShiftedRegister :: (Shifted Offset) -> RegisterName -> RegisterName -> Instruction THUMB
+  AddSubtractImmediate :: AddSub -> Offset -> RegisterName -> RegisterName -> Instruction THUMB
+  AddSutractRegister :: AddSub -> RegisterName -> RegisterName -> RegisterName -> Instruction THUMB
+  -- FIXME: Perhaps don't use Opcode here as the structure supports more operations than the instruction does
+  MovCmpAddSubImmediate :: Opcode -> RegisterName -> Offset -> Instruction THUMB
+  ALUOperation :: ThumbOpcode -> RegisterName -> RegisterName -> Instruction THUMB
+  HiRegOps :: ThumbOpcode -> RegisterName -> RegisterName -> Instruction THUMB
+  ThumbBranchExchange :: RegisterName -> Instruction THUMB
+  PCRelativeLoad :: RegisterName -> Offset -> Instruction THUMB
+  ThumbLoadStoreRegisterOffset :: LoadStore -> Granularity -> RegisterName -> RegisterName -> RegisterName -> Instruction THUMB
+  ThumbLoadStoreSignExtHalfwordByte :: Granularity -> LoadStore -> SignExtended -> RegisterName -> RegisterName -> RegisterName -> Instruction THUMB
+  ThumbLoadStoreImmediateOffset :: Granularity -> LoadStore -> Offset -> RegisterName -> RegisterName -> Instruction THUMB
+  ThumbLoadStoreHalfword :: LoadStore -> Offset -> RegisterName -> RegisterName -> Instruction THUMB
+  SPRelativeLoadStore :: LoadStore -> RegisterName -> Offset -> Instruction THUMB
+  LoadAddress :: BaseSource -> RegisterName -> Offset -> Instruction THUMB
+  SPAddOffset :: UpDown -> Offset -> Instruction THUMB
+  PushPopRegs :: LoadStore -> StoreLR -> RegisterList -> Instruction THUMB
+  MultipleLoadStore :: LoadStore -> RegisterName -> RegisterList -> Instruction THUMB
+  ConditionalBranch :: Condition -> Value -> Instruction THUMB
+  ThumbSoftwareInterrupt :: Value -> Instruction THUMB
+  ThumbBranch :: Offset -> Instruction THUMB
+  LongBranchWLink :: LowHigh -> Offset -> Instruction THUMB
+
+
 
 deriving instance Show (Instruction a)
 deriving instance Eq (Instruction a)
