@@ -77,7 +77,7 @@ data Instruction a where
   CoprocessorRegisterTransfer :: Instruction ARM
   SoftwareInterrupt :: Instruction ARM
   -- Thumb instructions --
-  MoveShiftedRegister :: (Shifted Offset) -> RegisterName -> RegisterName -> Instruction THUMB
+  MoveShiftedRegister :: (Shifted RegisterName) -> RegisterName -> Instruction THUMB
   AddSubtractImmediate :: AddSub -> Offset -> RegisterName -> RegisterName -> Instruction THUMB
   AddSutractRegister :: AddSub -> RegisterName -> RegisterName -> RegisterName -> Instruction THUMB
   -- FIXME: Perhaps don't use Opcode here as the structure supports more operations than the instruction does
