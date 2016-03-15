@@ -39,7 +39,13 @@ parseTHUMB w = case greaterId of
     cond = $(bitmask 11 8) w
 
 readAddSub :: HalfWord -> Instruction THUMB
-readAddSub = undefined
+readAddSub w = if testBit w 10 then AddSubtractImmediate op (fromIntegral val) srcReg destReg -- Immediate value
+               else AddSubtractRegister op (RegisterName $ fromIntegral val) srcReg destReg -- Register value
+  where
+    op = if testBit w 9 then Subtract else Add
+    val = $(bitmask 8 6) w
+    srcReg = RegisterName $ fromIntegral $ $(bitmask 5 3) w
+    destReg = RegisterName $ fromIntegral $ w .&. 0b111
 
 readMovShifted :: HalfWord -> Instruction THUMB
 readMovShifted w = MoveShiftedRegister shifted dest 
