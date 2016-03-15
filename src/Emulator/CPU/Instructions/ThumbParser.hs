@@ -9,7 +9,7 @@ import Numeric (showHex)
 
 parseTHUMB :: HalfWord -> Either String (Instruction THUMB)
 parseTHUMB w = case greaterId of
-  0 -> if addId then Right $ readAdd w else Right $ readMovShifted w
+  0 -> if addId then Right $ readAddSub w else Right $ readMovShifted w
   1 -> Right $ readMovCmpAddSub w
   2 -> if ahId then 
         if testBit w 10 then Right $ readHighRegOperation w 
@@ -37,8 +37,8 @@ parseTHUMB w = case greaterId of
     relLoadId = lesserId == 1
     cond = $(bitmask 11 8) w
 
-readAdd :: HalfWord -> Instruction THUMB
-readAdd = undefined
+readAddSub :: HalfWord -> Instruction THUMB
+readAddSub = undefined
 
 readMovShifted :: HalfWord -> Instruction THUMB
 readMovShifted = undefined
