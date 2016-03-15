@@ -61,7 +61,16 @@ readMovShifted w = MoveShiftedRegister shifted dest
     dest = RegisterName $ fromIntegral $ w .&. 0b111
 
 readMovCmpAddSub :: HalfWord -> Instruction THUMB
-readMovCmpAddSub = undefined
+readMovCmpAddSub w = MovCmpAddSubImmediate opcode op1 $ fromIntegral immediate
+  where
+    opcode = case $(bitmask 12 11) w of
+      0 -> MOV
+      1 -> CMP
+      2 -> ADD
+      3 -> SUB
+      _ -> undefined
+    op1 = RegisterName $ fromIntegral $ $(bitmask 10 8) w
+    immediate = w .&. 0xFF
 
 readHighRegOperation :: HalfWord -> Instruction THUMB
 readHighRegOperation = undefined
