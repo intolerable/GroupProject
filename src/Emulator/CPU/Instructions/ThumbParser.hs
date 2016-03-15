@@ -76,7 +76,13 @@ readHighRegOperation :: HalfWord -> Instruction THUMB
 readHighRegOperation = undefined
 
 readALUOperation :: HalfWord -> Instruction THUMB
-readALUOperation = undefined
+readALUOperation w = case opcode of 
+  (Just v) -> ALUOperation v srcReg destReg
+  Nothing -> error "Undefined opcode"
+  where
+    opcode = thumbOpcodeFromByte $ fromIntegral $ $(bitmask 9 6) w
+    srcReg = RegisterName $ fromIntegral $ $(bitmask 5 3) w
+    destReg = RegisterName $ fromIntegral $ w .&. 0b111
 
 readLoadStoreRegOffset :: HalfWord -> Instruction THUMB
 readLoadStoreRegOffset = undefined
