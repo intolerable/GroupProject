@@ -1,5 +1,6 @@
 module Emulator.CPU.Instructions.ThumbParser where
 
+import Emulator.CPU
 import Emulator.Types
 import Emulator.CPU.Instructions.Parser
 import Utilities.Parser.TemplateHaskell
@@ -41,7 +42,17 @@ readAddSub :: HalfWord -> Instruction THUMB
 readAddSub = undefined
 
 readMovShifted :: HalfWord -> Instruction THUMB
-readMovShifted = undefined
+readMovShifted w = MoveShiftedRegister shifted dest 
+  where
+    op = $(bitmask 12 11) w
+    operation :: ShiftType
+    operation
+      | op == 0 = LogicalLeft
+      | op == 1 = LogicalRight
+      | op == 2 = ArithRight
+      | otherwise = undefined
+    shifted = AmountShift (fromIntegral op) operation $ RegisterName $ fromIntegral $ $(bitmask 5 3) w
+    dest = RegisterName $ fromIntegral $ w .&. 0b111
 
 readMovCmpAddSub :: HalfWord -> Instruction THUMB
 readMovCmpAddSub = undefined
