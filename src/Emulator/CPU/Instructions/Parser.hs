@@ -79,7 +79,7 @@ data Instruction a where
   -- Thumb instructions --
   MoveShiftedRegister :: (Shifted RegisterName) -> RegisterName -> Instruction THUMB
   AddSubtractImmediate :: AddSub -> Offset -> RegisterName -> RegisterName -> Instruction THUMB
-  AddSutractRegister :: AddSub -> RegisterName -> RegisterName -> RegisterName -> Instruction THUMB
+  AddSubtractRegister :: AddSub -> RegisterName -> RegisterName -> RegisterName -> Instruction THUMB
   -- FIXME: Perhaps don't use Opcode here as the structure supports more operations than the instruction does
   MovCmpAddSubImmediate :: Opcode -> RegisterName -> Offset -> Instruction THUMB
   ALUOperation :: ThumbOpcode -> RegisterName -> RegisterName -> Instruction THUMB
