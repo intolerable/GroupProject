@@ -74,13 +74,15 @@ readMovCmpAddSub w = MovCmpAddSubImmediate opcode op1 $ fromIntegral immediate
 
 readHighRegOperation :: HalfWord -> Instruction THUMB
 readHighRegOperation w = case opcode of
-  0 -> undefined
-  1 -> undefined
-  2 -> undefined
+  0 -> HiRegOperation T_ADD src dest
+  1 -> HiRegOperation T_CMP src dest
+  2 -> HiRegOperation T_MOV src dest
   3 -> readHighRegBX w
   _ -> error "Undefined opcode"
   where
     opcode = $(bitmask 9 8) w
+    src = RegisterName $ fromIntegral $ ((if testBit w 6 then 8 else 0) + $(bitmask 5 3) w)
+    dest = RegisterName $ fromIntegral $ ((if testBit w 7 then 8 else 0) + $(bitmask 2 0) w)
 
 readHighRegBX :: HalfWord -> Instruction THUMB
 readHighRegBX w = ThumbBranchExchange $ RegisterName $ fromIntegral $ offset + ($(bitmask 5 3) w)
