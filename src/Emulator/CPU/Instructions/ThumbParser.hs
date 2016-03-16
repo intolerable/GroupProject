@@ -165,7 +165,10 @@ readPushPopRegisters :: HalfWord -> Instruction THUMB
 readPushPopRegisters = undefined
 
 readAddOffsetToSP :: HalfWord -> Instruction THUMB
-readAddOffsetToSP = undefined
+readAddOffsetToSP w = SPAddOffset dir offset
+  where
+    dir = if testBit w 7 then Down else Up
+    offset = fromIntegral $ $(bitmask 6 0) w
 
 readMultipleLoadStore :: HalfWord -> Instruction THUMB
 readMultipleLoadStore = undefined
