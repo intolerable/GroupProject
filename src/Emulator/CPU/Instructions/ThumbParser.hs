@@ -108,7 +108,20 @@ readLoadStoreRegOffset w = ThumbLoadStoreRegisterOffset ls granularity offset ba
     dest = RegisterName $ fromIntegral $ w .&. 0b111
 
 readLoadStoreSignExtByteHalfWord :: HalfWord -> Instruction THUMB
-readLoadStoreSignExtByteHalfWord = undefined
+readLoadStoreSignExtByteHalfWord w = case $(bitmask 11 10) w of
+  0 -> -- Store halfword
+    ThumbLoadStoreSignExtHalfwordByte HalfWord Store False offset base dest
+  1 -> -- Load halfword
+    ThumbLoadStoreSignExtHalfwordByte HalfWord Load False offset base dest
+  2 -> -- Load sign-extended byte
+    ThumbLoadStoreSignExtHalfwordByte Byte Load True offset base dest
+  3 -> -- Load sign-extended halfword
+    ThumbLoadStoreSignExtHalfwordByte HalfWord Load True offset base dest
+  _ -> error "Undefined opcode"
+  where
+    offset = RegisterName $ fromIntegral $ $(bitmask 8 6) w
+    base = RegisterName $ fromIntegral $ $(bitmask 5 3) w
+    dest = RegisterName $ fromIntegral $ w .&. 0b111
 
 readPCRelativeLoad :: HalfWord -> Instruction THUMB
 readPCRelativeLoad w = PCRelativeLoad dest offset
