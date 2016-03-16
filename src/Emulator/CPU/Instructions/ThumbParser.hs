@@ -105,7 +105,10 @@ readLoadStoreSignExtByteHalfWord :: HalfWord -> Instruction THUMB
 readLoadStoreSignExtByteHalfWord = undefined
 
 readPCRelativeLoad :: HalfWord -> Instruction THUMB
-readPCRelativeLoad = undefined
+readPCRelativeLoad w = PCRelativeLoad dest offset
+  where
+    dest = RegisterName $ fromIntegral $ $(bitmask 10 8) w
+    offset = fromIntegral $ w .&. 0xFF
 
 readLoadStoreImmedOffset :: HalfWord -> Instruction THUMB
 readLoadStoreImmedOffset = undefined
