@@ -83,7 +83,7 @@ data Instruction a where
   -- FIXME: Perhaps don't use Opcode here as the structure supports more operations than the instruction does
   MovCmpAddSubImmediate :: Opcode -> RegisterName -> Offset -> Instruction THUMB
   ALUOperation :: ThumbOpcode -> RegisterName -> RegisterName -> Instruction THUMB
-  HiRegOps :: ThumbOpcode -> RegisterName -> RegisterName -> Instruction THUMB
+  HiRegOperation :: ThumbOpcode -> RegisterName -> RegisterName -> Instruction THUMB
   ThumbBranchExchange :: RegisterName -> Instruction THUMB
   PCRelativeLoad :: RegisterName -> Offset -> Instruction THUMB
   ThumbLoadStoreRegisterOffset :: LoadStore -> Granularity -> RegisterName -> RegisterName -> RegisterName -> Instruction THUMB
