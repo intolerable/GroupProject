@@ -99,7 +99,13 @@ readALUOperation w = case opcode of
     destReg = RegisterName $ fromIntegral $ w .&. 0b111
 
 readLoadStoreRegOffset :: HalfWord -> Instruction THUMB
-readLoadStoreRegOffset = undefined
+readLoadStoreRegOffset w = ThumbLoadStoreRegisterOffset ls granularity offset base dest
+  where
+    ls = if testBit w 11 then Load else Store
+    granularity = if testBit w 10 then Byte else Word
+    offset = RegisterName $ fromIntegral $ $(bitmask 8 6) w
+    base = RegisterName $ fromIntegral $ $(bitmask 5 3) w
+    dest = RegisterName $ fromIntegral $ w .&. 0b111
 
 readLoadStoreSignExtByteHalfWord :: HalfWord -> Instruction THUMB
 readLoadStoreSignExtByteHalfWord = undefined
