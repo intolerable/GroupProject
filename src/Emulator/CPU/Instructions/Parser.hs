@@ -243,7 +243,7 @@ readBlockDataTransfer instr =
       writeBack = testBit instr 21
       loadStore = if instr `testBit` 20 then Load else Store
       base = RegisterName $ fromIntegral $ $(bitmask 19 16) instr
-      regList = parseRegisterList $ $(bitmask 15 0) instr
+      regList = parseRegisterList ($(bitmask 15 0) instr) 16
 
 parseOperand2 :: Immediate -> MWord -> Either (Shifted RegisterName) (Rotated Byte)
 parseOperand2 (Immediate False) w =
@@ -264,11 +264,11 @@ parseShiftedRegister w =
       shiftType = fromMaybe (error "Undefined shift type") $
         shiftTypeFromByte $ fromIntegral $ $(bitmask 6 5) w
 
-parseRegisterList :: MWord -> RegisterList
-parseRegisterList w' = parseRegisterList' w' 0 []
+parseRegisterList :: MWord -> Int -> RegisterList
+parseRegisterList w' m = parseRegisterList' w' 0 []
   where
     parseRegisterList' :: MWord -> Int -> RegisterList -> RegisterList
-    parseRegisterList' _ 16 list = list
     parseRegisterList' w n list
+      | n == m = list
       | testBit w n = parseRegisterList' w (n+1) $ (RegisterName n) : list
       | otherwise = parseRegisterList' w (n+1) list
