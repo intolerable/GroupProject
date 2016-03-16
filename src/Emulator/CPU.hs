@@ -212,7 +212,8 @@ data ThumbOpcode = T_AND
                  | T_MUL
                  | T_BIC
                  | T_MVN
-                 | T_MOV -- Not an ALU opcode, but a THUMB one
+                 | T_MOV -- Not an ALU opcode, but THUMB ones
+                 | T_ADD
   deriving (Show, Read, Eq, Enum, Bounded)
 
 thumbOpcodeFromByte :: Byte -> Maybe ThumbOpcode
