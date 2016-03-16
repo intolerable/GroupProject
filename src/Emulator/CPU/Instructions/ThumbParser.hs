@@ -155,7 +155,11 @@ readLoadStoreHalfword w = ThumbLoadStoreHalfword ls offset base dest
     dest = RegisterName $ fromIntegral $ w .&. 0b111
 
 readLoadAddress :: HalfWord -> Instruction THUMB
-readLoadAddress = undefined
+readLoadAddress w = LoadAddress source dest offset
+  where
+    source = if testBit w 11 then SP else PC
+    dest = RegisterName $ fromIntegral $ $(bitmask 10 8) w
+    offset = fromIntegral $ w .&. 0xFF
 
 readPushPopRegisters :: HalfWord -> Instruction THUMB
 readPushPopRegisters = undefined
