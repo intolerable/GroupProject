@@ -140,7 +140,11 @@ readLoadStoreImmedOffset w =
     dest = RegisterName $ fromIntegral $ w .&. 0b111
 
 readSPRelativeLoadStore :: HalfWord -> Instruction THUMB
-readSPRelativeLoadStore = undefined
+readSPRelativeLoadStore w = SPRelativeLoadStore ls dest offset
+  where
+    ls = if testBit w 11 then Load else Store
+    dest = RegisterName $ fromIntegral $ $(bitmask 10 8) w
+    offset = fromIntegral $ w .&. 0xFF
 
 readLoadStoreHalfword :: HalfWord -> Instruction THUMB
 readLoadStoreHalfword w = ThumbLoadStoreHalfword ls offset base dest
