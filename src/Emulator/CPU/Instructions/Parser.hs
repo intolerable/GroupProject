@@ -100,8 +100,6 @@ data Instruction a where
   ThumbBranch :: Offset -> Instruction THUMB
   LongBranchWLink :: LowHigh -> Offset -> Instruction THUMB
 
-
-
 deriving instance Show (Instruction a)
 deriving instance Eq (Instruction a)
 
