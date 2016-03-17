@@ -162,7 +162,11 @@ readLoadAddress w = LoadAddress source dest offset
     offset = fromIntegral $ w .&. 0xFF
 
 readPushPopRegisters :: HalfWord -> Instruction THUMB
-readPushPopRegisters = undefined
+readPushPopRegisters w = PushPopRegs ls store rlist
+  where
+    ls = if testBit w 11 then Load else Store
+    store = testBit w 8
+    rlist = parseRegisterList (fromIntegral $ $(bitmask 7 0) w) 8
 
 readAddOffsetToSP :: HalfWord -> Instruction THUMB
 readAddOffsetToSP w = SPAddOffset dir offset
