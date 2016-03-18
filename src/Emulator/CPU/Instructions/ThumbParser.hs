@@ -175,7 +175,11 @@ readAddOffsetToSP w = SPAddOffset dir offset
     offset = fromIntegral $ $(bitmask 6 0) w
 
 readMultipleLoadStore :: HalfWord -> Instruction THUMB
-readMultipleLoadStore = undefined
+readMultipleLoadStore w = MultipleLoadStore ls base rlist
+  where
+    ls = if testBit w 11 then Load else Store
+    base = RegisterName $ fromIntegral $ $(bitmask 10 8) w
+    rlist = parseRegisterList (fromIntegral $ $(bitmask 7 0) w) 8
 
 readThumbSoftwareInterrupt :: HalfWord -> Instruction THUMB
 readThumbSoftwareInterrupt = undefined
