@@ -22,6 +22,7 @@ library
     Emulator.Memory
     Emulator.Memory.IORegisters
     Emulator.Memory.Regions
+    Emulator.Memory.Video
     Emulator.ROM
     Emulator.ROM.Parser
     Emulator.Types
