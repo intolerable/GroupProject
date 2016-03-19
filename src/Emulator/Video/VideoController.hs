@@ -54,7 +54,7 @@ type X = 'X
 type Y = 'Y
 
 data BGOffset (axis :: Axis) (bg :: Background) = -- Exclusively Text Modes
-  BGOffet { offset :: HalfWord }
+  BGOffset { offset :: HalfWord }
   deriving (Show, Read, Eq)
 
 recordLCDControl :: HalfWord -> LCDControl
@@ -93,3 +93,7 @@ recordBGControl hword =
             (fromIntegral $ $(bitmask 12 8) hword)
             (testBit hword 13)
             (fromIntegral $ $(bitmask 15 14) hword)
+
+recordBGOffset :: HalfWord -> BGOffset a b
+recordBGOffset hword =
+  BGOffset (fromIntegral $ $(bitmask 8 0) hword)
