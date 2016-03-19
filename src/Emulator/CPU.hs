@@ -206,7 +206,7 @@ data ThumbOpcode = T_AND
                  | T_ROR
                  | T_TST
                  | T_NEG
-                 | T_CMP 
+                 | T_CMP
                  | T_CMN
                  | T_ORR
                  | T_MUL
