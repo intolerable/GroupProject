@@ -55,6 +55,7 @@ library
     FunctionalDependencies
     GADTs
     GeneralizedNewtypeDeriving
+    KindSignatures
     MultiParamTypeClasses
     RankNTypes
     ScopedTypeVariables

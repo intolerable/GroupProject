@@ -34,7 +34,10 @@ data LCDStatus =
 newtype VerticalCounter = VerticalCounter Byte  -- Read Only
   deriving (Show, Read, Eq)
 
-data BGControl =                          -- BGs 0-3
+data Background = BG0 | BG1 | BG2 | BG3
+  deriving (Show, Read, Eq)
+
+data BGControl (bg :: Background) =                          -- BGs 0-3
   BGControl { bgPriority :: Byte          -- 0 = Highest
             , characterBaseBlock :: Byte  -- =BG Tile Data
             , mosaic :: Bool
@@ -44,9 +47,14 @@ data BGControl =                          -- BGs 0-3
             , screenSize :: Byte }
   deriving (Show, Read, Eq)
 
-data BGOffset =                     -- Exclusively Text Modes
-  BGOffet { xOffset :: HalfWord
-          , yOffset :: HalfWord }
+data Axis = X | Y
+  deriving (Show, Read, Eq)
+
+type X = 'X
+type Y = 'Y
+
+data BGOffset (axis :: Axis) (bg :: Background) = -- Exclusively Text Modes
+  BGOffet { offset :: HalfWord }
   deriving (Show, Read, Eq)
 
 recordLCDControl :: HalfWord -> LCDControl
@@ -76,7 +84,7 @@ recordLCDStatus hword =
             (testBit hword 5)
             (fromIntegral $ $(bitmask 15 8) hword)
 
-recordBGControl :: HalfWord -> BGControl
+recordBGControl :: HalfWord -> BGControl a
 recordBGControl hword =
   BGControl (fromIntegral $ $(bitmask 1 0) hword)
             (fromIntegral $ $(bitmask 3 2) hword)
@@ -85,4 +93,3 @@ recordBGControl hword =
             (fromIntegral $ $(bitmask 12 8) hword)
             (testBit hword 13)
             (fromIntegral $ $(bitmask 15 14) hword)
-
