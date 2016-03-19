@@ -12,6 +12,8 @@ writeAddress addr hw =
   case addressToRegionType addr of
     BIOS -> return ()
     WRAM -> writeHalfWordLE addr hw
+    VRAM -> writeVRAM addr hw
+    ObjAttributes -> writeOAM addr hw
     Unused -> return ()
     _ -> undefined
 
@@ -20,5 +22,7 @@ readAddress addr =
   case addressToRegionType addr of
     BIOS -> return 0
     WRAM -> readHalfWordLE addr
+    VRAM -> readVRAM addr
+    ObjAttributes -> readOAM addr
     Unused -> return 0
     _ -> undefined
