@@ -31,6 +31,9 @@ data LCDStatus =
             , vCountSetting :: Byte }
   deriving (Show, Read, Eq)
 
+newtype VerticalCounter = VerticalCounter Byte  -- Read Only
+  deriving (Show, Read, Eq)
+
 data BGControl =                          -- BGs 0-3
   BGControl { bgPriority :: Byte          -- 0 = Highest
             , characterBaseBlock :: Byte  -- =BG Tile Data
@@ -41,7 +44,9 @@ data BGControl =                          -- BGs 0-3
             , screenSize :: Byte }
   deriving (Show, Read, Eq)
 
-newtype VerticalCounter = VerticalCounter Byte  -- Read Only
+data BGOffset =                     -- Exclusively Text Modes
+  BGOffet { xOffset :: HalfWord
+          , yOffset :: HalfWord }
   deriving (Show, Read, Eq)
 
 recordLCDControl :: HalfWord -> LCDControl
