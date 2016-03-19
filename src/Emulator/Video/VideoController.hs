@@ -31,6 +31,18 @@ data LCDStatus =
             , vCountSetting :: Byte }
   deriving (Show, Read, Eq)
 
+data BGControl =
+  BGControl { bgPriority :: Byte
+            , characterBaseBlock :: Byte
+            , mosaic :: Bool
+            , colorsPalettes :: Bool
+            , screenBaseBlock :: Byte
+            , displayAreaFlow :: Bool
+            , screenSize :: Byte }
+  deriving (Show, Read, Eq)
+
+newtype VerticalCounter = VerticalCounter Byte -- Read Only
+
 recordLCDControl :: HalfWord -> LCDControl
 recordLCDControl hword =
   LCDControl (fromIntegral $ $(bitmask 2 0) hword)
@@ -57,4 +69,3 @@ recordLCDStatus hword =
             (testBit hword 4)
             (testBit hword 5)
             (fromIntegral $ $(bitmask 15 8) hword)
-
