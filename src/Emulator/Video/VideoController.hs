@@ -49,4 +49,12 @@ recordDisplayControl hword =
                  (testBit hword 15)
 
 recordInterruptsStatus :: HalfWord -> InterruptsStatus
-recordInterruptsStatus _ = undefined
+recordInterruptsStatus hword =
+  InterruptsStatus (testBit hword 0)
+                   (testBit hword 1)
+                   (testBit hword 2)
+                   (testBit hword 3)
+                   (testBit hword 4)
+                   (testBit hword 5)
+                   (fromIntegral $ $(bitmask 15 8) hword)
+
