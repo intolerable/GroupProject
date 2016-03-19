@@ -31,17 +31,18 @@ data LCDStatus =
             , vCountSetting :: Byte }
   deriving (Show, Read, Eq)
 
-data BGControl =
-  BGControl { bgPriority :: Byte
-            , characterBaseBlock :: Byte
+data BGControl =                          -- BGs 0-3
+  BGControl { bgPriority :: Byte          -- 0 = Highest
+            , characterBaseBlock :: Byte  -- =BG Tile Data
             , mosaic :: Bool
-            , colorsPalettes :: Bool
+            , colorsPalettes :: Bool      -- (0=16/16, 1=256/1)
             , screenBaseBlock :: Byte
-            , displayAreaFlow :: Bool
+            , displayAreaFlow :: Bool     -- BG 2 & BG 3 only
             , screenSize :: Byte }
   deriving (Show, Read, Eq)
 
-newtype VerticalCounter = VerticalCounter Byte -- Read Only
+newtype VerticalCounter = VerticalCounter Byte  -- Read Only
+  deriving (Show, Read, Eq)
 
 recordLCDControl :: HalfWord -> LCDControl
 recordLCDControl hword =
@@ -69,3 +70,14 @@ recordLCDStatus hword =
             (testBit hword 4)
             (testBit hword 5)
             (fromIntegral $ $(bitmask 15 8) hword)
+
+recordBGControl :: HalfWord -> BGControl
+recordBGControl hword =
+  BGControl (fromIntegral $ $(bitmask 1 0) hword)
+            (fromIntegral $ $(bitmask 3 2) hword)
+            (testBit hword 6)
+            (testBit hword 7)
+            (fromIntegral $ $(bitmask 12 8) hword)
+            (testBit hword 13)
+            (fromIntegral $ $(bitmask 15 14) hword)
+
