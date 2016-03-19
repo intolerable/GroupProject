@@ -1,15 +1,14 @@
 module Emulator.Video.VideoController where
 
-import Emulator.Memory.Video
 import Emulator.Types
 import Utilities.Parser.TemplateHaskell
 import Data.Bits
 
 data DisplayControl =
-  DisplayControl { bgMode :: Byte
-                 , reservedMode :: Bool
-                 , displayFrameSelect :: Bool
-                 , hblankInterval :: Bool
+  DisplayControl { bgMode :: Byte                   -- 6-7 are prohibited
+                 , reservedMode :: Bool             -- Can only be set by BIOS opcodes
+                 , displayFrameSelect :: Bool       -- bgModes 4-5 only
+                 , hBlankInterval :: Bool
                  , objCharacterVRAMMapping :: Bool
                  , forcedBlank :: Bool
                  , screenDispBG0 :: Bool
@@ -20,6 +19,16 @@ data DisplayControl =
                  , window0DispFlag :: Bool
                  , window1DispFlag :: Bool
                  , windowOBJDispFlag :: Bool }
+  deriving (Show, Read, Eq)
+
+data InterruptsStatus =
+  InterruptsStatus { vBlankFlag :: Bool
+                   , hBlankFlag :: Bool
+                   , vCounterFlag :: Bool
+                   , vBlankIRQEnable :: Bool
+                   , hBlankIRQEnable :: Bool
+                   , vCounterIRQEnable :: Bool
+                   , vCountSetting :: Byte }
   deriving (Show, Read, Eq)
 
 recordDisplayControl :: HalfWord -> DisplayControl
@@ -39,3 +48,5 @@ recordDisplayControl hword =
                  (testBit hword 14)
                  (testBit hword 15)
 
+recordInterruptsStatus :: HalfWord -> InterruptsStatus
+recordInterruptsStatus _ = undefined
