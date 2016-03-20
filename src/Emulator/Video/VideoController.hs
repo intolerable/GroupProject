@@ -121,3 +121,9 @@ recordBGReferencePoint mword =
   BGReferencePoint (fromIntegral $ $(bitmask 7 0) mword)
                    (fromIntegral $ $(bitmask 26 8) mword)
                    (testBit mword 27)
+
+recordBGRotScalParam :: HalfWord -> BGRotScalParam a b
+recordBGRotScalParam hword =
+  BGRotScalParam (fromIntegral $ $(bitmask 7 0) hword)
+                 (fromIntegral $ $(bitmask 14 8) hword)
+                 (testBit hword 15)
