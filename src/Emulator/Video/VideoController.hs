@@ -122,6 +122,8 @@ data AlphaBlendCoeff =  -- W
                   , evbCoeff :: Byte }
   deriving (Show, Read, Eq)
 
+newtype BrightnessCoeff = BrightnessCoeff Byte
+
 recordLCDControl :: HalfWord -> LCDControl
 recordLCDControl hword =
   LCDControl (fromIntegral $ $(bitmask 2 0) hword)
@@ -216,3 +218,7 @@ recordAlphaBlendCoeff :: HalfWord -> AlphaBlendCoeff
 recordAlphaBlendCoeff hword =
   AlphaBlendCoeff (fromIntegral $ $(bitmask 4 0) hword)
                   (fromIntegral $ $(bitmask 12 8) hword)
+
+recordBrightnessCoeff :: HalfWord -> BrightnessCoeff
+recordBrightnessCoeff hword =
+  BrightnessCoeff (fromIntegral $ $(bitmask 4 0) hword)
