@@ -117,6 +117,11 @@ data ColourControl = -- R/W
                 , bdTargetPixel :: Bool }
   deriving (Show, Read, Eq)
 
+data AlphaBlendCoeff =  -- W
+  AlphaBlendCoeff { evaCoeff :: Byte
+                  , evbCoeff :: Byte }
+  deriving (Show, Read, Eq)
+
 recordLCDControl :: HalfWord -> LCDControl
 recordLCDControl hword =
   LCDControl (fromIntegral $ $(bitmask 2 0) hword)
@@ -206,3 +211,8 @@ recordColourControl hword =
                 (testBit hword 11)
                 (testBit hword 12)
                 (testBit hword 13)
+
+recordAlphaBlendCoeff :: HalfWord -> AlphaBlendCoeff
+recordAlphaBlendCoeff hword =
+  AlphaBlendCoeff (fromIntegral $ $(bitmask 4 0) hword)
+                  (fromIntegral $ $(bitmask 12 8) hword)
