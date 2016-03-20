@@ -53,17 +53,26 @@ data Axis = X | Y
 type X = 'X
 type Y = 'Y
 
-data BGOffset (axis :: Axis) (bg :: Background) = -- W. Exclusively Text Modes
+data BGOffset (axis :: Axis) (bg :: Background) = -- W. All layers in BG mode 0 and first two layers in BG mode 1, i.e text modes
   BGOffset { offset :: HalfWord }
   deriving (Show, Read, Eq)
 
-data LowerUpperBit = Lower | Upper -- 12 bit | 16 bit
+data LowerUpperBit = Lower | Upper -- 16 bit | 12 bit
   deriving (Show, Read, Eq)
 
-data BGReferencePoint (axis :: Axis) (bit :: LowerUpperBit) (bg :: Background) =  -- W. BG2 and BG3
+data BGReferencePoint (axis :: Axis) (bit :: LowerUpperBit) (bg :: Background) =  -- W. For all non text modes. For scrolling the screen
   BGReferencePoint { fractProportion :: Byte
                    , intProportion :: MWord
                    , sign :: Bool }
+  deriving (Show, Read, Eq)
+
+data Parameter = A | B | C | D
+  deriving (Show, Read, Eq)
+
+data BGRotScalParam (parameter :: Parameter) (bg :: Background) = -- W. Rotation and Scaling modes. Merge this and BGRefPoint?
+  BGRotScalParam { fractProport :: Byte
+                 , intProport :: Byte
+                 , sign' :: Bool }
   deriving (Show, Read, Eq)
 
 recordLCDControl :: HalfWord -> LCDControl
