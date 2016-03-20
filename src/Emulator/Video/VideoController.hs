@@ -108,4 +108,7 @@ recordBGOffset hword =
   BGOffset (fromIntegral $ $(bitmask 8 0) hword)
 
 recordBGReferencePoint :: MWord -> BGReferencePoint a b c
-recordBGReferencePoint _ = undefined
+recordBGReferencePoint mword =
+  BGReferencePoint (fromIntegral $ $(bitmask 7 0) mword)
+                   (fromIntegral $ $(bitmask 26 8) mword)
+                   (testBit mword 27)
