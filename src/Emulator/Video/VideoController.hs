@@ -85,13 +85,20 @@ data WinDimension (axis :: Axis) (win :: Window) =    -- W
 -- Garbage values of X2>240 or X1>X2 are interpreted as X2=240.
 -- Garbage values of Y2>160 or Y1>Y2 are interpreted as Y2=160.
 
-data WinControl (win :: Window) =
-  WinControl { win0BgsEnableBits :: Byte
-             , win0ObjEnableBit :: Bool
-             , win0ColSpecialEff :: Bool
-             , win1BgsEnableBits :: Byte
-             , win1ObjEnableBit :: Bool
-             , win1ColSpecialEff :: Bool }
+data WinControl (win :: Window) = -- R/W. Control inside of (WIN0 and WIN1) or (Outside windows and OBJWIN)
+  WinControl { bgsEnableBits0 :: Byte
+             , objEnableBit0 :: Bool
+             , colSpecialEff0 :: Bool
+             , bgsEnableBits1 :: Byte
+             , objEnableBit1 :: Bool
+             , colSpecialEff1 :: Bool }
+  deriving (Show, Read, Eq)
+
+data MosaicSize = --  W.
+  MosaicSize { bgHSize :: Byte
+             , bgVSize :: Byte
+             , objHSize :: Byte
+             , objVSize :: Byte }
   deriving (Show, Read, Eq)
 
 recordLCDControl :: HalfWord -> LCDControl
@@ -160,3 +167,10 @@ recordWinControl hword =
              (fromIntegral $ $(bitmask 11 8) hword)
              (testBit hword 12)
              (testBit hword 13)
+
+recordMosaicSize :: HalfWord -> MosaicSize
+recordMosaicSize hword =
+  MosaicSize (fromIntegral $ $(bitmask 3 0) hword)
+             (fromIntegral $ $(bitmask 7 4) hword)
+             (fromIntegral $ $(bitmask 11 8) hword)
+             (fromIntegral $ $(bitmask 15 12) hword)
