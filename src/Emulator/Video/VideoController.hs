@@ -101,6 +101,22 @@ data MosaicSize = --  W.
              , objVSize :: Byte }
   deriving (Show, Read, Eq)
 
+data ColourControl = -- R/W
+  ColourControl { bg0TargetPixel1 :: Bool
+                , bg1TargetPixel1 :: Bool
+                , bg2TargetPixel1 :: Bool
+                , bg3TargetPixel1 :: Bool
+                , objTargetPixel1 :: Bool
+                , bdTargetPixel1 :: Bool
+                , colSpecEffect :: Byte
+                , bg0TargetPixel :: Bool
+                , bg1TargetPixel :: Bool
+                , bg2TargetPixel :: Bool
+                , bg3TargetPixel :: Bool
+                , objTargetPixel :: Bool
+                , bdTargetPixel :: Bool }
+  deriving (Show, Read, Eq)
+
 recordLCDControl :: HalfWord -> LCDControl
 recordLCDControl hword =
   LCDControl (fromIntegral $ $(bitmask 2 0) hword)
@@ -174,3 +190,19 @@ recordMosaicSize hword =
              (fromIntegral $ $(bitmask 7 4) hword)
              (fromIntegral $ $(bitmask 11 8) hword)
              (fromIntegral $ $(bitmask 15 12) hword)
+
+recordColourControl :: HalfWord -> ColourControl
+recordColourControl hword =
+  ColourControl (testBit hword 0)
+                (testBit hword 1)
+                (testBit hword 2)
+                (testBit hword 3)
+                (testBit hword 4)
+                (testBit hword 5)
+                (fromIntegral $ $(bitmask 7 6) hword)
+                (testBit hword 8)
+                (testBit hword 9)
+                (testBit hword 10)
+                (testBit hword 11)
+                (testBit hword 12)
+                (testBit hword 13)
