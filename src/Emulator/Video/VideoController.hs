@@ -75,15 +75,24 @@ data BGRotScalParam (parameter :: Parameter) (bg :: Background) = -- W. Rotation
                  , sign' :: Bool }
   deriving (Show, Read, Eq)
 
-data Window = WIN0 | WIN1
+data Window = WIN0 | WIN1 | WINOBJ
   deriving (Show, Read, Eq)
 
-data WinDimension (axis :: Axis) (win :: Window) =
+data WinDimension (axis :: Axis) (win :: Window) =    -- W
   WinDimension { xy2 :: Byte         -- x = Rightmost coord of window, +1. y = Bottom coord of window, +1
                , xy1 :: Byte }       -- Leftmost coord of win. Top coord of window
   deriving (Show, Read, Eq)
 -- Garbage values of X2>240 or X1>X2 are interpreted as X2=240.
 -- Garbage values of Y2>160 or Y1>Y2 are interpreted as Y2=160.
+
+data WinControl (win :: Window) =
+  WinControl { win0BgsEnableBits :: Byte
+             , win0ObjEnableBit :: Bool
+             , win0ColSpecialEff :: Bool
+             , win1BgsEnableBits :: Byte
+             , win1ObjEnableBit :: Bool
+             , win1ColSpecialEff :: Bool }
+  deriving (Show, Read, Eq)
 
 recordLCDControl :: HalfWord -> LCDControl
 recordLCDControl hword =
@@ -142,3 +151,12 @@ recordWinDimension :: HalfWord -> WinDimension a b
 recordWinDimension hword =
   WinDimension (fromIntegral $ $(bitmask 7 0) hword)
                (fromIntegral $ $(bitmask 15 8) hword)
+
+recordWinControl :: HalfWord -> WinControl a
+recordWinControl hword =
+  WinControl (fromIntegral $ $(bitmask 3 0) hword)
+             (testBit hword 4)
+             (testBit hword 5)
+             (fromIntegral $ $(bitmask 11 8) hword)
+             (testBit hword 12)
+             (testBit hword 13)
