@@ -4,7 +4,7 @@ import Emulator.Types
 import Utilities.Parser.TemplateHaskell
 import Data.Bits
 
-data LCDControl =
+data LCDControl = -- R/W
   LCDControl { bgMode :: Byte                   -- 6-7 are prohibited
              , reservedMode :: Bool             -- Potentially is not necessary. Can only be set by BIOS opcodes
              , displayFrameSelect :: Bool       -- bgModes 4-5 only
@@ -21,7 +21,7 @@ data LCDControl =
              , windowOBJDispFlag :: Bool }
   deriving (Show, Read, Eq)
 
-data LCDStatus =
+data LCDStatus =  -- R/W
   LCDStatus { vBlankFlag :: Bool         -- Read only
             , hBlankFlag :: Bool         -- Read only
             , vCounterFlag :: Bool       -- Read only
@@ -37,7 +37,7 @@ newtype VerticalCounter = VerticalCounter Byte  -- Read Only
 data Background = BG0 | BG1 | BG2 | BG3
   deriving (Show, Read, Eq)
 
-data BGControl (bg :: Background) =                          -- BGs 0-3
+data BGControl (bg :: Background) =       -- R/W. BGs 0-3
   BGControl { bgPriority :: Byte          -- 0 = Highest
             , characterBaseBlock :: Byte  -- =BG Tile Data
             , mosaic :: Bool
@@ -53,8 +53,17 @@ data Axis = X | Y
 type X = 'X
 type Y = 'Y
 
-data BGOffset (axis :: Axis) (bg :: Background) = -- Exclusively Text Modes
+data BGOffset (axis :: Axis) (bg :: Background) = -- W. Exclusively Text Modes
   BGOffset { offset :: HalfWord }
+  deriving (Show, Read, Eq)
+
+data LowerUpperBit = Lower | Upper -- 12 bit | 16 bit
+  deriving (Show, Read, Eq)
+
+data BGReferencePoint (axis :: Axis) (bit :: LowerUpperBit) (bg :: Background) =  -- W. BG2 and BG3
+  BGReferencePoint { fractProportion :: Byte
+                   , intProportion :: MWord
+                   , sign :: Bool }
   deriving (Show, Read, Eq)
 
 recordLCDControl :: HalfWord -> LCDControl
@@ -97,3 +106,6 @@ recordBGControl hword =
 recordBGOffset :: HalfWord -> BGOffset a b
 recordBGOffset hword =
   BGOffset (fromIntegral $ $(bitmask 8 0) hword)
+
+recordBGReferencePoint :: MWord -> BGReferencePoint a b c
+recordBGReferencePoint _ = undefined
