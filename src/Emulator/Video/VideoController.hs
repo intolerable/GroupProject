@@ -75,6 +75,16 @@ data BGRotScalParam (parameter :: Parameter) (bg :: Background) = -- W. Rotation
                  , sign' :: Bool }
   deriving (Show, Read, Eq)
 
+data Window = WIN0 | WIN1
+  deriving (Show, Read, Eq)
+
+data WinDimension (axis :: Axis) (win :: Window) =
+  WinDimension { xy2 :: Byte         -- x = Rightmost coord of window, +1. y = Bottom coord of window, +1
+               , xy1 :: Byte }       -- Leftmost coord of win. Top coord of window
+  deriving (Show, Read, Eq)
+-- Garbage values of X2>240 or X1>X2 are interpreted as X2=240.
+-- Garbage values of Y2>160 or Y1>Y2 are interpreted as Y2=160.
+
 recordLCDControl :: HalfWord -> LCDControl
 recordLCDControl hword =
   LCDControl (fromIntegral $ $(bitmask 2 0) hword)
@@ -127,3 +137,8 @@ recordBGRotScalParam hword =
   BGRotScalParam (fromIntegral $ $(bitmask 7 0) hword)
                  (fromIntegral $ $(bitmask 14 8) hword)
                  (testBit hword 15)
+
+recordWinDimension :: HalfWord -> WinDimension a b
+recordWinDimension hword =
+  WinDimension (fromIntegral $ $(bitmask 7 0) hword)
+               (fromIntegral $ $(bitmask 15 8) hword)
