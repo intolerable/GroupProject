@@ -6,7 +6,7 @@ import Control.Lens
 import Data.ByteString (ByteString)
 
 data ROMHeader = ROMHeader
-  { _rhStartLoc :: ByteString -- 0x00: B <game_code_start>
+  { _rhStartLocation :: ByteString -- 0x00: B <game_code_start>
   , _rhNintendoLogo :: ByteString  -- 0x04: nintendo logo
   , _rhGameTitle :: ByteString  -- 0xA0: Game title (uppercase ascii, max 12 bytes)
   , _rhGameCode :: ByteString  -- 0xAC: Game code (uppercase ascii, max 4 bytes)
