@@ -2,6 +2,7 @@ module Emulator.CPU.Instructions.ParserSpec where
 
 import Emulator.CPU hiding (SoftwareInterrupt)
 import Emulator.CPU.Instructions.Parser
+import Emulator.Types
 
 import Test.Hspec
 

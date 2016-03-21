@@ -19,3 +19,6 @@ type RegisterVal = Address
 type Memory = UArray Address Byte
 
 type MemoryIO = IOUArray Address Byte
+
+newtype RegisterName = RegisterName Int
+  deriving (Show, Read, Eq, Ord)

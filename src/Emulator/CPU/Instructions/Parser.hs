@@ -14,9 +14,6 @@ data CPUMode = ARM | THUMB
 type ARM = 'ARM
 type THUMB = 'THUMB
 
-newtype RegisterName = RegisterName Int
-  deriving (Show, Read, Eq, Ord)
-
 newtype SetCondition = SetCondition Bool
   deriving (Show, Read, Eq)
 
