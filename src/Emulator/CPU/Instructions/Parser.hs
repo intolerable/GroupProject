@@ -44,10 +44,12 @@ data Rotated a = Rotated Int a
 data BaseSource = SP | PC
   deriving (Show, Read, Eq)
 
+newtype Link = Link Bool
+  deriving (Show, Read, Eq)
+
 type WriteBack = Bool
 type Signed = Bool
 type Accumulate = Bool
-type Link = Bool
 type HighReg = Bool
 type SignExtended = Bool
 type StoreLR = Bool
@@ -142,7 +144,7 @@ readBranchExchange w =
 readBranch :: MWord -> Instruction ARM
 readBranch br = Branch linkBit offset
   where
-    linkBit = testBit br 24
+    linkBit = Link $ testBit br 24
     offset = ((br .&. 0xFFFFFF) `shiftL` 2)
 
 -- Detect whether it is a Multiply or a Multiply long
