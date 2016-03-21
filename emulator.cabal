@@ -56,6 +56,7 @@ library
     GADTs
     GeneralizedNewtypeDeriving
     KindSignatures
+    LambdaCase
     MultiParamTypeClasses
     RankNTypes
     ScopedTypeVariables
