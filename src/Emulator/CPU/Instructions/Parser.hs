@@ -5,6 +5,7 @@ import Emulator.Types
 import Utilities.Parser.TemplateHaskell
 
 import Data.Bits
+import Data.Int
 import Data.Maybe
 import Numeric (showHex)
 
@@ -53,6 +54,7 @@ type Accumulate = Bool
 type HighReg = Bool
 type SignExtended = Bool
 type StoreLR = Bool
+type BranchOffset = Int32
 type Offset = MWord
 type Value = Int -- Value is used for signed values in instructions
 type ForceUserMode = Bool
@@ -70,7 +72,7 @@ data Instruction a where
   SingleDataTransfer :: PrePost -> UpDown -> Granularity -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> Instruction ARM
   Undefined :: Instruction ARM
   BlockDataTransfer :: PrePost -> UpDown -> ForceUserMode -> WriteBack -> LoadStore -> RegisterName -> RegisterList -> Instruction ARM
-  Branch :: Link -> Offset -> Instruction ARM
+  Branch :: Link -> BranchOffset -> Instruction ARM
   CoprocessorDataTransfer :: Instruction ARM
   CoprocessorDataOperation :: Instruction ARM
   CoprocessorRegisterTransfer :: Instruction ARM
@@ -145,7 +147,7 @@ readBranch :: MWord -> Instruction ARM
 readBranch br = Branch linkBit offset
   where
     linkBit = Link $ testBit br 24
-    offset = ((br .&. 0xFFFFFF) `shiftL` 2)
+    offset = $(bitmask 23 0) (fromIntegral br) `shiftL` 2
 
 -- Detect whether it is a Multiply or a Multiply long
 readGeneralMultiply :: MWord -> Instruction ARM
