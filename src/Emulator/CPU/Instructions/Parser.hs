@@ -118,8 +118,8 @@ parseARM w
               else Right (getCondition w, readHalfWordDataTransfer w)-- halfword data transfer
       0x08000000 -> Right (getCondition w, readBlockDataTransfer w) -- Block data transfer
       0x0A000000 -> Right (getCondition w, readBranch w) -- Branch instruction
-      0x0C000000 -> error "Unimplemented instruction - CoprocessorDataTransfer" -- Coprocessor data transfer
-      0x0E000000 -> error "Unimplemented instruction - CoprocessorDataOperation" -- Coprocessor data operation
+      0x0C000000 -> error "parseARM: undefined instruction: CoprocessorDataTransfer" -- Coprocessor data transfer
+      0x0E000000 -> error "parseARM: undefined instruction: CoprocessorDataOperation" -- Coprocessor data operation
       x | x == 0x6000000 || x == 0x4000000 -> Right (getCondition w, readLoadStore w) -- Load/Store
       _ -> error ("Undefined opcode: 0x" ++ (showHex w ""))
 
@@ -127,13 +127,13 @@ getCondition :: MWord -> Condition
 getCondition w =
   case conditionFromByte $ fromIntegral $ $(bitmask 31 28) w of
     Just x -> x
-    Nothing -> error "undefined condition!"
+    Nothing -> error $ "getCondition: invalid condition (" ++ show w ++ ")"
 
 getOpcode :: MWord -> Opcode
 getOpcode w =
   case opcodeFromByte $ fromIntegral $ $(bitmask 24 21) w of
     Just x -> x
-    Nothing -> error "undefined opcode!"
+    Nothing -> error $ "getOpcode: invalid opcode (" ++ show w ++ ")"
 
 readBranchExchange :: MWord -> Instruction ARM
 readBranchExchange w =
@@ -257,7 +257,7 @@ parseShiftedRegister w =
       AmountShift (fromIntegral $ $(bitmask 11 7) w) shiftType registerName
     where
       registerName = RegisterName $ fromIntegral $ $(bitmask 3 0) w
-      shiftType = fromMaybe (error "Undefined shift type") $
+      shiftType = fromMaybe (error "parseShiftedRegister(shiftType): unknown shift type") $
         shiftTypeFromByte $ fromIntegral $ $(bitmask 6 5) w
 
 parseRegisterList :: MWord -> Int -> RegisterList
