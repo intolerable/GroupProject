@@ -48,6 +48,11 @@ interpretLoop :: Monad m => System m ()
 interpretLoop = do
   System (use sysInitialInstruction) >>= interpretARM
   forever $ do
+    -- this is super wrong. it's reading from RAM when it should be consulting the regions
+    --   lookup table and finding where the memory address is actually stored. for now, we
+    --   will just error instead of trying to run this nonsense.
+    pc <- System (use (sysRegisters.r15))
+    _ <- error $ "interpretLoop: program counter says " ++ showHex pc
     newInstr <- System (use (sysRegisters.r15)) >>= readWordLE
     case parseARM newInstr of
       Left err -> error $ "interpretLoop: instruction parse failed (" ++ err ++ ")"
