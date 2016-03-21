@@ -178,6 +178,10 @@ registerLens (RegisterName n) =
     15 -> r15
     _ -> error $ "registerLens: undefined register label: #" ++ show n
 
+shiftedRegisterLens :: Shifted RegisterName -> Getter Registers ()
+shiftedRegisterLens (AmountShift byte shiftType regName) = undefined
+shiftedRegisterLens (RegisterShift shiftReg shiftType regName) = undefined
+
 fromByte :: forall a. (Enum a, Bounded a) => Byte -> Maybe a
 fromByte b =
   if fromIntegral b > maxByte then Nothing else Just $ toEnum $ fromIntegral b
