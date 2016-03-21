@@ -30,6 +30,7 @@ library
     Emulator.Types
     Emulator.Video.VideoController
     Utilities.Parser.TemplateHaskell
+    Utilities.Show
   build-depends:
     base >= 4.6 && < 4.10,
     array,
