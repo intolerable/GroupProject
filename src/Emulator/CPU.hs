@@ -157,6 +157,27 @@ data Shifted a = AmountShift Byte ShiftType a
                | RegisterShift a ShiftType a
   deriving (Show, Read, Eq)
 
+registerLens :: RegisterName -> Lens' Registers MWord
+registerLens (RegisterName n) =
+  case n of
+    0 -> r0
+    1 -> r1
+    2 -> r2
+    3 -> r3
+    4 -> r4
+    5 -> r5
+    6 -> r6
+    7 -> r7
+    8 -> r8
+    9 -> r9
+    10 -> r10
+    11 -> r11
+    12 -> r12
+    13 -> r13
+    14 -> r14
+    15 -> r15
+    _ -> error $ "registerLens: undefined register label: #" ++ show n
+
 fromByte :: forall a. (Enum a, Bounded a) => Byte -> Maybe a
 fromByte b =
   if fromIntegral b > maxByte then Nothing else Just $ toEnum $ fromIntegral b
