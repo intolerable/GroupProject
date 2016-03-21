@@ -4,6 +4,7 @@ import Emulator.CPU hiding (System)
 import Emulator.CPU.Instructions.Parser
 import Emulator.Memory
 import Emulator.Memory.RAM
+import Utilities.Show
 
 import Control.Lens
 import Control.Monad
@@ -56,8 +57,9 @@ interpretLoop = do
 interpretARM :: Monad m => Instruction ARM -> System m ()
 interpretARM instr =
   case instr of
-    Branch _ _ ->
-      error "interpretARM: undefined branch instruction handler"
+    Branch _ offset ->
+      -- not totally sure how prefetch interacts with this
+      System $ sysRegisters.r15 %= \x -> fromIntegral (fromIntegral x + offset)
     DataProcessing _ _ _ _ _ ->
       error "interpretARM: undefined data processing instruction handler"
     _ -> error "interpretARM: unknown instruction"
