@@ -145,6 +145,14 @@ data ShiftType = LogicalLeft
 shiftTypeFromByte :: Byte -> Maybe ShiftType
 shiftTypeFromByte = fromByte
 
+applyShiftType :: Bits a => ShiftType -> a -> Int -> a
+applyShiftType st x s =
+  case st of
+    LogicalLeft -> x `shiftL` s
+    LogicalRight -> x `shiftR` s
+    ArithRight -> undefined
+    RotateRight -> x `rotateR` s
+
 data Shifted a = AmountShift Byte ShiftType a
                | RegisterShift a ShiftType a
   deriving (Show, Read, Eq)
