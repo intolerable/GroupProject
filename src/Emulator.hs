@@ -6,6 +6,7 @@ import Emulator.Interpreter
 import Emulator.ROM
 import Emulator.ROM.Parser
 import Emulator.Types
+import Emulator.Video.Display
 import Utilities.Show
 
 import Control.Lens
@@ -35,6 +36,7 @@ initGL = do
   GLUT.displayCallback $= do
     clear [GLUT.ColorBuffer]
     GLUT.swapBuffers
+  GLUT.idleCallback $= Just display
 
 loadROM :: FilePath -> IO ()
 loadROM fp = do
