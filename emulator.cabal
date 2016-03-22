@@ -28,6 +28,7 @@ library
     Emulator.ROM
     Emulator.ROM.Parser
     Emulator.Types
+    Emulator.Video.Display
     Emulator.Video.VideoController
     Utilities.Parser.TemplateHaskell
     Utilities.Show
