@@ -33,10 +33,8 @@ initGL = do
   GLUT.windowSize $= Size 240 160
   GLUT.viewport $= (Position 0 0, Size 240 160)
   GLUT.clearColor $= Color4 0 0 0 0
-  GLUT.displayCallback $= do
-    clear [GLUT.ColorBuffer]
-    GLUT.swapBuffers
-  GLUT.idleCallback $= Just display
+  GLUT.displayCallback $= display
+  GLUT.idleCallback $= Just animate
 
 loadROM :: FilePath -> IO ()
 loadROM fp = do
