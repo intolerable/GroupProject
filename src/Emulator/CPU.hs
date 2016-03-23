@@ -116,9 +116,9 @@ data Registers = Registers
   , _registersR10 :: MWord
   , _registersR11 :: MWord
   , _registersR12 :: MWord
-  , _registersR13 :: MWord
-  , _registersR14 :: MWord
-  , _registersR15 :: MWord
+  , _registersR13 :: MWord -- Stack Pointer (SP)
+  , _registersR14 :: MWord -- Link Register (LR)
+  , _registersR15 :: MWord -- Program Counter (PC)
   , _registersCpsr :: Flags }
   deriving (Show, Read, Eq)
 
