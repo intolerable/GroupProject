@@ -14,6 +14,11 @@ type SrcRegister = Getting MWord Registers MWord
 type DestRegister = ASetter' Registers MWord
 type ConditionCode = Bool
 
+---------------------
+-- Data processing instructions
+-- TODO: almost all flags need checking/fixing
+---------------------
+
 -- Standard arithmetic add
 add :: (HasFlags s, HasRegisters s, MonadState s m)
     => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
@@ -107,6 +112,50 @@ and dest src1 src2 cCode = do
     flags.carry .= False
     flags.zero .= (val == 0)
     flags.sign .= checkSign val
+
+orr :: (HasFlags s, HasRegisters s, MonadState s m)
+    => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
+orr dest src1 src2 cCode = do
+  res1 <- use $ registers.src1
+  res2 <- use $ registers.src2
+  let val = res1 .|. res2
+  registers.dest .= val
+  -- Update flags if condition code is true
+  when cCode $ do
+    -- used and flags, TODO
+    flags.carry .= False
+    flags.zero .= (val == 0)
+    flags.sign .= checkSign val
+
+-- not
+mvn :: (HasFlags s, HasRegisters s, MonadState s m)
+    => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
+mvn dest _ src2 cCode = do
+  res2 <- use $ registers.src2
+  let val = complement res2
+  registers.dest .= val
+  -- Update flags if condition code is true
+  when cCode $ do
+    -- used and flags, TODO
+    flags.carry .= False
+    flags.zero .= (val == 0)
+    flags.sign .= checkSign val
+
+-- Bit clear
+bic :: (HasFlags s, HasRegisters s, MonadState s m)
+    => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
+bic dest src1 src2 cCode = do
+  res1 <- use $ registers.src1
+  res2 <- use $ registers.src2
+  let val = res1 .&. (complement res2)
+  registers.dest .= val
+  -- Update flags if condition code is true
+  when cCode $ do
+    -- used and flags, TODO
+    flags.carry .= False
+    flags.zero .= (val == 0)
+    flags.sign .= checkSign val
+
 
 -- Test instruction
 tst :: (HasFlags s, HasRegisters s, MonadState s m)
