@@ -40,7 +40,6 @@ library
     containers,
     data-default-class,
     GLUT,
-    GLUtil,
     OpenGL,
     lens,
     mtl,
