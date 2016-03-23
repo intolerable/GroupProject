@@ -15,6 +15,25 @@ type DestRegister = ASetter' Registers MWord
 type ConditionCode = Bool
 
 ---------------------
+-- Branch and Exchange (BX, BLX)
+-- TODO: these need to put the CPU into THUMB mode
+---------------------
+
+bx :: (HasFlags s, HasRegisters s, MonadState s m)
+    => Condition -> SrcRegister -> m ()
+bx cond rn = do
+  cnd <- runCondition cond
+  when cnd $ do
+    -- todo: always 1 or check cond to set to 1?
+    flags.thumbStateBit .= True
+    rnVal <- use $ registers.rn
+    registers.r15 .= rnVal
+
+blx :: (HasFlags s, HasRegisters s, MonadState s m)
+    => Condition -> SrcRegister -> m ()
+blx cond rn = undefined
+
+---------------------
 -- Data processing instructions
 -- TODO: almost all flags need checking/fixing
 ---------------------

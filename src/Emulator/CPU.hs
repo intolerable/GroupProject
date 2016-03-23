@@ -9,7 +9,7 @@ module Emulator.CPU
   , HasStickyOverflow(..)
   , HasIrqDisable(..)
   , HasFiqDisable(..)
-  , HasStateBit(..)
+  , HasThumbStateBit(..)
   , applyFlags
   , extractFlags
   , Registers(Registers)
@@ -66,7 +66,7 @@ data Flags = Flags -- Status Register
   , _flagsStickyOverflow :: Bool
   , _flagsIrqDisable :: Bool
   , _flagsFiqDisable :: Bool
-  , _flagsStateBit :: Bool }
+  , _flagsThumbStateBit :: Bool }
   deriving (Show, Read, Eq)
 
 makeLensesWith defaultFieldRules ''Flags
@@ -88,7 +88,7 @@ applyFlags f w =
     & bitAt 27 .~ (f ^. stickyOverflow)
     & bitAt 7 .~ (f ^. irqDisable)
     & bitAt 6 .~ (f ^. fiqDisable)
-    & bitAt 5 .~ (f ^. stateBit)
+    & bitAt 5 .~ (f ^. thumbStateBit)
 
 extractFlags :: MWord -> Flags
 extractFlags =
