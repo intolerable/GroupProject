@@ -60,7 +60,9 @@ interpretLoop = do
 interpretARM :: Monad m => Instruction ARM -> System m ()
 interpretARM instr =
   case instr of
-    Branch _ offset ->
+    Branch (Link l) offset -> do
+      -- if the link bit is set, we put the current pc into r14
+      when l $ System $ sysRegisters.r14 <~ use (sysRegisters.r15)
       -- not totally sure how prefetch interacts with this
       System $ sysRegisters.r15 %= \x -> fromIntegral (fromIntegral x + offset)
     DataProcessing _ _ _ _ _ ->
