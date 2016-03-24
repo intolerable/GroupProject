@@ -5,17 +5,17 @@ import Emulator.CPU.Instructions
 import Emulator.CPU.Instructions.Parser
 import Emulator.Memory
 import Emulator.Memory.AddressSpace
+import Emulator.Types
 import Utilities.Show
 
 import Control.Lens
 import Control.Monad
+import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State
 import Data.Array.Unboxed
 import Data.ByteString.Lazy (ByteString)
 import Data.Default.Class
-import Emulator.Types
-import Control.Monad.IO.Class
 import qualified Control.Monad.State.Class as State
 import qualified Data.ByteString.Lazy as BS
 
