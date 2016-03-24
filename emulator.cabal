@@ -21,11 +21,8 @@ library
     Emulator.CPU.Instructions.ThumbParser
     Emulator.Interpreter
     Emulator.Memory
-    Emulator.Memory.IORegisters
-    Emulator.Memory.RAM
-    Emulator.Memory.Region
+    Emulator.Memory.AddressSpace
     Emulator.Memory.Regions
-    Emulator.Memory.Video
     Emulator.ROM
     Emulator.ROM.Parser
     Emulator.Types
