@@ -15,6 +15,7 @@ import Data.ByteString.Lazy (ByteString)
 import Data.Default.Class
 import Data.Proxy
 import Emulator.Types
+import qualified Control.Monad.State.Class as State
 import qualified Data.ByteString.Lazy as BS
 
 data SystemState =
@@ -40,6 +41,9 @@ buildInitialState bs =
 instance HasRegisters SystemState where
   registers = sysRegisters
 
+instance HasFlags SystemState where
+  flags = sysRegisters.flags
+
 newtype System m a =
   System { runSystem :: StateT SystemState m a }
   deriving (Functor, Applicative, Monad, MonadTrans)
@@ -64,6 +68,9 @@ instance Monad m => CanWrite OAM (System m) where
 
 instance Monad m => CanRead OAM (System m) where
   readByte _ a = System $ zoom sysOAM $ gets (! a)
+
+instance Monad m => State.MonadState SystemState (System m) where
+  state = System . State.state
 
 interpretLoop :: Monad m => System m ()
 interpretLoop = do
