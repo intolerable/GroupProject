@@ -58,16 +58,16 @@ canRead ObjAttributes = True
 canRead GamePakROM    = True
 canRead GamePakSRAM   = True
 
-addressToRegionType :: Address -> RegionType
+addressToRegionType :: Address -> (Address, RegionType)
 addressToRegionType addr =
   case Map.lookupLE addr regions of
-    Just (_, x) -> x
+    Just x -> x
     Nothing -> error "Unrecognized region"
 
 addressPermissions :: Address -> (Bool, Bool)
 addressPermissions addr = (canRead regionType, canWrite regionType)
   where
-    regionType = addressToRegionType addr
+    (_, regionType) = addressToRegionType addr
 
 data DispRegisters = DispCntrl
                    | GreenSwap

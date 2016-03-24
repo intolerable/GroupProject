@@ -4,6 +4,7 @@ import Emulator.CPU hiding (System)
 import Emulator.CPU.Instructions.Parser
 import Emulator.Memory
 import Emulator.Memory.RAM
+import Emulator.Memory.ROM
 import Emulator.Memory.Region
 import Utilities.Show
 
@@ -47,6 +48,9 @@ instance Monad m => CanWrite WRAM (System m) where
 instance Monad m => CanRead WRAM (System m) where
   readByte _ a = System $ zoom sysRAM $ gets (! a)
 
+instance Monad m => CanRead ROM (System m) where
+  readByte _ a = System $ zoom sysROM $ gets (! a)
+
 interpretLoop :: Monad m => System m ()
 interpretLoop = do
   forever $ do
@@ -54,8 +58,8 @@ interpretLoop = do
     --   lookup table and finding where the memory address is actually stored. for now, we
     --   will just error instead of trying to run this nonsense.
     pc <- System (use (sysRegisters.r15))
-    _ <- error $ "interpretLoop: program counter says " ++ showHex pc
-    newInstr <- System (use (sysRegisters.r15)) >>= readWord (Proxy :: Proxy WRAM)
+    --_ <- error $ "interpretLoop: program counter says " ++ showHex pc
+    newInstr <- System (use (sysRegisters.r15)) >>= readAddressWord
     case parseARM newInstr of
       Left err -> error $ "interpretLoop: instruction parse failed (" ++ err ++ ")"
       Right (cond, instr) ->
