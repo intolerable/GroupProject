@@ -15,6 +15,7 @@ import Data.ByteString.Lazy (ByteString)
 import Data.Default.Class
 import Data.Proxy
 import Emulator.Types
+import Control.Monad.IO.Class
 import qualified Control.Monad.State.Class as State
 import qualified Data.ByteString.Lazy as BS
 
@@ -46,7 +47,7 @@ instance HasFlags SystemState where
 
 newtype System m a =
   System { runSystem :: StateT SystemState m a }
-  deriving (Functor, Applicative, Monad, MonadTrans)
+  deriving (Functor, Applicative, Monad, MonadTrans, MonadIO)
 
 instance Monad m => CanWrite WRAM (System m) where
   writeByte _ a b = System $ zoom sysRAM $ modify (// [(a, b)])
