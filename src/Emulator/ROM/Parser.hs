@@ -9,15 +9,15 @@ import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as BS
 
 -- Given a filename, return the data and header of the ROM, or an error.
-readROM :: String -> IO (Either String (ROMHeader, ByteString))
+readROM :: String -> IO (Either String (ROMHeader, ByteString, ByteString))
 readROM path = do
   parseROM <$> BS.readFile path
 
-parseROM :: ByteString -> Either String (ROMHeader, ByteString)
+parseROM :: ByteString -> Either String (ROMHeader, ByteString, ByteString)
 parseROM str =
   case runGetOrFail parseHeader str of
     Left (_, _, err) -> Left err
-    Right (rest, _, rh) -> Right (rh, rest)
+    Right (rest, _, rh) -> Right (rh, rest, str)
 
 parseHeader :: Get ROMHeader
 parseHeader =

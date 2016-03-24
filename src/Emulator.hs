@@ -40,11 +40,11 @@ loadROM :: FilePath -> IO ()
 loadROM fp = do
   readROM fp >>= \case
     Left err -> putStrLn err
-    Right (rh, mem) ->
+    Right (rh, _, bs) ->
       case parseARM (mwordFromBS (rh ^. startLocation)) of
         Right (AL, Branch (Link False) o) ->
           evalStateT (runSystem interpretLoop) $
-            buildInitialState (Branch (Link False) o) mem
+            buildInitialState bs
         _ -> error "loadROM: undefined"
 
 mwordFromBS :: ByteString -> MWord

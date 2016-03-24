@@ -19,15 +19,14 @@ import qualified Data.ByteString.Lazy as BS
 data SystemState =
   SystemState { _systemStateSysRegisters :: Registers
               , _systemStateSysROM :: Memory
-              , _systemStateSysRAM :: Memory
-              , _systemStateSysInitialInstruction :: Instruction ARM }
+              , _systemStateSysRAM :: Memory }
   deriving (Show, Eq)
 
 makeFields ''SystemState
 
-buildInitialState :: Instruction ARM -> ByteString -> SystemState
-buildInitialState instr bs =
-  SystemState def romArray initialRAM instr
+buildInitialState :: ByteString -> SystemState
+buildInitialState bs =
+  SystemState (def & r15 .~ 0x08000000) romArray initialRAM
     where
       initialRAM = accumArray const 0 (0x02000000, 0x0203FFFF) []
       -- not totally sure that this is producing the correct output
@@ -46,7 +45,6 @@ instance Monad m => Mem (System m) where
 
 interpretLoop :: Monad m => System m ()
 interpretLoop = do
-  System (use sysInitialInstruction) >>= interpretARM
   forever $ do
     -- this is super wrong. it's reading from RAM when it should be consulting the regions
     --   lookup table and finding where the memory address is actually stored. for now, we
