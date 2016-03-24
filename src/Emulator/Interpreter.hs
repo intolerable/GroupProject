@@ -88,8 +88,8 @@ interpretARM instr =
     Branch (Link l) offset -> do
       -- if the link bit is set, we put the current pc into r14
       when l $ System $ sysRegisters.r14 <~ use (sysRegisters.r15)
-      -- not totally sure how prefetch interacts with this
-      System $ sysRegisters.r15 %= \x -> fromIntegral (fromIntegral x + offset)
+      -- not totally sure how prefetch interacts with this, so we'll just assume we're an instruction ahead at the moment
+      System $ sysRegisters.r15 %= \x -> fromIntegral (fromIntegral x + offset + 4)
     DataProcessing _ _ _ _ _ ->
       error "interpretARM: undefined data processing instruction handler"
     _ -> error "interpretARM: unknown instruction"
