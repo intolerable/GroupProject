@@ -42,7 +42,7 @@ instance HasRegisters SystemState where
 
 newtype System m a =
   System { runSystem :: StateT SystemState m a }
-  deriving (Functor, Applicative, Monad)
+  deriving (Functor, Applicative, Monad, MonadTrans)
 
 instance Monad m => CanWrite WRAM (System m) where
   writeByte _ a b = System $ zoom sysRAM $ modify (// [(a, b)])
