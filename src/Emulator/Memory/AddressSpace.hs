@@ -39,8 +39,8 @@ class (Monad m) => CanRead space m where
   readWord p addr = do
     b1 <- fromIntegral <$> readByte p addr
     b2 <- fromIntegral <$> readByte p (addr + 1)
-    b3 <- fromIntegral <$> readByte p (addr + 1)
-    b4 <- fromIntegral <$> readByte p (addr + 1)
+    b3 <- fromIntegral <$> readByte p (addr + 2)
+    b4 <- fromIntegral <$> readByte p (addr + 3)
     return $
       b1 .|. (b2 `shiftL` 8)
          .|. (b3 `shiftL` 16)
