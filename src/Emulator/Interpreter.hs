@@ -4,6 +4,7 @@ import Emulator.CPU hiding (System)
 import Emulator.CPU.Instructions.Parser
 import Emulator.Memory
 import Emulator.Memory.RAM
+import Emulator.Memory.Region
 import Utilities.Show
 
 import Control.Lens
@@ -13,6 +14,7 @@ import Control.Monad.Trans.State
 import Data.Array.Unboxed
 import Data.ByteString.Lazy (ByteString)
 import Data.Default.Class
+import Data.Proxy
 import Emulator.Types
 import qualified Data.ByteString.Lazy as BS
 
@@ -39,9 +41,11 @@ newtype System m a =
   System { runSystem :: StateT SystemState m a }
   deriving (Functor, Applicative, Monad)
 
-instance Monad m => Mem (System m) where
-  writeByte a b = System $ zoom sysRAM $ modify (// [(a, b)])
-  readByte a = System $ zoom sysRAM $ gets (! a)
+instance Monad m => CanWrite WRAM (System m) where
+  writeByte _ a b = System $ zoom sysRAM $ modify (// [(a, b)])
+
+instance Monad m => CanRead WRAM (System m) where
+  readByte _ a = System $ zoom sysRAM $ gets (! a)
 
 interpretLoop :: Monad m => System m ()
 interpretLoop = do
@@ -51,7 +55,7 @@ interpretLoop = do
     --   will just error instead of trying to run this nonsense.
     pc <- System (use (sysRegisters.r15))
     _ <- error $ "interpretLoop: program counter says " ++ showHex pc
-    newInstr <- System (use (sysRegisters.r15)) >>= readWordLE
+    newInstr <- System (use (sysRegisters.r15)) >>= readWord (Proxy :: Proxy WRAM)
     case parseARM newInstr of
       Left err -> error $ "interpretLoop: instruction parse failed (" ++ err ++ ")"
       Right (cond, instr) ->
