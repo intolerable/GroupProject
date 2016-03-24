@@ -1,9 +1,11 @@
 module Emulator.Interpreter where
 
 import Emulator.CPU hiding (System)
+import Emulator.CPU.Instructions
 import Emulator.CPU.Instructions.Parser
 import Emulator.Memory
 import Emulator.Memory.AddressSpace
+import Utilities.Show
 
 import Control.Lens
 import Control.Monad
@@ -71,14 +73,22 @@ instance Monad m => CanRead OAM (System m) where
 instance Monad m => State.MonadState SystemState (System m) where
   state = System . State.state
 
-interpretLoop :: Monad m => System m ()
-interpretLoop = do
-  forever $ do
-    newInstr <- System (use (sysRegisters.r15)) >>= readAddressWord
-    case parseARM newInstr of
-      Left err -> error $ "interpretLoop: instruction parse failed (" ++ err ++ ")"
-      Right (cond, _instr) ->
-        error $ "interpretLoop: unimplemented condition handling (" ++ show cond ++ ")"
+interpretLoop :: MonadIO m => System m ()
+interpretLoop = go False
+  where
+    go inc = do
+      when inc $ sysRegisters.r15 += 4
+      pc <- System (use (sysRegisters.r15))
+      liftIO $ putStrLn $ showHex pc
+      newInstr <- System (use (sysRegisters.r15)) >>= readAddressWord
+      liftIO $ putStrLn $ showHex newInstr
+      case parseARM newInstr of
+        Left err -> error $ "interpretLoop: instruction parse failed (" ++ err ++ ")"
+        Right (cond, instr) -> do
+          liftIO $ print (cond, instr)
+          conditionally cond $ do
+            interpretARM instr
+          go True
 
 interpretARM :: Monad m => Instruction ARM -> System m ()
 interpretARM instr =
