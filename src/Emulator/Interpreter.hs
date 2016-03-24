@@ -80,7 +80,7 @@ interpretLoop = do
     case parseARM newInstr of
       Left err -> error $ "interpretLoop: instruction parse failed (" ++ err ++ ")"
       Right (cond, instr) ->
-        error $ "interpretLoop: unimplemented condition handling (" ++ show instr ++ ")"
+        error $ "interpretLoop: unimplemented condition handling (" ++ show cond ++ ")"
 
 interpretARM :: Monad m => Instruction ARM -> System m ()
 interpretARM instr =
