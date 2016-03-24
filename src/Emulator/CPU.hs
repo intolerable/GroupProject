@@ -33,6 +33,8 @@ module Emulator.CPU
   , HasCpsr(..)
   , ShiftType(..)
   , shiftTypeFromByte
+  , applyShiftType
+  , shiftedRegisterLens
   , Shifted(..)
   , Condition(..)
   , conditionFromByte
@@ -157,8 +159,8 @@ data Shifted a = AmountShift Byte ShiftType a
                | RegisterShift a ShiftType a
   deriving (Show, Read, Eq)
 
-registerLens :: RegisterName -> Lens' Registers MWord
-registerLens (RegisterName n) =
+_registerLens :: RegisterName -> Lens' Registers MWord
+_registerLens (RegisterName n) =
   case n of
     0 -> r0
     1 -> r1
@@ -179,8 +181,8 @@ registerLens (RegisterName n) =
     _ -> error $ "registerLens: undefined register label: #" ++ show n
 
 shiftedRegisterLens :: Shifted RegisterName -> Getter Registers ()
-shiftedRegisterLens (AmountShift byte shiftType regName) = undefined
-shiftedRegisterLens (RegisterShift shiftReg shiftType regName) = undefined
+shiftedRegisterLens (AmountShift _byte _shiftType _regName) = undefined
+shiftedRegisterLens (RegisterShift _shiftReg _shiftType _regName) = undefined
 
 fromByte :: forall a. (Enum a, Bounded a) => Byte -> Maybe a
 fromByte b =

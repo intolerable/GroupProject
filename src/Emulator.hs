@@ -7,7 +7,6 @@ import Emulator.ROM
 import Emulator.ROM.Parser
 import Emulator.Types
 import Emulator.Video.Display
-import Utilities.Show
 
 import Control.Lens
 import Data.Bits
@@ -42,7 +41,7 @@ loadROM fp = do
     Left err -> putStrLn err
     Right (rh, _, bs) ->
       case parseARM (mwordFromBS (rh ^. startLocation)) of
-        Right (AL, Branch (Link False) o) ->
+        Right (AL, Branch (Link False) _) ->
           evalStateT (runSystem interpretLoop) $
             buildInitialState bs
         _ -> error "loadROM: undefined"

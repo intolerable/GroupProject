@@ -4,7 +4,6 @@ import Emulator.CPU hiding (System)
 import Emulator.CPU.Instructions.Parser
 import Emulator.Memory
 import Emulator.Memory.AddressSpace
-import Utilities.Show
 
 import Control.Lens
 import Control.Monad
@@ -13,7 +12,6 @@ import Control.Monad.Trans.State
 import Data.Array.Unboxed
 import Data.ByteString.Lazy (ByteString)
 import Data.Default.Class
-import Data.Proxy
 import Emulator.Types
 import Control.Monad.IO.Class
 import qualified Control.Monad.State.Class as State
@@ -76,11 +74,10 @@ instance Monad m => State.MonadState SystemState (System m) where
 interpretLoop :: Monad m => System m ()
 interpretLoop = do
   forever $ do
-    pc <- System (use (sysRegisters.r15))
     newInstr <- System (use (sysRegisters.r15)) >>= readAddressWord
     case parseARM newInstr of
       Left err -> error $ "interpretLoop: instruction parse failed (" ++ err ++ ")"
-      Right (cond, instr) ->
+      Right (cond, _instr) ->
         error $ "interpretLoop: unimplemented condition handling (" ++ show cond ++ ")"
 
 interpretARM :: Monad m => Instruction ARM -> System m ()

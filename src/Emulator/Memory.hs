@@ -42,7 +42,7 @@ writeAddressWord addr hw =
 readAddressWord :: AddressSpace m => Address -> m MWord
 readAddressWord addr =
   case addressToRegionType addr of
-    (off, WRAM) -> readWord (Proxy :: Proxy WRAM) addr
-    (off, GamePakROM) -> readWord (Proxy :: Proxy ROM) addr
+    (_, WRAM) -> readWord (Proxy :: Proxy WRAM) addr
+    (_, GamePakROM) -> readWord (Proxy :: Proxy ROM) addr
     (_, r) -> error $ "writeAddress: unhandled region type: " ++ show r
 
