@@ -12,35 +12,51 @@ parseTHUMB :: HalfWord -> Either String (Instruction THUMB)
 parseTHUMB w = case greaterId of
   0 -> if addId then Right $ readAddSub w else Right $ readMovShifted w
   1 -> Right $ readMovCmpAddSub w
-  2 -> if ahId then 
-        if testBit w 10 then Right $ readHighRegOperation w 
-        else Right $ readALUOperation w
-       else if relLoadId then Right $ readPCRelativeLoad w
-            else if testBit w 9 then Right $ readLoadStoreRegOffset w 
-                 else Right $ readLoadStoreSignExtByteHalfWord w
+  2 ->
+    if ahId
+      then
+        if testBit w 10
+          then Right $ readHighRegOperation w
+          else Right $ readALUOperation w
+       else
+        if relLoadId
+          then Right $ readPCRelativeLoad w
+          else
+            if testBit w 9
+              then Right $ readLoadStoreRegOffset w
+              else Right $ readLoadStoreSignExtByteHalfWord w
   3 -> Right $ readLoadStoreImmedOffset w
   4 -> if modifierBit then Right $ readSPRelativeLoadStore w else Right $ readLoadStoreHalfword w
-  5 -> if not modifierBit then Right $ readLoadAddress w
-       else if testBit w 10 then Right $ readPushPopRegisters w
-            else Right $ readAddOffsetToSP w
-  6 -> if not modifierBit then Right $ readMultipleLoadStore w
-       else if cond == 0xF then Right $ readThumbSoftwareInterrupt w
-            else Right $ readConditionalBranch w
-  7 -> if modifierBit then Right $ readLongBranchWithLink w
-       else Right $ readUnconditionalBranch w
-  _ -> error ("Undefined opcode: 0x" ++ (showHex w ""))
+  5 ->
+    if not modifierBit
+      then Right $ readLoadAddress w
+      else
+        if testBit w 10
+          then Right $ readPushPopRegisters w
+          else Right $ readAddOffsetToSP w
+  6 ->
+    if not modifierBit
+      then Right $ readMultipleLoadStore w
+      else
+        if cond == 0xF
+          then Right $ readThumbSoftwareInterrupt w
+          else Right $ readConditionalBranch w
+  7 -> if modifierBit then Right $ readLongBranchWithLink w else Right $ readUnconditionalBranch w
+  _ -> error $ "Undefined opcode: 0x" ++ showHex w ""
   where
-    greaterId = $(bitmask 15 13) w 
+    greaterId = $(bitmask 15 13) w
     lesserId = $(bitmask 12 11) w
     modifierBit = testBit w 12
     addId = lesserId == 3
-    ahId = lesserId == 0  -- alu or high-reg operation
+    ahId = lesserId == 0 -- alu or high-reg operation
     relLoadId = lesserId == 1
     cond = $(bitmask 11 8) w
 
 readAddSub :: HalfWord -> Instruction THUMB
-readAddSub w = if testBit w 10 then AddSubtractImmediate op (fromIntegral val) srcReg destReg -- Immediate value
-               else AddSubtractRegister op (RegisterName $ fromIntegral val) srcReg destReg -- Register value
+readAddSub w =
+  if testBit w 10
+    then AddSubtractImmediate op (fromIntegral val) srcReg destReg -- Immediate value
+    else AddSubtractRegister op (RegisterName $ fromIntegral val) srcReg destReg -- Register value
   where
     op = if testBit w 9 then Subtract else Add
     val = $(bitmask 8 6) w
@@ -48,7 +64,7 @@ readAddSub w = if testBit w 10 then AddSubtractImmediate op (fromIntegral val) s
     destReg = RegisterName $ fromIntegral $ w .&. 0b111
 
 readMovShifted :: HalfWord -> Instruction THUMB
-readMovShifted w = MoveShiftedRegister shifted dest 
+readMovShifted w = MoveShiftedRegister shifted dest
   where
     op = $(bitmask 12 11) w
     operation :: ShiftType
@@ -90,7 +106,7 @@ readHighRegBX w = ThumbBranchExchange $ RegisterName $ fromIntegral $ offset + (
     offset = if testBit w 6 then 8 else 0
 
 readALUOperation :: HalfWord -> Instruction THUMB
-readALUOperation w = case opcode of 
+readALUOperation w = case opcode of
   (Just v) -> ALUOperation v srcReg destReg
   Nothing -> error "Undefined opcode"
   where
@@ -130,7 +146,7 @@ readPCRelativeLoad w = PCRelativeLoad dest offset
     offset = fromIntegral $ w .&. 0xFF
 
 readLoadStoreImmedOffset :: HalfWord -> Instruction THUMB
-readLoadStoreImmedOffset w = 
+readLoadStoreImmedOffset w =
   ThumbLoadStoreImmediateOffset granularity ls offset base dest
   where
     granularity = if testBit w 12 then Byte else Word
