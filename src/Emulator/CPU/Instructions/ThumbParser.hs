@@ -4,9 +4,9 @@ import Emulator.CPU
 import Emulator.Types
 import Emulator.CPU.Instructions.Parser
 import Utilities.Parser.TemplateHaskell
+import Utilities.Show
 
 import Data.Bits
-import Numeric (showHex)
 
 parseTHUMB :: HalfWord -> Either String (Instruction THUMB)
 parseTHUMB w = case greaterId of
@@ -42,7 +42,7 @@ parseTHUMB w = case greaterId of
           then Right $ readThumbSoftwareInterrupt w
           else Right $ readConditionalBranch w
   7 -> if modifierBit then Right $ readLongBranchWithLink w else Right $ readUnconditionalBranch w
-  _ -> error $ "Undefined opcode: 0x" ++ showHex w ""
+  _ -> error $ "Undefined opcode: 0x" ++ showHex w
   where
     greaterId = $(bitmask 15 13) w
     lesserId = $(bitmask 12 11) w
