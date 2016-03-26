@@ -97,6 +97,6 @@ interpretARM instr =
       when l $ System $ sysRegisters.r14 <~ use (sysRegisters.r15)
       -- not totally sure how prefetch interacts with this, so we'll just assume we're an instruction ahead at the moment
       System $ sysRegisters.r15 %= \x -> fromIntegral (fromIntegral x + offset + 4)
-    DataProcessing _ _ _ _ _ ->
-      error "interpretARM: undefined data processing instruction handler"
+    DataProcessing opcode (SetCondition setCond) dest op1 op2 -> do
+      System $ (functionFromOpcode opcode) (registerLens dest) (registerLens op1) (operand2Lens op2) setCond
     _ -> error "interpretARM: unknown instruction"

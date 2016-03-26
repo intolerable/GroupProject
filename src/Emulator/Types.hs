@@ -22,3 +22,6 @@ type MemoryIO = IOUArray Address Byte
 
 newtype RegisterName = RegisterName Int
   deriving (Show, Read, Eq, Ord)
+
+data Rotated a = Rotated Int a
+  deriving (Show, Read, Eq)

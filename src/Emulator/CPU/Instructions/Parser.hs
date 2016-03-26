@@ -39,9 +39,6 @@ data Granularity = Byte | Word | HalfWord
 newtype Immediate = Immediate Bool
   deriving (Show, Read, Eq)
 
-data Rotated a = Rotated Int a
-  deriving (Show, Read, Eq)
-
 data BaseSource = SP | PC
   deriving (Show, Read, Eq)
 

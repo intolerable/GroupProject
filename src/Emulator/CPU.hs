@@ -34,7 +34,9 @@ module Emulator.CPU
   , ShiftType(..)
   , shiftTypeFromByte
   , applyShiftType
+  , registerLens
   , shiftedRegisterLens
+  , operand2Lens
   , Shifted(..)
   , Condition(..)
   , conditionFromByte
@@ -49,6 +51,7 @@ import Emulator.Types
 import Control.Lens
 import Data.Bits
 import Data.Bits.Lens
+import Data.Int
 import Data.Default.Class
 
 data CPUMode = User
@@ -76,7 +79,8 @@ makeLensesWith defaultFieldRules ''Flags
 class HasFlags a where
   flags :: Lens' a Flags
 
-instance HasFlags Flags where flags = iso id id
+instance HasFlags Flags where
+  flags = iso id id
 
 instance Default Flags where
   def = Flags False False False False False False False False
@@ -147,20 +151,20 @@ data ShiftType = LogicalLeft
 shiftTypeFromByte :: Byte -> Maybe ShiftType
 shiftTypeFromByte = fromByte
 
-applyShiftType :: Bits a => ShiftType -> a -> Int -> a
+applyShiftType :: ShiftType -> MWord -> Int -> MWord
 applyShiftType st x s =
   case st of
     LogicalLeft -> x `shiftL` s
     LogicalRight -> x `shiftR` s
-    ArithRight -> undefined
+    ArithRight -> fromIntegral $ (fromIntegral x :: Int32) `shiftR` s
     RotateRight -> x `rotateR` s
 
 data Shifted a = AmountShift Byte ShiftType a
                | RegisterShift a ShiftType a
   deriving (Show, Read, Eq)
 
-_registerLens :: RegisterName -> Lens' Registers MWord
-_registerLens (RegisterName n) =
+registerLens :: RegisterName -> Lens' Registers MWord
+registerLens (RegisterName n) =
   case n of
     0 -> r0
     1 -> r1
@@ -180,9 +184,19 @@ _registerLens (RegisterName n) =
     15 -> r15
     _ -> error $ "registerLens: undefined register label: #" ++ show n
 
-shiftedRegisterLens :: Shifted RegisterName -> Getter Registers ()
-shiftedRegisterLens (AmountShift _byte _shiftType _regName) = undefined
-shiftedRegisterLens (RegisterShift _shiftReg _shiftType _regName) = undefined
+shiftedRegisterLens :: Shifted RegisterName -> Getter Registers MWord
+shiftedRegisterLens (AmountShift byte shiftType regName) =
+  registerLens regName.(to (\x -> applyShiftType shiftType x (fromIntegral byte)))
+shiftedRegisterLens (RegisterShift shiftReg shiftType regName) =
+  to $ \r -> do
+    let val = r ^. registerLens regName
+    let offset = fromIntegral $ r ^. registerLens shiftReg :: Byte
+    applyShiftType shiftType val (fromIntegral offset)
+
+operand2Lens :: Either (Shifted RegisterName) (Rotated Byte) -> Getter Registers MWord
+operand2Lens (Left r) = shiftedRegisterLens r
+operand2Lens (Right (Rotated x b)) = to $ const $ fromIntegral b `rotateL` (x * 2)
+
 
 fromByte :: forall a. (Enum a, Bounded a) => Byte -> Maybe a
 fromByte b =

@@ -7,12 +7,33 @@ import Control.Lens
 import Control.Monad.State.Class
 import Control.Monad
 import Data.Bits
-import Prelude hiding (Ordering(..))
+import Prelude hiding (Ordering(..), and)
 
 type RegisterLabel = Lens' Registers MWord
 type SrcRegister = Getting MWord Registers MWord
 type DestRegister = ASetter' Registers MWord
 type ConditionCode = Bool
+
+functionFromOpcode :: (HasFlags s, HasRegisters s, MonadState s m)
+                   => Opcode -> DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
+functionFromOpcode opcode =
+  case opcode of
+    AND -> and
+    EOR -> eor
+    SUB -> sub
+    RSB -> rsb
+    ADD -> add
+    ADC -> adc
+    SBC -> sbc
+    RSC -> rsc
+    TST -> tst
+    TEQ -> teq
+    CMP -> cmp
+    CMN -> cmn
+    ORR -> orr
+    MOV -> mov
+    BIC -> bic
+    MVN -> mvn
 
 ---------------------
 -- Data processing instructions
