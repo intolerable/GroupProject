@@ -156,7 +156,6 @@ readGeneralMultiply instr =
     where
       isMulLong = testBit instr 23
 
-
 readMultiply :: MWord -> Instruction ARM
 readMultiply instr =
   Multiply accumulate (SetCondition setCondition) (RegisterName $ fromIntegral dest) (RegisterName $ fromIntegral operand1)
@@ -213,7 +212,7 @@ readHalfWordDataTransfer instr
     load = if instr `testBit` 20 then Load else Store
     base = RegisterName $ fromIntegral $ (instr .&. 0xF0000) `shiftR` 16
     dest = RegisterName $ fromIntegral $ (instr .&. 0xF000) `shiftR` 12
-    offset = RegisterName $ fromIntegral $ (instr .&. 0xF)
+    offset = RegisterName $ fromIntegral $ instr .&. 0xF
     granularity = if instr `testBit` 5 then HalfWord else Byte
     signed = instr `testBit` 6
     offsetImmediate =
@@ -270,5 +269,5 @@ parseRegisterList w' m = parseRegisterList' w' 0 []
     parseRegisterList' :: MWord -> Int -> RegisterList -> RegisterList
     parseRegisterList' w n list
       | n == m = list
-      | testBit w n = parseRegisterList' w (n+1) $ (RegisterName n) : list
+      | testBit w n = parseRegisterList' w (n+1) $ RegisterName n : list
       | otherwise = parseRegisterList' w (n+1) list

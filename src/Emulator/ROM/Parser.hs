@@ -10,7 +10,7 @@ import qualified Data.ByteString.Lazy as BS
 
 -- Given a filename, return the data and header of the ROM, or an error.
 readROM :: String -> IO (Either String (ROMHeader, ByteString, ByteString))
-readROM path = do
+readROM path =
   parseROM <$> BS.readFile path
 
 parseROM :: ByteString -> Either String (ROMHeader, ByteString, ByteString)

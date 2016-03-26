@@ -86,8 +86,7 @@ interpretLoop = go False
         Left err -> error $ "interpretLoop: instruction parse failed (" ++ err ++ ")"
         Right (cond, instr) -> do
           liftIO $ print (cond, instr)
-          conditionally cond $ do
-            interpretARM instr
+          conditionally cond $ interpretARM instr
           go True
 
 interpretARM :: Monad m => Instruction ARM -> System m ()

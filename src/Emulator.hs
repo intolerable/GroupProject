@@ -36,7 +36,7 @@ initGL = do
   GLUT.idleCallback $= Just animate
 
 loadROM :: FilePath -> IO ()
-loadROM fp = do
+loadROM fp =
   readROM fp >>= \case
     Left err -> putStrLn err
     Right (rh, _, bs) ->
