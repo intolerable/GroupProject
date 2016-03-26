@@ -3,11 +3,11 @@ module Emulator.CPU.Instructions.Parser where
 import Emulator.CPU hiding (SoftwareInterrupt)
 import Emulator.Types
 import Utilities.Parser.TemplateHaskell
+import Utilities.Show
 
 import Data.Bits
 import Data.Int
 import Data.Maybe
-import Numeric (showHex)
 
 data CPUMode = ARM | THUMB
   deriving (Show, Read, Eq)
@@ -125,7 +125,7 @@ parseARM w
       0x0C000000 -> error "parseARM: undefined instruction: CoprocessorDataTransfer" -- Coprocessor data transfer
       0x0E000000 -> error "parseARM: undefined instruction: CoprocessorDataOperation" -- Coprocessor data operation
       x | x == 0x6000000 || x == 0x4000000 -> Right (getCondition w, readLoadStore w) -- Load/Store
-      _ -> error ("Undefined opcode: 0x" ++ (showHex w ""))
+      _ -> error $ "Undefined opcode: 0x" ++ showHex w
 
 getCondition :: MWord -> Condition
 getCondition w =
