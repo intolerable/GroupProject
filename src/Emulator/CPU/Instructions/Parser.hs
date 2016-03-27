@@ -93,7 +93,7 @@ data Instruction a where
   SPAddOffset :: UpDown -> Offset -> Instruction THUMB
   PushPopRegs :: LoadStore -> StoreLR -> RegisterList -> Instruction THUMB
   MultipleLoadStore :: LoadStore -> RegisterName -> RegisterList -> Instruction THUMB
-  ConditionalBranch :: Condition -> Value -> Instruction THUMB
+  ConditionalBranch :: Condition -> Offset -> Instruction THUMB
   ThumbSoftwareInterrupt :: Value -> Instruction THUMB
   ThumbBranch :: Offset -> Instruction THUMB
   LongBranchWLink :: LowHigh -> Offset -> Instruction THUMB
