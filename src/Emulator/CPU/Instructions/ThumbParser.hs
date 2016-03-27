@@ -209,4 +209,6 @@ readLongBranchWithLink :: HalfWord -> Instruction THUMB
 readLongBranchWithLink = undefined
 
 readUnconditionalBranch :: HalfWord -> Instruction THUMB
-readUnconditionalBranch = undefined
+readUnconditionalBranch w = ThumbBranch offset
+  where
+    offset = fromIntegral $ $(bitmask 10 0) w
