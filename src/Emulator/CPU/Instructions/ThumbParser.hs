@@ -203,7 +203,13 @@ readThumbSoftwareInterrupt :: HalfWord -> Instruction THUMB
 readThumbSoftwareInterrupt = undefined
 
 readConditionalBranch :: HalfWord -> Instruction THUMB
-readConditionalBranch = undefined
+readConditionalBranch w = ConditionalBranch cond offset
+  where
+    cond = case maybeCond of
+      (Just v) -> v
+      Nothing -> error "Error reading condition ThumbParser.hs:210"
+    maybeCond = conditionFromByte $ fromIntegral $ $(bitmask 11 8) w
+    offset = fromIntegral $ $(bitmask 7 0) w
 
 readLongBranchWithLink :: HalfWord -> Instruction THUMB
 readLongBranchWithLink w = LongBranchWLink lh offset
