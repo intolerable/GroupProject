@@ -206,7 +206,10 @@ readConditionalBranch :: HalfWord -> Instruction THUMB
 readConditionalBranch = undefined
 
 readLongBranchWithLink :: HalfWord -> Instruction THUMB
-readLongBranchWithLink = undefined
+readLongBranchWithLink w = LongBranchWLink lh offset
+  where
+    lh = if testBit w 11 then Low else High
+    offset = fromIntegral $ $(bitmask 10 0) w
 
 readUnconditionalBranch :: HalfWord -> Instruction THUMB
 readUnconditionalBranch w = ThumbBranch offset
