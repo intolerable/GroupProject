@@ -81,6 +81,7 @@ test-suite test
     base == 4.*,
     Cabal >= 1.16.0,
     emulator,
+    bytestring,
     data-default-class,
     hspec,
     lens,
