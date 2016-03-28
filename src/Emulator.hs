@@ -15,15 +15,15 @@ import Data.Array.Storable
 import Data.Bits
 import Data.ByteString (ByteString)
 import Data.StateVar
-import qualified Data.StateVar as StateVar
+import Data.Word
 import Graphics.Rendering.OpenGL
 import qualified Data.ByteString as BS
+import qualified Data.StateVar as StateVar
 import qualified Graphics.UI.GLUT as GLUT
 
 main :: IO ()
 main = do
   initGL
-  loadTestTexture
   GLUT.mainLoop
 
 initGL :: IO ()
@@ -34,23 +34,27 @@ initGL = do
     , GLUT.WithAlphaComponent
     , GLUT.DoubleBuffered ]
   _ <- GLUT.createWindow "GBA"
+  name <- loadTestTexture
   GLUT.windowSize $= Size 240 160
   GLUT.viewport $= (Position 0 0, Size 240 160)
   GLUT.clearColor $= Color4 0 0 0 0
+  GLUT.blend $= Enabled
+  GLUT.blendFunc $= (SrcAlpha, OneMinusSrcAlpha)
+  GLUT.texture Texture2D $= Enabled
   GLUT.displayCallback $= display
-  GLUT.idleCallback $= Just animate
+  GLUT.idleCallback $= Just (animate name)
 
 loadTestTexture :: IO TextureObject
 loadTestTexture = do
-  arr <- newArray (0, 15) 1
+  arr <- newArray (0, 15) 0xFF0000FF
   loadTexture arr 4 4
 
-loadTexture :: StorableArray Int Byte -> Int -> Int -> IO TextureObject
+loadTexture :: StorableArray Int Word32 -> Int -> Int -> IO TextureObject
 loadTexture arr w h = preserving (textureBinding Texture2D) $
   withStorableArray arr $ \ptr -> do
     name <- genObjectName
     textureBinding Texture2D $= Just name
-    texImage2D Texture2D NoProxy 0 R8 (TextureSize2D (fromIntegral w) (fromIntegral h)) 0 (PixelData Red UnsignedByte ptr)
+    texImage2D Texture2D NoProxy 0 RGBA' (TextureSize2D (fromIntegral w) (fromIntegral h)) 0 (PixelData RGBA UnsignedByte ptr)
     return name
 
 preserving :: (HasGetter s a, HasSetter s a, MonadIO m) => s -> m b -> m b
