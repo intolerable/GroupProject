@@ -41,6 +41,7 @@ library
     OpenGL,
     lens,
     mtl,
+    StateVar,
     template-haskell,
     transformers
   hs-source-dirs: src/

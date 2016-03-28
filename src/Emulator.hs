@@ -9,16 +9,21 @@ import Emulator.Types
 import Emulator.Video.Display
 
 import Control.Lens
+import Control.Monad.IO.Class
+import Control.Monad.Trans.State
+import Data.Array.Storable
 import Data.Bits
 import Data.ByteString (ByteString)
+import Data.StateVar
+import qualified Data.StateVar as StateVar
 import Graphics.Rendering.OpenGL
-import Control.Monad.Trans.State
 import qualified Data.ByteString as BS
 import qualified Graphics.UI.GLUT as GLUT
 
 main :: IO ()
 main = do
   initGL
+  loadTestTexture
   GLUT.mainLoop
 
 initGL :: IO ()
@@ -34,6 +39,26 @@ initGL = do
   GLUT.clearColor $= Color4 0 0 0 0
   GLUT.displayCallback $= display
   GLUT.idleCallback $= Just animate
+
+loadTestTexture :: IO TextureObject
+loadTestTexture = do
+  arr <- newArray (0, 15) 1
+  loadTexture arr 4 4
+
+loadTexture :: StorableArray Int Byte -> Int -> Int -> IO TextureObject
+loadTexture arr w h = preserving (textureBinding Texture2D) $
+  withStorableArray arr $ \ptr -> do
+    name <- genObjectName
+    textureBinding Texture2D $= Just name
+    texImage2D Texture2D NoProxy 0 R8 (TextureSize2D (fromIntegral w) (fromIntegral h)) 0 (PixelData Red UnsignedByte ptr)
+    return name
+
+preserving :: (HasGetter s a, HasSetter s a, MonadIO m) => s -> m b -> m b
+preserving s a = do
+  prev <- liftIO $ StateVar.get s
+  res <- a
+  liftIO $ s $= prev
+  return res
 
 loadROM :: FilePath -> IO ()
 loadROM fp =
