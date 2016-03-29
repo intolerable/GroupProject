@@ -31,10 +31,17 @@ initGL = do
   _ <- GLUT.createWindow "GBA"
   GLUT.windowSize $= Size 240 160
   GLUT.viewport $= (Position 0 0, Size 240 160)
+  GLUT.reshapeCallback $= Just reshape
   GLUT.clearColor $= Color4 0 0 0 0
   GLUT.texture Texture2D $= Enabled
   GLUT.displayCallback $= display
   GLUT.idleCallback $= Just animate
+
+reshape :: GLUT.ReshapeCallback
+reshape (Size x y) = do
+  loadIdentity
+  ortho 0 640 480 0 0 1
+  viewport $= (GLUT.Position 0 0, Size x y)
 
 loadROM :: FilePath -> IO ()
 loadROM fp =
