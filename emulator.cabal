@@ -38,6 +38,7 @@ library
     containers,
     data-default-class,
     GLUT,
+    JuicyPixels,
     OpenGL,
     lens,
     mtl,
