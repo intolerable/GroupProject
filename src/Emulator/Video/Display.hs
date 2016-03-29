@@ -1,9 +1,13 @@
 module Emulator.Video.Display where
 
-import Codec.Picture.Bitmap
+import Codec.Picture
+import Control.Monad.IO.Class
 import Data.Array.Storable
+import Data.ByteString (ByteString)
+import Data.Vector.Storable
 import Data.Word
 import Graphics.Rendering.OpenGL
+--import qualified Data.StateVar as StateVar
 import qualified Graphics.UI.GLUT as GLUT
 
 type FileName = String
@@ -16,7 +20,7 @@ display = do
 animate :: GLUT.IdleCallback
 animate = do
   clear [GLUT.ColorBuffer]
-  name <- loadTestTexture "/Users/harryduce/Downloads/LAND3.bmp"
+  name <- loadTestTexture "/Users/harryduce/Downloads/star.bmp"
   textureBinding Texture2D $= Just name
   textureFilter Texture2D $= ((Nearest, Nothing), Nearest)
   renderPrimitive Quads $ do
@@ -31,11 +35,20 @@ animate = do
   GLUT.swapBuffers
 
 loadTestTexture :: FileName -> IO TextureObject
-loadTestTexture fname = undefined
+loadTestTexture fname = do
+  bmp <- readBitmap fname
+  case bmp of
+    Right bmp' -> do
+      let (w, h, pixVec) = parseImage bmp'
+      loadTexture pixVec w h
+  where
+    parseImage :: DynamicImage -> (Int, Int, Vector Word8)
+    parseImage (ImageRGB8 (Image w h pixData)) = do
+      (w, h, pixData)
 
-loadTexture :: StorableArray Int Word32 -> Int -> Int -> IO TextureObject
-loadTexture arr w h = withStorableArray arr $ \ptr -> do
+loadTexture :: Vector Word8 -> Int -> Int -> IO TextureObject
+loadTexture vec w h = unsafeWith vec $ \ptr -> do
     name <- genObjectName
     textureBinding Texture2D $= Just name
-    texImage2D Texture2D NoProxy 0 RGBA' (TextureSize2D (fromIntegral w) (fromIntegral h)) 0 (PixelData RGBA UnsignedByte ptr)
+    texImage2D Texture2D NoProxy 0 RGBA' (TextureSize2D (fromIntegral w) (fromIntegral h)) 0 (PixelData RGB UnsignedByte ptr)
     return name
