@@ -39,7 +39,7 @@ initGL = do
 reshape :: GLUT.ReshapeCallback
 reshape (Size x y) = do
   loadIdentity
-  ortho 0 640 480 0 0 1
+  ortho 0 240 160 0 0 1
   viewport $= (GLUT.Position 0 0, Size x y)
 
 loadROM :: FilePath -> IO ()
