@@ -24,7 +24,7 @@ data LoadStore = Load | Store
 data PrePost = Pre | Post
   deriving (Show, Read, Eq)
 
-data UpDown = Up | Down
+data OffsetDirection = Up | Down
   deriving (Show, Read, Eq)
 
 data AddSub = Add | Subtract
@@ -64,11 +64,11 @@ data Instruction a where
   MultiplyLong :: Signed -> Accumulate -> SetCondition -> RegisterName -> RegisterName -> RegisterName -> RegisterName -> Instruction ARM
   SingleDataSwap :: Granularity -> RegisterName -> RegisterName -> RegisterName -> Instruction ARM
   BranchExchange :: RegisterName -> Instruction ARM
-  HalfwordDataTransferRegister :: PrePost -> UpDown -> WriteBack -> LoadStore -> Signed -> Granularity -> RegisterName -> RegisterName -> RegisterName -> Instruction ARM
-  HalfwordDataTransferImmediate :: PrePost -> UpDown -> WriteBack -> LoadStore -> Signed -> Granularity -> RegisterName -> RegisterName -> Offset -> Instruction ARM
-  SingleDataTransfer :: PrePost -> UpDown -> Granularity -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> Instruction ARM
+  HalfwordDataTransferRegister :: PrePost -> OffsetDirection -> WriteBack -> LoadStore -> Signed -> Granularity -> RegisterName -> RegisterName -> RegisterName -> Instruction ARM
+  HalfwordDataTransferImmediate :: PrePost -> OffsetDirection -> WriteBack -> LoadStore -> Signed -> Granularity -> RegisterName -> RegisterName -> Offset -> Instruction ARM
+  SingleDataTransfer :: PrePost -> OffsetDirection -> Granularity -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> Instruction ARM
   Undefined :: Instruction ARM
-  BlockDataTransfer :: PrePost -> UpDown -> ForceUserMode -> WriteBack -> LoadStore -> RegisterName -> RegisterList -> Instruction ARM
+  BlockDataTransfer :: PrePost -> OffsetDirection -> ForceUserMode -> WriteBack -> LoadStore -> RegisterName -> RegisterList -> Instruction ARM
   Branch :: Link -> BranchOffset -> Instruction ARM
   CoprocessorDataTransfer :: Instruction ARM
   CoprocessorDataOperation :: Instruction ARM
@@ -90,7 +90,7 @@ data Instruction a where
   ThumbLoadStoreHalfword :: LoadStore -> Offset -> RegisterName -> RegisterName -> Instruction THUMB
   SPRelativeLoadStore :: LoadStore -> RegisterName -> Offset -> Instruction THUMB
   LoadAddress :: BaseSource -> RegisterName -> Offset -> Instruction THUMB
-  SPAddOffset :: UpDown -> Offset -> Instruction THUMB
+  SPAddOffset :: OffsetDirection -> Offset -> Instruction THUMB
   PushPopRegs :: LoadStore -> StoreLR -> RegisterList -> Instruction THUMB
   MultipleLoadStore :: LoadStore -> RegisterName -> RegisterList -> Instruction THUMB
   ConditionalBranch :: Condition -> Offset -> Instruction THUMB
