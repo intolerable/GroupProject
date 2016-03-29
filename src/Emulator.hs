@@ -32,6 +32,7 @@ initGL = do
   GLUT.windowSize $= Size 240 160
   GLUT.viewport $= (Position 0 0, Size 240 160)
   GLUT.clearColor $= Color4 0 0 0 0
+  GLUT.texture Texture2D $= Enabled
   GLUT.displayCallback $= display
   GLUT.idleCallback $= Just animate
 
