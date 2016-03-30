@@ -99,4 +99,11 @@ interpretARM instr =
       System $ sysRegisters.r15 %= \x -> fromIntegral (fromIntegral x + offset + 4)
     DataProcessing opcode (SetCondition setCond) dest op1 op2 -> do
       System $ (functionFromOpcode opcode) (registerLens dest) (registerLens op1) (operand2Lens op2) setCond
+    SingleDataTransfer pp ud g wb ls dest src op2 ->
+      handleSingleDataTransfer pp ud g wb ls dest src op2
     _ -> error "interpretARM: unknown instruction"
+
+handleSingleDataTransfer :: Monad m
+                         => PrePost -> OffsetDirection -> Granularity -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> System m ()
+handleSingleDataTransfer _pp _ud _g _wb _ls _dest _src _op2 =
+  error "handleSingleDataTransfer: unimplemented instruction"
