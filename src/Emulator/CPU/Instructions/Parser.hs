@@ -10,40 +10,40 @@ import Data.Int
 import Data.Maybe
 
 data CPUMode = ARM | THUMB
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 type ARM = 'ARM
 type THUMB = 'THUMB
 
 newtype SetCondition = SetCondition Bool
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 data LoadStore = Load | Store
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 data PrePost = Pre | Post
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 data OffsetDirection = Up | Down
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 data AddSub = Add | Subtract
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 data LowHigh = Low | High
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 data Granularity = Byte | Word | HalfWord
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 newtype Immediate = Immediate Bool
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 data BaseSource = SP | PC
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 newtype Link = Link Bool
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 type WriteBack = Bool
 type Signed = Bool

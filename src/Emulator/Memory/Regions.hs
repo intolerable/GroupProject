@@ -14,7 +14,7 @@ data RegionType = BIOS
                 | ObjAttributes
                 | GamePakROM
                 | GamePakSRAM
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 regions :: Map Address RegionType
 regions = Map.fromList
@@ -108,4 +108,4 @@ data DispRegisters = DispCntrl
                    | BLDCNT    -- Color Special Effects Selection
                    | BLGALPHA  -- Alpha Blending Coefficients
                    | BLDY      -- Brightness Coefficient
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)

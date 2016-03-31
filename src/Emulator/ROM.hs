@@ -12,6 +12,6 @@ data ROMHeader = ROMHeader
   , _rhGameCode :: ByteString  -- 0xAC: Game code (uppercase ascii, max 4 bytes)
   , _rhMakerCode :: ByteString  -- 0xB0: Maker code (uppercase ascii, max 2 bytes)
   , _rhMagicByte :: Byte }    -- 0xB2: Must be 0x96
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 makeLensesWith abbreviatedFields ''ROMHeader

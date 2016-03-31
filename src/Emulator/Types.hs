@@ -24,4 +24,4 @@ newtype RegisterName = RegisterName Int
   deriving (Show, Read, Eq, Ord)
 
 data Rotated a = Rotated Int a
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord, Functor)

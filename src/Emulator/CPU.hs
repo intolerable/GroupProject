@@ -213,7 +213,7 @@ applyShiftType st x s =
 --     in another register. It can also be shifted in a variety of ways.
 data Shifted a = AmountShift Byte ShiftType a -- ^ shift the register by a fixed number of bytes according to the shift type
                | RegisterShift a ShiftType a -- ^ shift the register by the value of another specified register (according to the shift type)
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Functor)
 
 -- | Given a 'RegisterName', which is simply a wrapped 'Int' (which should be 0-15),
 --     'registerLens' returns the corresponding lens which can be used to access that
@@ -276,7 +276,7 @@ data Condition = EQ -- ^ Equal
                | GT -- ^ Greater than
                | LE -- ^ Less than or equal
                | AL -- ^ Always (unconditional)
-  deriving (Show, Read, Eq, Enum, Bounded)
+  deriving (Show, Read, Eq, Ord, Enum, Bounded)
 
 -- | Parses a 'Condition' from a given byte, and if the given byte is invalid simply
 --     returns 'Nothing'.
@@ -301,7 +301,7 @@ data Opcode = AND -- ^ Rd := Op1 AND Op2
             | MOV -- ^ Rd := Op2
             | BIC -- ^ Rd := Op1 AND NOT Op2
             | MVN -- ^ Rd := NOT Op2
-  deriving (Show, Read, Eq, Enum, Bounded)
+  deriving (Show, Read, Eq, Ord, Enum, Bounded)
 
 -- | Parses an 'Opcode' from a given byte, and if the given byte is invalid simply
 --     returns 'Nothing'.
@@ -326,7 +326,7 @@ data ThumbOpcode = T_AND
                  | T_MVN
                  | T_MOV -- Not an ALU opcode, but THUMB ones
                  | T_ADD
-  deriving (Show, Read, Eq, Enum, Bounded)
+  deriving (Show, Read, Eq, Ord, Enum, Bounded)
 
 -- | Parses a 'ThumbOpcode' from a given byte, and if the given byte is invalid simply
 --     returns 'Nothing'.
@@ -340,4 +340,4 @@ data Interrupt = Reset                -- Probably won't be used
                | DataAbort            --   for virtual memory systems, which the GBA doesn't use.
                | NormalInterrupt      -- Standard interrupts
                | FastInterrupt        -- Fast (standard) interrupts
-   deriving (Show, Read, Eq)
+   deriving (Show, Read, Eq, Ord)
