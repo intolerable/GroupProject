@@ -1,6 +1,7 @@
 module Emulator.CPU
   ( CPUMode(..)
-  , Flags(Flags)
+  , Flags()
+  , mkFlags
   , HasFlags(..)
   , HasSign(..)
   , HasZero(..)
@@ -84,6 +85,17 @@ instance HasFlags Flags where
 
 instance Default Flags where
   def = Flags False False False False False False False False
+
+mkFlags :: Bool -- ^ sign
+        -> Bool -- ^ zero
+        -> Bool -- ^ carry
+        -> Bool -- ^ overflow
+        -> Bool -- ^ stickyOverflow
+        -> Bool -- ^ irqDisable
+        -> Bool -- ^ fiqDisable
+        -> Bool -- ^ thumbStateBit
+        -> Flags
+mkFlags = Flags
 
 applyFlags :: Flags -> MWord -> MWord
 applyFlags f w =
