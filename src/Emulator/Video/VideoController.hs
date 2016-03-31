@@ -1,5 +1,6 @@
 module Emulator.Video.VideoController where
 
+import Emulator.Memory
 import Emulator.Types
 import Utilities.Parser.TemplateHaskell
 import Data.Bits
@@ -124,9 +125,10 @@ data AlphaBlendCoeff =  -- W
 
 newtype BrightnessCoeff = BrightnessCoeff Byte
 
-recordLCDControl :: HalfWord -> LCDControl
-recordLCDControl hword =
-  LCDControl (fromIntegral $ $(bitmask 2 0) hword)
+recordLCDControl :: AddressSpace m => m LCDControl
+recordLCDControl = do
+  hword <- readAddressHalfWord 0x04000000
+  let lcdCNT = LCDControl (fromIntegral $ $(bitmask 2 0) hword)
              (testBit hword 3)
              (testBit hword 4)
              (testBit hword 5)
@@ -140,6 +142,7 @@ recordLCDControl hword =
              (testBit hword 13)
              (testBit hword 14)
              (testBit hword 15)
+  return lcdCNT
 
 recordLCDStatus :: HalfWord -> LCDStatus
 recordLCDStatus hword =
