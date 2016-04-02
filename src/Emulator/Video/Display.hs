@@ -1,5 +1,8 @@
 module Emulator.Video.Display where
 
+import Emulator.Memory
+import Emulator.Video.BitmapModes
+import Emulator.Video.TileModes
 import Emulator.Video.VideoController
 import Emulator.Types
 
@@ -20,6 +23,14 @@ animate = do
   clear [GLUT.ColorBuffer]
   _ <- drawBg "/Users/harryduce/4thYrProj/bmp/toad.bmp" (150, 230) (100, 160)
   GLUT.swapBuffers
+
+backgroundMode :: AddressSpace m => m a
+backgroundMode = do
+  record <- recordLCDControl
+  if bgMode record <= 2 then
+    tileModes record
+  else
+    bitmapModes record
 
 drawBg :: FileName -> (GLdouble, GLdouble) -> (GLdouble, GLdouble) -> IO TextureObject
 drawBg fname (x1, x2) (y1, y2) = do
