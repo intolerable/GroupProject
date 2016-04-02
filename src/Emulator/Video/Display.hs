@@ -1,10 +1,10 @@
 module Emulator.Video.Display where
 
 import Emulator.Memory
+import Emulator.Types
 import Emulator.Video.BitmapModes
 import Emulator.Video.TileModes
 import Emulator.Video.VideoController
-import Emulator.Types
 
 import Codec.Picture
 import Data.Vector.Storable
