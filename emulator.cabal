@@ -29,6 +29,7 @@ library
     Emulator.Video.BitmapModes
     Emulator.Video.Display
     Emulator.Video.TileModes
+    Emulator.Video.Util
     Emulator.Video.VideoController
     Utilities.Parser.TemplateHaskell
     Utilities.Show
