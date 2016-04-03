@@ -61,9 +61,12 @@ canRead ObjAttributes = True
 canRead GamePakROM    = True
 canRead GamePakSRAM   = True
 
+lookupRegion :: Address -> Maybe (Address, RegionType)
+lookupRegion addr = Map.lookupLE addr regions
+
 addressToRegionType :: Address -> (Address, RegionType)
 addressToRegionType addr =
-  case Map.lookupLE addr regions of
+  case lookupRegion addr of
     Just x -> x
     Nothing -> error "Unrecognized region"
 
