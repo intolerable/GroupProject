@@ -50,6 +50,7 @@ data OAM
 data ROM
 data VRAM
 data WRAM
+data GamePakWRAM
 
 newtype PureMemoryT x m a = PureMemoryT (StateT Memory m a)
   deriving (Functor, Applicative, Monad, MonadTrans, MonadIO)
