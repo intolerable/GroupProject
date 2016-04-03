@@ -4,7 +4,10 @@ import Control.Monad
 import Data.Bits
 import Language.Haskell.TH
 
--- $(bitmask x y) :: (Integral a, Bits a, Num a) => a -> a
+-- | @$(bitmask x y) :: (Integral a, Bits a, Num a) => a -> a@
+--
+--   @$(bitmask x y)@ generates a function which masks a given bitstring and returns the bits whose
+--     indexes are between @x@ and @y@. It is a compile error for @y@ to be bigger than @x@.
 bitmask :: Word -> Word -> Q Exp
 bitmask x y = do
   when (y > x) $ fail "Invalid bitmask: the lower bound for a bitmask must be less than its upper bound."
