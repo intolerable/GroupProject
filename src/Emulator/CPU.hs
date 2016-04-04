@@ -239,6 +239,9 @@ registerLens (RegisterName n) =
     15 -> r15
     _ -> error $ "registerLens: undefined register label: #" ++ show n
 
+rn :: RegisterName -> Lens' Registers MWord
+rn = registerLens
+
 shiftedRegisterLens :: Shifted RegisterName -> Getter Registers MWord
 shiftedRegisterLens (AmountShift byte shiftType regName) =
   registerLens regName.(to (\x -> applyShiftType shiftType x (fromIntegral byte)))
