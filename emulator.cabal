@@ -42,6 +42,7 @@ library
     OpenGL,
     lens,
     mtl,
+    stm,
     template-haskell,
     transformers
   hs-source-dirs: src/
@@ -86,6 +87,7 @@ test-suite test
     data-default-class,
     hspec,
     lens,
+    mtl,
     QuickCheck,
     transformers
   default-extensions:

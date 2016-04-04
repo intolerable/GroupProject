@@ -10,11 +10,12 @@ import Emulator.ROM.Parser
 import Emulator.Types
 import Emulator.Video.Display
 
+import Control.Concurrent.STM
 import Control.Lens
+import Control.Monad
 import Data.Bits
 import Data.ByteString (ByteString)
 import Graphics.Rendering.OpenGL
-import Control.Monad.Trans.State
 import qualified Data.ByteString as BS
 import qualified Graphics.UI.GLUT as GLUT
 
@@ -43,7 +44,8 @@ initGL = do
   GLUT.reshapeCallback $= Just reshape
   GLUT.clearColor $= Color4 0 0 0 0
   GLUT.displayCallback $= display
-  GLUT.idleCallback $= Just animate
+  chan <- newEmptyTMVarIO
+  GLUT.idleCallback $= Just (animate chan)
 
 -- | Callback that should be executed whenever the window is resized. We just fix the
 --     ortho to 240x160 and set the correct window size.
@@ -61,7 +63,7 @@ loadROM fp =
     Right (rh, _, bs) ->
       case parseARM (mwordFromBS (rh ^. startLocation)) of
         Right (AL, Branch (Link False) _) ->
-          evalStateT (runSystem interpretLoop) $
+          void $ runSystemT interpretLoop $
             buildInitialState bs
         _ -> error "loadROM: undefined"
 

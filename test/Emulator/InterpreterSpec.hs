@@ -1,11 +1,10 @@
 module Emulator.InterpreterSpec where
 
-import Emulator.CPU.Instructions.Parser
 import Emulator.CPU
+import Emulator.CPU.Instructions.Parser
 import Emulator.Interpreter
 
 import Control.Lens
-import Control.Monad.Trans.State
 import Test.Hspec
 import qualified Data.ByteString.Lazy as ByteString
 
@@ -21,6 +20,6 @@ spec = do
     let initialSystem = buildInitialState romFile
 
     it "should be able to handle a branch instruction" $ do
-      execState (runSystem (interpretARM (Branch (Link False) 184))) initialSystem ^. sysRegisters.r15 `shouldBe` 0x080000BC
-      execState (runSystem (interpretARM (Branch (Link True) 184))) initialSystem ^. sysRegisters.r14 `shouldBe` 0x08000000
-
+      let run instr = snd $ runIdentity $ runSystemT instr initialSystem
+      run (interpretARM (Branch (Link False) 184)) ^. sysRegisters.r15 `shouldBe` 0x080000BC
+      run (interpretARM (Branch (Link True) 184)) ^. sysRegisters.r14 `shouldBe` 0x08000000
