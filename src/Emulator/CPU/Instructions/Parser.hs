@@ -10,40 +10,40 @@ import Data.Int
 import Data.Maybe
 
 data CPUMode = ARM | THUMB
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 type ARM = 'ARM
 type THUMB = 'THUMB
 
 newtype SetCondition = SetCondition Bool
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 data LoadStore = Load | Store
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 data PrePost = Pre | Post
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
-data UpDown = Up | Down
-  deriving (Show, Read, Eq)
+data OffsetDirection = Up | Down
+  deriving (Show, Read, Eq, Ord)
 
 data AddSub = Add | Subtract
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 data LowHigh = Low | High
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 data Granularity = Byte | Word | HalfWord
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 newtype Immediate = Immediate Bool
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 data BaseSource = SP | PC
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 newtype Link = Link Bool
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 type WriteBack = Bool
 type Signed = Bool
@@ -64,11 +64,11 @@ data Instruction a where
   MultiplyLong :: Signed -> Accumulate -> SetCondition -> RegisterName -> RegisterName -> RegisterName -> RegisterName -> Instruction ARM
   SingleDataSwap :: Granularity -> RegisterName -> RegisterName -> RegisterName -> Instruction ARM
   BranchExchange :: RegisterName -> Instruction ARM
-  HalfwordDataTransferRegister :: PrePost -> UpDown -> WriteBack -> LoadStore -> Signed -> Granularity -> RegisterName -> RegisterName -> RegisterName -> Instruction ARM
-  HalfwordDataTransferImmediate :: PrePost -> UpDown -> WriteBack -> LoadStore -> Signed -> Granularity -> RegisterName -> RegisterName -> Offset -> Instruction ARM
-  SingleDataTransfer :: PrePost -> UpDown -> Granularity -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> Instruction ARM
+  HalfwordDataTransferRegister :: PrePost -> OffsetDirection -> WriteBack -> LoadStore -> Signed -> Granularity -> RegisterName -> RegisterName -> RegisterName -> Instruction ARM
+  HalfwordDataTransferImmediate :: PrePost -> OffsetDirection -> WriteBack -> LoadStore -> Signed -> Granularity -> RegisterName -> RegisterName -> Offset -> Instruction ARM
+  SingleDataTransfer :: PrePost -> OffsetDirection -> Granularity -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> Instruction ARM
   Undefined :: Instruction ARM
-  BlockDataTransfer :: PrePost -> UpDown -> ForceUserMode -> WriteBack -> LoadStore -> RegisterName -> RegisterList -> Instruction ARM
+  BlockDataTransfer :: PrePost -> OffsetDirection -> ForceUserMode -> WriteBack -> LoadStore -> RegisterName -> RegisterList -> Instruction ARM
   Branch :: Link -> BranchOffset -> Instruction ARM
   CoprocessorDataTransfer :: Instruction ARM
   CoprocessorDataOperation :: Instruction ARM
@@ -90,7 +90,7 @@ data Instruction a where
   ThumbLoadStoreHalfword :: LoadStore -> Offset -> RegisterName -> RegisterName -> Instruction THUMB
   SPRelativeLoadStore :: LoadStore -> RegisterName -> Offset -> Instruction THUMB
   LoadAddress :: BaseSource -> RegisterName -> Offset -> Instruction THUMB
-  SPAddOffset :: UpDown -> Offset -> Instruction THUMB
+  SPAddOffset :: OffsetDirection -> Offset -> Instruction THUMB
   PushPopRegs :: LoadStore -> StoreLR -> RegisterList -> Instruction THUMB
   MultipleLoadStore :: LoadStore -> RegisterName -> RegisterList -> Instruction THUMB
   ConditionalBranch :: Condition -> Offset -> Instruction THUMB

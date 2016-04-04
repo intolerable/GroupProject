@@ -51,12 +51,12 @@ spec = do
       checkSign maxBound `shouldBe` True
 
 instance Arbitrary Flags where
-  arbitrary = Flags <$> arbitrary
-                    <*> arbitrary
-                    <*> arbitrary
-                    <*> arbitrary
-                    <*> arbitrary
-                    <*> arbitrary
-                    <*> arbitrary
-                    <*> arbitrary
+  arbitrary = mkFlags <$> arbitrary
+                      <*> arbitrary
+                      <*> arbitrary
+                      <*> arbitrary
+                      <*> arbitrary
+                      <*> arbitrary
+                      <*> arbitrary
+                      <*> arbitrary
   shrink = const []

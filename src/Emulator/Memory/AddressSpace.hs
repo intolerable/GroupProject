@@ -1,8 +1,24 @@
-module Emulator.Memory.AddressSpace where
+module Emulator.Memory.AddressSpace
+  ( CanWrite(..)
+  , CanRead(..)
+  , OAM
+  , ROM
+  , VRAM
+  , WRAM
+  , GamePakWRAM
+  , PureMemoryT()
+  , PureMemory
+  , runPureMemoryT
+  , runPureMemory
+  , MutableMemoryT()
+  , MutableMemory
+  , runMutableMemoryT
+  , runMutableMemory ) where
 
 import Emulator.Types
 
 import Control.Monad.IO.Class
+import Control.Monad.Identity
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Reader
 import Control.Monad.Trans.State.Strict
@@ -50,9 +66,12 @@ data OAM
 data ROM
 data VRAM
 data WRAM
+data GamePakWRAM
 
 newtype PureMemoryT x m a = PureMemoryT (StateT Memory m a)
   deriving (Functor, Applicative, Monad, MonadTrans, MonadIO)
+
+type PureMemory x a = PureMemoryT x Identity a
 
 instance Monad m => CanRead x (PureMemoryT x m) where
   readByte _ a =
@@ -62,9 +81,17 @@ instance Monad m => CanWrite x (PureMemoryT x m) where
   writeByte _ a b =
     PureMemoryT (modify (// [(a, b)]))
 
+runPureMemoryT :: PureMemoryT x m a -> Memory -> m (a, Memory)
+runPureMemoryT (PureMemoryT a) x = runStateT a x
+
+runPureMemory :: PureMemory x a -> Memory -> (a, Memory)
+runPureMemory a x = runIdentity $ runPureMemoryT a x
+
 newtype MutableMemoryT x m a =
-  MutableMemoryT { runMutableMemoryT :: ReaderT MemoryIO m a }
+  MutableMemoryT (ReaderT MemoryIO m a)
   deriving (Functor, Applicative, Monad, MonadTrans, MonadIO)
+
+type MutableMemory x a = MutableMemoryT x IO a
 
 instance MonadIO m => CanWrite x (MutableMemoryT x m) where
   writeByte _ a b = do
@@ -75,3 +102,9 @@ instance MonadIO m => CanRead x (MutableMemoryT x m) where
   readByte _ a = do
     arr <- MutableMemoryT ask
     liftIO $ readArray arr a
+
+runMutableMemoryT :: MutableMemoryT x m a -> MemoryIO -> m a
+runMutableMemoryT (MutableMemoryT a) x = runReaderT a x
+
+runMutableMemory :: MutableMemory x a -> MemoryIO -> IO a
+runMutableMemory = runMutableMemoryT

@@ -14,7 +14,8 @@ data RegionType = BIOS
                 | ObjAttributes
                 | GamePakROM
                 | GamePakSRAM
-  deriving (Show, Eq)
+                | GamePakWRAM
+  deriving (Show, Read, Eq, Ord)
 
 regions :: Map Address RegionType
 regions = Map.fromList
@@ -22,7 +23,7 @@ regions = Map.fromList
   , (0x00004000, Unused)
   , (0x02000000, WRAM)
   , (0x02040000, Unused)
-  , (0x03000000, WRAM)
+  , (0x03000000, GamePakWRAM)
   , (0x03008000, Unused)
   , (0x04000000, IORegisters)
   , (0x04000400, Unused)
@@ -40,6 +41,7 @@ canWrite :: RegionType -> Bool
 canWrite BIOS          = False
 canWrite Unused        = False
 canWrite WRAM          = True
+canWrite GamePakWRAM   = True
 canWrite IORegisters   = True -- Can we definitely write to these??
 canWrite PaletteRAM    = True
 canWrite VRAM          = True
@@ -51,6 +53,7 @@ canRead :: RegionType -> Bool
 canRead BIOS          = False
 canRead Unused        = False
 canRead WRAM          = True
+canRead GamePakWRAM   = True
 canRead IORegisters   = True
 canRead PaletteRAM    = True
 canRead VRAM          = True
@@ -58,9 +61,12 @@ canRead ObjAttributes = True
 canRead GamePakROM    = True
 canRead GamePakSRAM   = True
 
+lookupRegion :: Address -> Maybe (Address, RegionType)
+lookupRegion addr = Map.lookupLE addr regions
+
 addressToRegionType :: Address -> (Address, RegionType)
 addressToRegionType addr =
-  case Map.lookupLE addr regions of
+  case lookupRegion addr of
     Just x -> x
     Nothing -> error "Unrecognized region"
 
@@ -108,4 +114,4 @@ data DispRegisters = DispCntrl
                    | BLDCNT    -- Color Special Effects Selection
                    | BLGALPHA  -- Alpha Blending Coefficients
                    | BLDY      -- Brightness Coefficient
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
