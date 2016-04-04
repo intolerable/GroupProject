@@ -40,7 +40,7 @@ data Background = BG0 | BG1 | BG2 | BG3
 
 data BGControl (bg :: Background) =       -- R/W. BGs 0-3
   BGControl { bgPriority :: Byte          -- 0 = Highest
-            , characterBaseBlock :: Byte  -- =BG Tile Data
+            , characterBaseBlock :: Byte  -- =BG Tile Data. Indicates the start of tile counting
             , mosaic :: Bool
             , colorsPalettes :: Bool      -- (0=16/16, 1=256/1)
             , screenBaseBlock :: Byte
@@ -154,15 +154,18 @@ recordLCDStatus hword =
             (testBit hword 5)
             (fromIntegral $ $(bitmask 15 8) hword)
 
-recordBGControl :: HalfWord -> BGControl a
-recordBGControl hword =
-  BGControl (fromIntegral $ $(bitmask 1 0) hword)
+-- Reads a mem address that points to bgcnt register
+recordBGControl :: AddressSpace m => Address -> m (BGControl a)
+recordBGControl mem = do
+  hword <- readAddressHalfWord mem
+  let bgCNT = BGControl (fromIntegral $ $(bitmask 1 0) hword)
             (fromIntegral $ $(bitmask 3 2) hword)
             (testBit hword 6)
             (testBit hword 7)
             (fromIntegral $ $(bitmask 12 8) hword)
             (testBit hword 13)
             (fromIntegral $ $(bitmask 15 14) hword)
+  return bgCNT
 
 recordBGOffset :: HalfWord -> BGOffset a b
 recordBGOffset hword =
