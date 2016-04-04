@@ -239,6 +239,8 @@ registerLens (RegisterName n) =
     15 -> r15
     _ -> error $ "registerLens: undefined register label: #" ++ show n
 
+-- | 'rn' is just a shorter name for 'registerLens' which is easier to use when writing
+--     instruction handling code.
 rn :: RegisterName -> Lens' Registers MWord
 rn = registerLens
 
