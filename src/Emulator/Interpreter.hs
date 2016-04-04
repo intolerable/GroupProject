@@ -77,13 +77,13 @@ instance Monad m => State.MonadState SystemState (SystemT m) where
   state = SystemT . State.state
 
 interpretLoop :: MonadIO m => SystemT m ()
-interpretLoop = go False
+interpretLoop = go True
   where
     go inc = do
       when inc $ sysRegisters.r15 += 4
-      pc <- SystemT (use (sysRegisters.r15))
+      pc <- prefetched <$> use (sysRegisters.r15) -- adjusted for prefetch
       liftIO $ putStrLn $ showHex pc
-      newInstr <- SystemT (use (sysRegisters.r15)) >>= readAddressWord
+      newInstr <- readAddressWord pc
       liftIO $ putStrLn $ showHex newInstr
       case parseARM newInstr of
         Left err -> error $ "interpretLoop: instruction parse failed (" ++ err ++ ")"
@@ -92,21 +92,31 @@ interpretLoop = go False
           conditionally cond $ interpretARM instr
           go True
 
+prefetched :: Address -> Address
+prefetched addr = addr - 4
+
 interpretARM :: Monad m => Instruction ARM -> SystemT m ()
 interpretARM instr =
   case instr of
-    Branch (Link l) offset -> do
+    Branch (Link l) offset -> SystemT $ do
       -- if the link bit is set, we put the current pc into r14
-      when l $ SystemT $ sysRegisters.r14 <~ use (sysRegisters.r15)
-      -- not totally sure how prefetch interacts with this, so we'll just assume we're an instruction ahead at the moment
-      SystemT $ sysRegisters.r15 %= \x -> fromIntegral (fromIntegral x + offset + 4)
+      when l $ sysRegisters.r14 <~ use (sysRegisters.r15)
+      sysRegisters.r15 %= \x -> fromIntegral (fromIntegral x + offset)
     DataProcessing opcode (SetCondition setCond) dest op1 op2 -> do
-      SystemT $ (functionFromOpcode opcode) (registerLens dest) (registerLens op1) (operand2Lens op2) setCond
+      (functionFromOpcode opcode) (registerLens dest) (registerLens op1) (operand2Lens op2) setCond
     SingleDataTransfer pp ud g wb ls dest src op2 ->
       handleSingleDataTransfer pp ud g wb ls dest src op2
     _ -> error "interpretARM: unknown instruction"
 
 handleSingleDataTransfer :: Monad m
                          => PrePost -> OffsetDirection -> Granularity -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> SystemT m ()
-handleSingleDataTransfer _pp _ud _g _wb _ls _dest _src _op2 =
-  error "handleSingleDataTransfer: unimplemented instruction"
+handleSingleDataTransfer _pp ud gran _wb ls base _target op2 = do
+  _addr <- offsetDir <$> use (registers.registerLens base) <*> use (registers.targetLens)
+  case (ls, gran) of
+    (Load, Byte) -> undefined
+    (Load, Word) -> undefined
+    (Store, Byte) -> undefined
+    (Store, Word) -> undefined
+  where
+    targetLens = case op2 of { Left x -> shiftedRegisterLens x; Right x -> to (const x) }
+    offsetDir = case ud of { Up -> (+); Down -> (-) }
