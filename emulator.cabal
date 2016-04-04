@@ -20,6 +20,7 @@ library
     Emulator.CPU.Instructions.Parser
     Emulator.CPU.Instructions.ThumbParser
     Emulator.Interpreter
+    Emulator.Input
     Emulator.Memory
     Emulator.Memory.AddressSpace
     Emulator.Memory.Regions
