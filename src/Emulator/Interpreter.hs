@@ -120,3 +120,8 @@ handleSingleDataTransfer _pp ud gran _wb ls base _target op2 = do
   where
     targetLens = case op2 of { Left x -> shiftedRegisterLens x; Right x -> to (const x) }
     offsetDir = case ud of { Up -> (+); Down -> (-) }
+
+directionToOperator :: Num a => OffsetDirection -> (a -> a -> a)
+directionToOperator d = case d of
+  Up -> (+)
+  Down -> (-)
