@@ -106,10 +106,13 @@ interpretARM instr =
       (functionFromOpcode opcode) (registerLens dest) (registerLens op1) (operand2Lens op2) setCond
     SingleDataTransfer pp ud g wb ls dest src op2 ->
       handleSingleDataTransfer pp ud g wb ls dest src op2
+    BlockDataTransfer pp ud user wb ls base rlist ->
+      handleBlockDataTranfer pp ud user wb ls base rlist
     _ -> error "interpretARM: unknown instruction"
 
 handleSingleDataTransfer :: Monad m
                          => PrePost -> OffsetDirection -> Granularity -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> SystemT m ()
+
 handleSingleDataTransfer _pp ud gran _wb ls base _target op2 = do
   _addr <- offsetDir <$> use (registers.registerLens base) <*> use (registers.targetLens)
   case (ls, gran) of
@@ -120,6 +123,36 @@ handleSingleDataTransfer _pp ud gran _wb ls base _target op2 = do
   where
     targetLens = case op2 of { Left x -> shiftedRegisterLens x; Right x -> to (const x) }
     offsetDir = case ud of { Up -> (+); Down -> (-) }
+
+handleBlockDataTranfer :: Monad m => PrePost -> OffsetDirection -> ForceUserMode -> WriteBack -> LoadStore -> RegisterName -> RegisterList -> SystemT m ()
+handleBlockDataTranfer pp ud user wb ls base rlist = do
+  baseVal <- use (registers.rn base)
+  let start = (directionToOperator ud) baseVal (if pp == Pre then 4 else 0)    
+  case (ls, user) of
+    (_, True) -> error "Unimplemented feature: S bit set in BlockDataTransfer"
+    (Load, False) -> do
+      endVal <- readBlocks ud start rlist
+      if wb then registers.rn base .= endVal else return ()
+    (Store, False) -> do
+      endVal <- writeBlocks ud start rlist
+      if wb then registers.rn base .= endVal else return ()
+
+readBlocks :: Monad m => OffsetDirection -> MWord -> RegisterList -> SystemT m MWord
+readBlocks _ w [] = return w
+readBlocks d w (r:rs) = do
+  (registers.rn r) <~ readAddressWord w
+  readBlocks d (o w 4) rs
+  where
+    o = directionToOperator d
+
+writeBlocks :: Monad m => OffsetDirection -> MWord -> RegisterList -> SystemT m MWord
+writeBlocks _ w [] = return w
+writeBlocks d w (r:rs) = do
+  val <- use (registers.rn r)
+  writeAddressWord w val
+  writeBlocks d (o w 4) rs
+  where
+    o = directionToOperator d
 
 directionToOperator :: Num a => OffsetDirection -> (a -> a -> a)
 directionToOperator d = case d of
