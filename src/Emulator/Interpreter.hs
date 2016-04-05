@@ -115,7 +115,6 @@ interpretARM instr =
 
 handleSingleDataTransfer :: Monad m
                          => PrePost -> OffsetDirection -> Granularity -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> SystemT m ()
-
 handleSingleDataTransfer _pp ud gran _wb ls base _target op2 = do
   _addr <- offsetDir <$> use (registers.registerLens base) <*> use (registers.targetLens)
   case (ls, gran) of
@@ -130,7 +129,7 @@ handleSingleDataTransfer _pp ud gran _wb ls base _target op2 = do
 handleBlockDataTranfer :: Monad m => PrePost -> OffsetDirection -> ForceUserMode -> WriteBack -> LoadStore -> RegisterName -> RegisterList -> SystemT m ()
 handleBlockDataTranfer pp ud user wb ls base rlist = do
   baseVal <- use (registers.rn base)
-  let start = (directionToOperator ud) baseVal (if pp == Pre then 4 else 0)    
+  let start = (directionToOperator ud) baseVal (if pp == Pre then 4 else 0)
   case (ls, user) of
     (_, True) -> error "Unimplemented feature: S bit set in BlockDataTransfer"
     (Load, False) -> do
