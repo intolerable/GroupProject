@@ -132,10 +132,10 @@ handleBlockDataTranfer pp ud user wb ls base rlist = do
     (_, True) -> error "Unimplemented feature: S bit set in BlockDataTransfer"
     (Load, False) -> do
       endVal <- readBlocks ud start rlist
-      if wb then registers.rn base .= endVal else return ()
+      when wb $ registers.rn base .= endVal
     (Store, False) -> do
       endVal <- writeBlocks ud start rlist
-      if wb then registers.rn base .= endVal else return ()
+      when wb $ registers.rn base .= endVal
 
 readBlocks :: Monad m => OffsetDirection -> MWord -> RegisterList -> SystemT m MWord
 readBlocks _ w [] = return w
