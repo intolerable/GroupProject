@@ -19,6 +19,7 @@ library
     Emulator.CPU.Instructions
     Emulator.CPU.Instructions.Parser
     Emulator.CPU.Instructions.ThumbParser
+    Emulator.CPU.Interrupts
     Emulator.Interpreter
     Emulator.Input
     Emulator.Memory
