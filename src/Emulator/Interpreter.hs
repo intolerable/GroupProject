@@ -162,8 +162,8 @@ handleSingleDataSwap g base dest src = case g of
     swapAddr <- use (registers.rn base)
     swapVal <- readAddressHalfWord swapAddr
     srcVal <- use (registers.rn src)
-    let v1 = $(bitmask 7 0) swapVal -- FIXME: Sign Extension
-    let v2 = $(bitmask 7 0) srcVal
+    let v1 = byteExtend $ (fromIntegral ($(bitmask 7 0) swapVal) :: Byte)
+    let v2 = byteExtend $ (fromIntegral ($(bitmask 7 0) srcVal) :: Byte)
     writeAddressHalfWord swapAddr $ fromIntegral v2
     registers.rn dest .= fromIntegral v1
   Word -> do
