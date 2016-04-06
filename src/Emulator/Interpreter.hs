@@ -2,11 +2,11 @@ module Emulator.Interpreter where
 
 import Emulator.CPU
 import Emulator.CPU.Instructions
-import Emulator.CPU.Instructions.Parser
 import Emulator.Memory
 import Emulator.Memory.AddressSpace
 import Emulator.Types
 import Utilities.Show
+import Utilities.Parser.TemplateHaskell
 
 import Control.Lens
 import Control.Monad
@@ -95,7 +95,7 @@ interpretLoop = go True
 prefetched :: Address -> Address
 prefetched addr = addr - 4
 
-interpretARM :: Monad m => Instruction ARM -> SystemT m ()
+interpretARM :: Monad m => ARMInstruction -> SystemT m ()
 interpretARM instr =
   case instr of
     Branch (Link l) offset -> SystemT $ do
@@ -104,6 +104,8 @@ interpretARM instr =
       sysRegisters.r15 %= \x -> fromIntegral (fromIntegral x + offset)
     DataProcessing opcode (SetCondition setCond) dest op1 op2 -> do
       (functionFromOpcode opcode) (registerLens dest) (registerLens op1) (operand2Lens op2) setCond
+    SingleDataSwap g base dest src ->
+      handleSingleDataSwap g base dest src
     SingleDataTransfer pp ud g wb ls dest src op2 ->
       handleSingleDataTransfer pp ud g wb ls dest src op2
     BlockDataTransfer pp ud user wb ls base rlist ->
@@ -112,7 +114,6 @@ interpretARM instr =
 
 handleSingleDataTransfer :: Monad m
                          => PrePost -> OffsetDirection -> Granularity -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> SystemT m ()
-
 handleSingleDataTransfer _pp ud gran _wb ls base _target op2 = do
   _addr <- offsetDir <$> use (registers.registerLens base) <*> use (registers.targetLens)
   case (ls, gran) of
@@ -127,7 +128,7 @@ handleSingleDataTransfer _pp ud gran _wb ls base _target op2 = do
 handleBlockDataTranfer :: Monad m => PrePost -> OffsetDirection -> ForceUserMode -> WriteBack -> LoadStore -> RegisterName -> RegisterList -> SystemT m ()
 handleBlockDataTranfer pp ud user wb ls base rlist = do
   baseVal <- use (registers.rn base)
-  let start = (directionToOperator ud) baseVal (if pp == Pre then 4 else 0)    
+  let start = (directionToOperator ud) baseVal (if pp == Pre then 4 else 0)
   case (ls, user) of
     (_, True) -> error "Unimplemented feature: S bit set in BlockDataTransfer"
     (Load, False) -> do
@@ -153,6 +154,25 @@ writeBlocks d w (r:rs) = do
   writeBlocks d (o w 4) rs
   where
     o = directionToOperator d
+
+
+handleSingleDataSwap :: Monad m => Granularity -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
+handleSingleDataSwap g base dest src = case g of
+  Byte -> do
+    swapAddr <- use (registers.rn base)
+    swapVal <- readAddressHalfWord swapAddr
+    srcVal <- use (registers.rn src)
+    let v1 = $(bitmask 7 0) swapVal -- FIXME: Sign Extension
+    let v2 = $(bitmask 7 0) srcVal
+    writeAddressHalfWord swapAddr $ fromIntegral v2
+    registers.rn dest .= fromIntegral v1
+  Word -> do
+    swapAddr <- use (registers.rn base)
+    registers.rn dest <~ readAddressWord swapAddr
+    srcVal <- use (registers.rn src)
+    writeAddressWord swapAddr srcVal
+  _ -> error "Incorrect granularity supplied for SingleDataSwap"
+
 
 directionToOperator :: Num a => OffsetDirection -> (a -> a -> a)
 directionToOperator d = case d of
