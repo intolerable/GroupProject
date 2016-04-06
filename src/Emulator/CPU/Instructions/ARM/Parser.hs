@@ -1,107 +1,16 @@
-module Emulator.CPU.Instructions.Parser where
+module Emulator.CPU.Instructions.ARM.Parser where
 
 import Emulator.CPU hiding (SoftwareInterrupt)
+import Emulator.CPU.Instructions.ARM
+import Emulator.CPU.Instructions.Types
 import Emulator.Types
 import Utilities.Parser.TemplateHaskell
 import Utilities.Show
 
 import Data.Bits
-import Data.Int
 import Data.Maybe
 
-data CPUMode = ARM | THUMB
-  deriving (Show, Read, Eq, Ord)
-
-type ARM = 'ARM
-type THUMB = 'THUMB
-
-newtype SetCondition = SetCondition Bool
-  deriving (Show, Read, Eq, Ord)
-
-data LoadStore = Load | Store
-  deriving (Show, Read, Eq, Ord)
-
-data PrePost = Pre | Post
-  deriving (Show, Read, Eq, Ord)
-
-data OffsetDirection = Up | Down
-  deriving (Show, Read, Eq, Ord)
-
-data AddSub = Add | Subtract
-  deriving (Show, Read, Eq, Ord)
-
-data LowHigh = Low | High
-  deriving (Show, Read, Eq, Ord)
-
-data Granularity = Byte | Word | HalfWord
-  deriving (Show, Read, Eq, Ord)
-
-newtype Immediate = Immediate Bool
-  deriving (Show, Read, Eq, Ord)
-
-data BaseSource = SP | PC
-  deriving (Show, Read, Eq, Ord)
-
-newtype Link = Link Bool
-  deriving (Show, Read, Eq, Ord)
-
-type WriteBack = Bool
-type Signed = Bool
-type Accumulate = Bool
-type HighReg = Bool
-type SignExtended = Bool
-type StoreLR = Bool
-type BranchOffset = Int32
-type Offset = MWord
-type Value = Int -- Value is used for signed values in instructions
-type ForceUserMode = Bool
-type RegisterList = [RegisterName]
-
-data Instruction a where
-  DataProcessing :: Opcode -> SetCondition -> RegisterName -> RegisterName -> Either (Shifted RegisterName) (Rotated Byte) -> Instruction ARM
-  Multiply :: Accumulate -> SetCondition -> RegisterName -> RegisterName -> RegisterName -> RegisterName -> Instruction ARM
-    -- MUL A S Rd Rn Rs Rm, Rd <- Rm * Rs (+ Rn if A)
-  MultiplyLong :: Signed -> Accumulate -> SetCondition -> RegisterName -> RegisterName -> RegisterName -> RegisterName -> Instruction ARM
-  SingleDataSwap :: Granularity -> RegisterName -> RegisterName -> RegisterName -> Instruction ARM
-  BranchExchange :: RegisterName -> Instruction ARM
-  HalfwordDataTransferRegister :: PrePost -> OffsetDirection -> WriteBack -> LoadStore -> Signed -> Granularity -> RegisterName -> RegisterName -> RegisterName -> Instruction ARM
-  HalfwordDataTransferImmediate :: PrePost -> OffsetDirection -> WriteBack -> LoadStore -> Signed -> Granularity -> RegisterName -> RegisterName -> Offset -> Instruction ARM
-  SingleDataTransfer :: PrePost -> OffsetDirection -> Granularity -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> Instruction ARM
-  Undefined :: Instruction ARM
-  BlockDataTransfer :: PrePost -> OffsetDirection -> ForceUserMode -> WriteBack -> LoadStore -> RegisterName -> RegisterList -> Instruction ARM
-  Branch :: Link -> BranchOffset -> Instruction ARM
-  CoprocessorDataTransfer :: Instruction ARM
-  CoprocessorDataOperation :: Instruction ARM
-  CoprocessorRegisterTransfer :: Instruction ARM
-  SoftwareInterrupt :: Instruction ARM
-  -- Thumb instructions --
-  MoveShiftedRegister :: (Shifted RegisterName) -> RegisterName -> Instruction THUMB
-  AddSubtractImmediate :: AddSub -> Offset -> RegisterName -> RegisterName -> Instruction THUMB
-  AddSubtractRegister :: AddSub -> RegisterName -> RegisterName -> RegisterName -> Instruction THUMB
-  -- FIXME: Perhaps don't use Opcode here as the structure supports more operations than the instruction does
-  MovCmpAddSubImmediate :: Opcode -> RegisterName -> Offset -> Instruction THUMB
-  ALUOperation :: ThumbOpcode -> RegisterName -> RegisterName -> Instruction THUMB
-  HiRegOperation :: ThumbOpcode -> RegisterName -> RegisterName -> Instruction THUMB
-  ThumbBranchExchange :: RegisterName -> Instruction THUMB
-  PCRelativeLoad :: RegisterName -> Offset -> Instruction THUMB
-  ThumbLoadStoreRegisterOffset :: LoadStore -> Granularity -> RegisterName -> RegisterName -> RegisterName -> Instruction THUMB
-  ThumbLoadStoreSignExtHalfwordByte :: Granularity -> LoadStore -> SignExtended -> RegisterName -> RegisterName -> RegisterName -> Instruction THUMB
-  ThumbLoadStoreImmediateOffset :: Granularity -> LoadStore -> Offset -> RegisterName -> RegisterName -> Instruction THUMB
-  ThumbLoadStoreHalfword :: LoadStore -> Offset -> RegisterName -> RegisterName -> Instruction THUMB
-  SPRelativeLoadStore :: LoadStore -> RegisterName -> Offset -> Instruction THUMB
-  LoadAddress :: BaseSource -> RegisterName -> Offset -> Instruction THUMB
-  SPAddOffset :: OffsetDirection -> Offset -> Instruction THUMB
-  PushPopRegs :: LoadStore -> StoreLR -> RegisterList -> Instruction THUMB
-  MultipleLoadStore :: LoadStore -> RegisterName -> RegisterList -> Instruction THUMB
-  ConditionalBranch :: Condition -> Offset -> Instruction THUMB
-  ThumbSoftwareInterrupt :: Value -> Instruction THUMB
-  ThumbBranch :: Offset -> Instruction THUMB
-  LongBranchWLink :: LowHigh -> Offset -> Instruction THUMB
-
-deriving instance Show (Instruction a)
-deriving instance Eq (Instruction a)
-
-parseARM :: MWord -> Either String (Condition, Instruction ARM)
+parseARM :: MWord -> Either String (Condition, ARMInstruction)
 parseARM w
   | w .&. 0x0FFFFFF0 == 0x012FFF10 = Right (getCondition w, readBranchExchange w) -- Definitely branch exchange instruction
   | (w .&. 0x0C000000 == 0x00) && (testBit w 25 || (w .&. 0b10010000) /= 0b10010000) = -- Data Processing thing
@@ -136,24 +45,24 @@ getOpcode w =
     Just x -> x
     Nothing -> error $ "getOpcode: invalid opcode (" ++ show w ++ ")"
 
-readBranchExchange :: MWord -> Instruction ARM
+readBranchExchange :: MWord -> ARMInstruction
 readBranchExchange w =
   BranchExchange $ RegisterName $ fromIntegral $ $(bitmask 3 0) w
 
-readBranch :: MWord -> Instruction ARM
+readBranch :: MWord -> ARMInstruction
 readBranch br = Branch linkBit offset
   where
     linkBit = Link $ testBit br 24
     offset = $(bitmask 23 0) (fromIntegral br) `shiftL` 2
 
 -- Detect whether it is a Multiply or a Multiply long
-readGeneralMultiply :: MWord -> Instruction ARM
+readGeneralMultiply :: MWord -> ARMInstruction
 readGeneralMultiply instr =
   if isMulLong then readMultiplyLong instr else readMultiply instr
     where
       isMulLong = testBit instr 23
 
-readMultiply :: MWord -> Instruction ARM
+readMultiply :: MWord -> ARMInstruction
 readMultiply instr =
   Multiply accumulate (SetCondition setCondition) (RegisterName $ fromIntegral dest) (RegisterName $ fromIntegral operand1)
     (RegisterName $ fromIntegral operand2) (RegisterName $ fromIntegral operand3)
@@ -165,7 +74,7 @@ readMultiply instr =
       operand2 = $(bitmask 11 8) instr
       operand3 = $(bitmask 3 0) instr
 
-readMultiplyLong :: MWord -> Instruction ARM
+readMultiplyLong :: MWord -> ARMInstruction
 readMultiplyLong instr =
   MultiplyLong signed
                accumulate
@@ -183,7 +92,7 @@ readMultiplyLong instr =
       operand1 = $(bitmask 11 8) instr
       operand2 = $(bitmask 3 0) instr
 
-readSingleDataSwap :: MWord -> Instruction ARM
+readSingleDataSwap :: MWord -> ARMInstruction
 readSingleDataSwap instr =
   SingleDataSwap granularity
                  (RegisterName $ fromIntegral base)
@@ -196,7 +105,7 @@ readSingleDataSwap instr =
       src = $(bitmask 3 0) instr
 
 -- Actually a halfword or signed data transfer but that wouldn't make a nice function name
-readHalfWordDataTransfer :: MWord -> Instruction ARM
+readHalfWordDataTransfer :: MWord -> ARMInstruction
 readHalfWordDataTransfer instr
   | testBit instr 22 =
     HalfwordDataTransferImmediate preIndex upDown writeBack load signed granularity base dest offsetImmediate
@@ -215,7 +124,7 @@ readHalfWordDataTransfer instr
     offsetImmediate =
       ($(bitmask 11 8) instr `shiftL` 4) .|. $(bitmask 3 0) instr
 
-readLoadStore :: MWord -> Instruction ARM
+readLoadStore :: MWord -> ARMInstruction
 readLoadStore instr =
   SingleDataTransfer prePost upDown granularity writeBack loadStore base dest offset
     where
@@ -230,7 +139,7 @@ readLoadStore instr =
         then Left $ parseShiftedRegister instr
         else Right $ $(bitmask 11 0) instr
 
-readBlockDataTransfer :: MWord -> Instruction ARM
+readBlockDataTransfer :: MWord -> ARMInstruction
 readBlockDataTransfer instr =
   BlockDataTransfer prePost upDown forceUser writeBack loadStore base regList
     where

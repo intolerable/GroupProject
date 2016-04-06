@@ -3,7 +3,9 @@ module Emulator
   , loadROM ) where
 
 import Emulator.CPU
-import Emulator.CPU.Instructions.Parser
+import Emulator.CPU.Instructions.ARM
+import Emulator.CPU.Instructions.ARM.Parser
+import Emulator.CPU.Instructions.Types
 import Emulator.Interpreter
 import Emulator.ROM
 import Emulator.ROM.Parser

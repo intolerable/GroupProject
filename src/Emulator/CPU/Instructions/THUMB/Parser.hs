@@ -1,14 +1,16 @@
-module Emulator.CPU.Instructions.ThumbParser where
+module Emulator.CPU.Instructions.THUMB.Parser where
 
 import Emulator.CPU
+import Emulator.CPU.Instructions.ARM.Parser (parseRegisterList)
+import Emulator.CPU.Instructions.THUMB
+import Emulator.CPU.Instructions.Types
 import Emulator.Types
-import Emulator.CPU.Instructions.Parser
 import Utilities.Parser.TemplateHaskell
 import Utilities.Show
 
 import Data.Bits
 
-parseTHUMB :: HalfWord -> Either String (Instruction THUMB)
+parseTHUMB :: HalfWord -> Either String THUMBInstruction
 parseTHUMB w = case greaterId of
   0 -> if addId then Right $ readAddSub w else Right $ readMovShifted w
   1 -> Right $ readMovCmpAddSub w
@@ -52,7 +54,7 @@ parseTHUMB w = case greaterId of
     relLoadId = lesserId == 1
     cond = $(bitmask 11 8) w
 
-readAddSub :: HalfWord -> Instruction THUMB
+readAddSub :: HalfWord -> THUMBInstruction
 readAddSub w =
   if testBit w 10
     then AddSubtractImmediate op (fromIntegral val) srcReg destReg -- Immediate value
@@ -63,7 +65,7 @@ readAddSub w =
     srcReg = RegisterName $ fromIntegral $ $(bitmask 5 3) w
     destReg = RegisterName $ fromIntegral $ w .&. 0b111
 
-readMovShifted :: HalfWord -> Instruction THUMB
+readMovShifted :: HalfWord -> THUMBInstruction
 readMovShifted w = MoveShiftedRegister shifted dest
   where
     op = $(bitmask 12 11) w
@@ -76,7 +78,7 @@ readMovShifted w = MoveShiftedRegister shifted dest
     shifted = AmountShift (fromIntegral op) operation $ RegisterName $ fromIntegral $ $(bitmask 5 3) w
     dest = RegisterName $ fromIntegral $ w .&. 0b111
 
-readMovCmpAddSub :: HalfWord -> Instruction THUMB
+readMovCmpAddSub :: HalfWord -> THUMBInstruction
 readMovCmpAddSub w = MovCmpAddSubImmediate opcode op1 $ fromIntegral immediate
   where
     opcode = case $(bitmask 12 11) w of
@@ -88,7 +90,7 @@ readMovCmpAddSub w = MovCmpAddSubImmediate opcode op1 $ fromIntegral immediate
     op1 = RegisterName $ fromIntegral $ $(bitmask 10 8) w
     immediate = w .&. 0xFF
 
-readHighRegOperation :: HalfWord -> Instruction THUMB
+readHighRegOperation :: HalfWord -> THUMBInstruction
 readHighRegOperation w = case opcode of
   0 -> HiRegOperation T_ADD src dest
   1 -> HiRegOperation T_CMP src dest
@@ -102,12 +104,12 @@ readHighRegOperation w = case opcode of
     dest =
       RegisterName $ fromIntegral $ (if testBit w 7 then 8 else 0) + $(bitmask 2 0) w
 
-readHighRegBX :: HalfWord -> Instruction THUMB
+readHighRegBX :: HalfWord -> THUMBInstruction
 readHighRegBX w = ThumbBranchExchange $ RegisterName $ fromIntegral $ offset + $(bitmask 5 3) w
   where
     offset = if testBit w 6 then 8 else 0
 
-readALUOperation :: HalfWord -> Instruction THUMB
+readALUOperation :: HalfWord -> THUMBInstruction
 readALUOperation w = case opcode of
   (Just v) -> ALUOperation v srcReg destReg
   Nothing -> error "Undefined opcode"
@@ -116,7 +118,7 @@ readALUOperation w = case opcode of
     srcReg = RegisterName $ fromIntegral $ $(bitmask 5 3) w
     destReg = RegisterName $ fromIntegral $ w .&. 0b111
 
-readLoadStoreRegOffset :: HalfWord -> Instruction THUMB
+readLoadStoreRegOffset :: HalfWord -> THUMBInstruction
 readLoadStoreRegOffset w = ThumbLoadStoreRegisterOffset ls granularity offset base dest
   where
     ls = if testBit w 11 then Load else Store
@@ -125,7 +127,7 @@ readLoadStoreRegOffset w = ThumbLoadStoreRegisterOffset ls granularity offset ba
     base = RegisterName $ fromIntegral $ $(bitmask 5 3) w
     dest = RegisterName $ fromIntegral $ w .&. 0b111
 
-readLoadStoreSignExtByteHalfWord :: HalfWord -> Instruction THUMB
+readLoadStoreSignExtByteHalfWord :: HalfWord -> THUMBInstruction
 readLoadStoreSignExtByteHalfWord w = case $(bitmask 11 10) w of
   0 -> -- Store halfword
     ThumbLoadStoreSignExtHalfwordByte HalfWord Store False offset base dest
@@ -141,13 +143,13 @@ readLoadStoreSignExtByteHalfWord w = case $(bitmask 11 10) w of
     base = RegisterName $ fromIntegral $ $(bitmask 5 3) w
     dest = RegisterName $ fromIntegral $ w .&. 0b111
 
-readPCRelativeLoad :: HalfWord -> Instruction THUMB
+readPCRelativeLoad :: HalfWord -> THUMBInstruction
 readPCRelativeLoad w = PCRelativeLoad dest offset
   where
     dest = RegisterName $ fromIntegral $ $(bitmask 10 8) w
     offset = fromIntegral $ w .&. 0xFF
 
-readLoadStoreImmedOffset :: HalfWord -> Instruction THUMB
+readLoadStoreImmedOffset :: HalfWord -> THUMBInstruction
 readLoadStoreImmedOffset w =
   ThumbLoadStoreImmediateOffset granularity ls offset base dest
   where
@@ -157,14 +159,14 @@ readLoadStoreImmedOffset w =
     base = RegisterName $ fromIntegral $ $(bitmask 5 3) w
     dest = RegisterName $ fromIntegral $ w .&. 0b111
 
-readSPRelativeLoadStore :: HalfWord -> Instruction THUMB
+readSPRelativeLoadStore :: HalfWord -> THUMBInstruction
 readSPRelativeLoadStore w = SPRelativeLoadStore ls dest offset
   where
     ls = if testBit w 11 then Load else Store
     dest = RegisterName $ fromIntegral $ $(bitmask 10 8) w
     offset = fromIntegral $ w .&. 0xFF
 
-readLoadStoreHalfword :: HalfWord -> Instruction THUMB
+readLoadStoreHalfword :: HalfWord -> THUMBInstruction
 readLoadStoreHalfword w = ThumbLoadStoreHalfword ls offset base dest
   where
     ls = if testBit w 11 then Load else Store
@@ -172,37 +174,37 @@ readLoadStoreHalfword w = ThumbLoadStoreHalfword ls offset base dest
     base = RegisterName $ fromIntegral $ $(bitmask 5 3) w
     dest = RegisterName $ fromIntegral $ w .&. 0b111
 
-readLoadAddress :: HalfWord -> Instruction THUMB
+readLoadAddress :: HalfWord -> THUMBInstruction
 readLoadAddress w = LoadAddress source dest offset
   where
     source = if testBit w 11 then SP else PC
     dest = RegisterName $ fromIntegral $ $(bitmask 10 8) w
     offset = fromIntegral $ w .&. 0xFF
 
-readPushPopRegisters :: HalfWord -> Instruction THUMB
+readPushPopRegisters :: HalfWord -> THUMBInstruction
 readPushPopRegisters w = PushPopRegs ls store rlist
   where
     ls = if testBit w 11 then Load else Store
     store = testBit w 8
     rlist = parseRegisterList (fromIntegral $ $(bitmask 7 0) w) 8
 
-readAddOffsetToSP :: HalfWord -> Instruction THUMB
+readAddOffsetToSP :: HalfWord -> THUMBInstruction
 readAddOffsetToSP w = SPAddOffset dir offset
   where
     dir = if testBit w 7 then Down else Up
     offset = fromIntegral $ $(bitmask 6 0) w
 
-readMultipleLoadStore :: HalfWord -> Instruction THUMB
+readMultipleLoadStore :: HalfWord -> THUMBInstruction
 readMultipleLoadStore w = MultipleLoadStore ls base rlist
   where
     ls = if testBit w 11 then Load else Store
     base = RegisterName $ fromIntegral $ $(bitmask 10 8) w
     rlist = parseRegisterList (fromIntegral $ $(bitmask 7 0) w) 8
 
-readThumbSoftwareInterrupt :: HalfWord -> Instruction THUMB
+readThumbSoftwareInterrupt :: HalfWord -> THUMBInstruction
 readThumbSoftwareInterrupt = undefined
 
-readConditionalBranch :: HalfWord -> Instruction THUMB
+readConditionalBranch :: HalfWord -> THUMBInstruction
 readConditionalBranch w = ConditionalBranch cond offset
   where
     cond = case maybeCond of
@@ -211,13 +213,13 @@ readConditionalBranch w = ConditionalBranch cond offset
     maybeCond = conditionFromByte $ fromIntegral $ $(bitmask 11 8) w
     offset = fromIntegral $ $(bitmask 7 0) w
 
-readLongBranchWithLink :: HalfWord -> Instruction THUMB
+readLongBranchWithLink :: HalfWord -> THUMBInstruction
 readLongBranchWithLink w = LongBranchWLink lh offset
   where
     lh = if testBit w 11 then Low else High
     offset = fromIntegral $ $(bitmask 10 0) w
 
-readUnconditionalBranch :: HalfWord -> Instruction THUMB
+readUnconditionalBranch :: HalfWord -> THUMBInstruction
 readUnconditionalBranch w = ThumbBranch offset
   where
     offset = fromIntegral $ $(bitmask 10 0) w

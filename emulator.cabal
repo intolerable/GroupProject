@@ -17,11 +17,15 @@ library
     Emulator
     Emulator.CPU
     Emulator.CPU.Instructions
-    Emulator.CPU.Instructions.Parser
-    Emulator.CPU.Instructions.ThumbParser
+    Emulator.CPU.Instructions.ARM
+    Emulator.CPU.Instructions.ARM.Opcodes
+    Emulator.CPU.Instructions.ARM.Parser
+    Emulator.CPU.Instructions.THUMB
+    Emulator.CPU.Instructions.THUMB.Parser
+    Emulator.CPU.Instructions.Types
     Emulator.CPU.Interrupts
-    Emulator.Interpreter
     Emulator.Input
+    Emulator.Interpreter
     Emulator.Memory
     Emulator.Memory.AddressSpace
     Emulator.Memory.Regions

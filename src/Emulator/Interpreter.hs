@@ -2,7 +2,6 @@ module Emulator.Interpreter where
 
 import Emulator.CPU
 import Emulator.CPU.Instructions
-import Emulator.CPU.Instructions.Parser
 import Emulator.Memory
 import Emulator.Memory.AddressSpace
 import Emulator.Types
@@ -96,7 +95,7 @@ interpretLoop = go True
 prefetched :: Address -> Address
 prefetched addr = addr - 4
 
-interpretARM :: Monad m => Instruction ARM -> SystemT m ()
+interpretARM :: Monad m => ARMInstruction -> SystemT m ()
 interpretARM instr =
   case instr of
     Branch (Link l) offset -> SystemT $ do
