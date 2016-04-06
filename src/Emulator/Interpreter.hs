@@ -113,7 +113,7 @@ interpretARM instr =
     _ -> error "interpretARM: unknown instruction"
 
 handleSingleDataTransfer :: Monad m
-                         => PrePost -> OffsetDirection -> Granularity -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> SystemT m ()
+                         => PrePost -> OffsetDirection -> (Granularity 'Full) -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> SystemT m ()
 handleSingleDataTransfer _pp ud gran _wb ls base _target op2 = do
   _addr <- offsetDir <$> use (registers.registerLens base) <*> use (registers.targetLens)
   case (ls, gran) of
@@ -155,8 +155,7 @@ writeBlocks d w (r:rs) = do
   where
     o = directionToOperator d
 
-
-handleSingleDataSwap :: Monad m => Granularity -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
+handleSingleDataSwap :: Monad m => (Granularity 'Full) -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
 handleSingleDataSwap g base dest src = case g of
   Byte -> do
     swapAddr <- use (registers.rn base)
@@ -171,8 +170,6 @@ handleSingleDataSwap g base dest src = case g of
     registers.rn dest <~ readAddressWord swapAddr
     srcVal <- use (registers.rn src)
     writeAddressWord swapAddr srcVal
-  _ -> error "Incorrect granularity supplied for SingleDataSwap"
-
 
 directionToOperator :: Num a => OffsetDirection -> (a -> a -> a)
 directionToOperator d = case d of
