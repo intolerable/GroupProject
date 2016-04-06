@@ -5,6 +5,7 @@ import Emulator.CPU.Instructions
 import Emulator.Memory
 import Emulator.Memory.AddressSpace
 import Emulator.Types
+import Utilities.Bits
 import Utilities.Show
 import Utilities.Parser.TemplateHaskell
 
@@ -104,6 +105,8 @@ interpretARM instr =
       sysRegisters.r15 %= \x -> fromIntegral (fromIntegral x + offset)
     DataProcessing opcode (SetCondition setCond) dest op1 op2 -> do
       (functionFromOpcode opcode) (registerLens dest) (registerLens op1) (operand2Lens op2) setCond
+    HalfwordDataTransferRegister pp ud wb ls s g base dest offset ->
+      handleHalfwordDataTransferRegister pp ud wb ls s g base dest offset
     SingleDataSwap g base dest src ->
       handleSingleDataSwap g base dest src
     SingleDataTransfer pp ud g wb ls dest src op2 ->
@@ -155,14 +158,35 @@ writeBlocks d w (r:rs) = do
   where
     o = directionToOperator d
 
+handleHalfwordDataTransferRegister :: Monad m => PrePost -> OffsetDirection -> WriteBack -> LoadStore -> Signed -> (Granularity 'Lower) -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
+handleHalfwordDataTransferRegister pp ud wb ls s g base dest offset = do
+  bVal <- use (registers.rn base)
+  oVal <- use (registers.rn offset)
+  let readAddr = (directionToOperator ud) bVal (if pp == Pre then oVal else 0)
+  case (g, ls, s) of
+    (Byte, Load, True) -> do
+      valHW <- readAddressHalfWord readAddr
+      let val = byteExtend $ fromIntegral $ $(bitmask 7 0) valHW
+      registers.rn dest .= val
+      when ((pp == Post) || ((pp == Pre) && wb)) $
+        registers.rn base .= (directionToOperator ud) bVal oVal
+    (Byte, Load, False) -> undefined
+    (HalfWord, Load, True) -> undefined
+    (HalfWord, Load, False) -> undefined
+    (HalfWord, Store, True) -> undefined
+    (HalfWord, Store, False) -> undefined
+    (Byte, Store, _) -> error "handleHalfwordDataTransferRegister: Incorrect arguments passed to HalfWordDataTransfer instruction"
+
+  registers.rn dest .= 5
+
 handleSingleDataSwap :: Monad m => (Granularity 'Full) -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
 handleSingleDataSwap g base dest src = case g of
   Byte -> do
     swapAddr <- use (registers.rn base)
     swapVal <- readAddressHalfWord swapAddr
     srcVal <- use (registers.rn src)
-    let v1 = $(bitmask 7 0) swapVal -- FIXME: Sign Extension
-    let v2 = $(bitmask 7 0) srcVal
+    let v1 = byteExtend $ (fromIntegral ($(bitmask 7 0) swapVal) :: Byte)
+    let v2 = byteExtend $ (fromIntegral ($(bitmask 7 0) srcVal) :: Byte)
     writeAddressHalfWord swapAddr $ fromIntegral v2
     registers.rn dest .= fromIntegral v1
   Word -> do
