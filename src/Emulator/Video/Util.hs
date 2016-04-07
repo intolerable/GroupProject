@@ -8,9 +8,9 @@ import Graphics.Rendering.OpenGL
 
 type FileName = String
 
-drawTile :: FileName -> (GLdouble, GLdouble) -> (GLdouble, GLdouble) -> IO TextureObject
+drawTile :: FileName -> (GLdouble, GLdouble) -> (GLdouble, GLdouble) -> IO ()
 drawTile fname (x1, x2) (y1, y2) = do
-  bg <- loadTestTexture fname
+  _ <- loadTestTexture fname
   textureFilter Texture2D $= ((Nearest, Nothing), Nearest)
   renderPrimitive Quads $ do
     texCoord $ TexCoord2 0 (0 :: GLdouble)
@@ -21,11 +21,10 @@ drawTile fname (x1, x2) (y1, y2) = do
     vertex $ Vertex2 x2 (y2 :: GLdouble)
     texCoord $ TexCoord2 0 (1 :: GLdouble)
     vertex $ Vertex2 x1 (y2 :: GLdouble)
-  return bg
 
 
-drawTile' :: Address -> (GLdouble, GLdouble) -> (GLdouble, GLdouble) -> IO ()
-drawTile' addr (x1, x2) (y1, y2) = undefined -- do
+-- drawTile' :: Address -> (GLdouble, GLdouble) -> (GLdouble, GLdouble) -> IO ()
+-- drawTile' addr (x1, x2) (y1, y2) = undefined do
 --   bg <- loadTestTexture
 --   textureFilter Texture2D $= ((Nearest, Nothing), Nearest)
 --   renderPrimitive Quads $ do
