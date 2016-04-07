@@ -54,8 +54,9 @@ data Axis = X | Y
 type X = 'X
 type Y = 'Y
 
-data BGOffset (axis :: Axis) (bg :: Background) = -- W. All layers in BG mode 0 and first two layers in BG mode 1, i.e text modes
-  BGOffset { offset :: HalfWord }
+data BGOffset = -- W. All layers in BG mode 0 and first two layers in BG mode 1, i.e text modes
+  BGOffset { xOffset :: HalfWord
+           , yOffset :: HalfWord }
   deriving (Show, Read, Eq)
 
 data LowerUpperBit = Lower | Upper -- 16 bit | 12 bit
@@ -167,9 +168,14 @@ recordBGControl addr = do
                         (fromIntegral $ $(bitmask 15 14) hword)
   return bgCNT
 
-recordBGOffset :: HalfWord -> BGOffset a b
-recordBGOffset hword =
-  BGOffset (fromIntegral $ $(bitmask 8 0) hword)
+recordBGOffset :: AddressSpace m => Address -> Address -> m BGOffset
+recordBGOffset xAddr yAddr = do
+  xHword <- readAddressHalfWord xAddr
+  yHword <- readAddressHalfWord yAddr
+  let bgOffset = BGOffset (fromIntegral $ $(bitmask 8 0) xHword)
+                          (fromIntegral $ $(bitmask 8 0) yHword)
+  return bgOffset
+
 
 recordBGReferencePoint :: MWord -> BGReferencePoint a b c
 recordBGReferencePoint mword =
