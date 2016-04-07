@@ -156,15 +156,15 @@ recordLCDStatus hword =
 
 -- Reads a mem address that points to bgcnt register
 recordBGControl :: AddressSpace m => Address -> m (BGControl a)
-recordBGControl mem = do
-  hword <- readAddressHalfWord mem
+recordBGControl addr = do
+  hword <- readAddressHalfWord addr
   let bgCNT = BGControl (fromIntegral $ $(bitmask 1 0) hword)
-            (fromIntegral $ $(bitmask 3 2) hword)
-            (testBit hword 6)
-            (testBit hword 7)
-            (fromIntegral $ $(bitmask 12 8) hword)
-            (testBit hword 13)
-            (fromIntegral $ $(bitmask 15 14) hword)
+                        (fromIntegral $ $(bitmask 3 2) hword)
+                        (testBit hword 6)
+                        (testBit hword 7)
+                        (fromIntegral $ $(bitmask 12 8) hword)
+                        (testBit hword 13)
+                        (fromIntegral $ $(bitmask 15 14) hword)
   return bgCNT
 
 recordBGOffset :: HalfWord -> BGOffset a b
