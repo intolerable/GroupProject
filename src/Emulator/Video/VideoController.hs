@@ -129,19 +129,19 @@ recordLCDControl :: AddressSpace m => m LCDControl
 recordLCDControl = do
   hword <- readAddressHalfWord 0x04000000
   let lcdCNT = LCDControl (fromIntegral $ $(bitmask 2 0) hword)
-             (testBit hword 3)
-             (testBit hword 4)
-             (testBit hword 5)
-             (testBit hword 6)
-             (testBit hword 7)
-             (testBit hword 8)
-             (testBit hword 9)
-             (testBit hword 10)
-             (testBit hword 11)
-             (testBit hword 12)
-             (testBit hword 13)
-             (testBit hword 14)
-             (testBit hword 15)
+                          (testBit hword 3)
+                          (testBit hword 4)
+                          (testBit hword 5)
+                          (testBit hword 6)
+                          (testBit hword 7)
+                          (testBit hword 8)
+                          (testBit hword 9)
+                          (testBit hword 10)
+                          (testBit hword 11)
+                          (testBit hword 12)
+                          (testBit hword 13)
+                          (testBit hword 14)
+                          (testBit hword 15)
   return lcdCNT
 
 recordLCDStatus :: HalfWord -> LCDStatus
