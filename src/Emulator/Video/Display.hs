@@ -19,14 +19,22 @@ display = do
   clear [GLUT.ColorBuffer]
   GLUT.swapBuffers
 
-animate :: TMVar SystemState -> GLUT.IdleCallback
-animate chan = do
+animate' :: TMVar SystemState -> GLUT.IdleCallback
+animate' chan = do
   liftIO $ print "waiting"
   mem <- atomically $ takeTMVar chan
   void $ flip runSystemT mem $ do
-    readAddressWord 0x08000000 >>= liftIO . print
+    --readAddressWord 0x08000000 >>= liftIO . print
     liftIO $ clear [GLUT.ColorBuffer]
+    backgroundMode
     liftIO $ GLUT.swapBuffers
+
+animate :: TMVar SystemState -> GLUT.IdleCallback
+animate _ = do
+  clear [GLUT.ColorBuffer]
+  drawVLines "/Users/harryduce/4thYrProj/bmp/BLU.bmp" 64 32 (0,0) 0x06000000
+  drawVLines "/Users/harryduce/4thYrProj/bmp/toad.bmp" 32 32 (30,20) 0x06000000
+  GLUT.swapBuffers
 
 backgroundMode :: AddressSpace m => m ()
 backgroundMode = do
