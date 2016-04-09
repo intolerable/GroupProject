@@ -35,7 +35,7 @@ drawVLines fname n columns (x, y) addr = do
 drawHLine :: String -> Int -> (GLdouble, GLdouble) -> Address -> IO ()
 drawHLine _ (0) _ _ = return ()
 drawHLine fname n (x, y) addr = do
-  drawTile fname (x, x+8) (y, y+8)
+  _ <- drawTile fname (x, x+8) (y, y+8)
   drawHLine fname (n-1) (x+8,y) (addr + 0x00000020)
 
 getTileBlock :: Byte -> Address

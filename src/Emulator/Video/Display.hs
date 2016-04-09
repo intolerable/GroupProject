@@ -32,8 +32,8 @@ animate' chan = do
 animate :: TMVar SystemState -> GLUT.IdleCallback
 animate _ = do
   clear [GLUT.ColorBuffer]
-  drawVLines "/Users/harryduce/4thYrProj/bmp/BLU.bmp" 64 32 (0,0) 0x06000000
-  drawVLines "/Users/harryduce/4thYrProj/bmp/toad.bmp" 32 32 (30,20) 0x06000000
+  --drawVLines "/Users/harryduce/4thYrProj/bmp/BLU.bmp" 64 32 (0,0) 0x06000000
+  drawVLines "/Users/harryduce/4thYrProj/bmp/toad.bmp" 32 32 (-60, -130) 0x06000000
   GLUT.swapBuffers
 
 backgroundMode :: AddressSpace m => m ()
