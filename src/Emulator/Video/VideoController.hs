@@ -168,12 +168,13 @@ recordBGControl addr = do
                         (fromIntegral $ $(bitmask 15 14) hword)
   return bgCNT
 
+-- negating both values.. PROBABLY DOESNT WORK
 recordBGOffset :: AddressSpace m => Address -> Address -> m BGOffset
 recordBGOffset xAddr yAddr = do
   xHword <- readAddressHalfWord xAddr
   yHword <- readAddressHalfWord yAddr
-  let bgOffset = BGOffset (fromIntegral $ $(bitmask 8 0) xHword)
-                          (fromIntegral $ $(bitmask 8 0) yHword)
+  let bgOffset = BGOffset (-(fromIntegral $ $(bitmask 8 0) xHword))
+                          (-(fromIntegral $ $(bitmask 8 0) yHword))
   return bgOffset
 
 
