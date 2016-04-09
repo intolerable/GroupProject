@@ -13,9 +13,9 @@ data THUMBInstruction
   | HiRegOperation ThumbOpcode RegisterName RegisterName
   | ThumbBranchExchange RegisterName
   | PCRelativeLoad RegisterName Offset
-  | ThumbLoadStoreRegisterOffset LoadStore Granularity RegisterName RegisterName RegisterName
-  | ThumbLoadStoreSignExtHalfwordByte Granularity LoadStore SignExtended RegisterName RegisterName RegisterName
-  | ThumbLoadStoreImmediateOffset Granularity LoadStore Offset RegisterName RegisterName
+  | ThumbLoadStoreRegisterOffset LoadStore (Granularity 'Full) RegisterName RegisterName RegisterName
+  | ThumbLoadStoreSignExtHalfwordByte (Granularity 'Lower) LoadStore SignExtended RegisterName RegisterName RegisterName
+  | ThumbLoadStoreImmediateOffset (Granularity 'Full) LoadStore Offset RegisterName RegisterName
   | ThumbLoadStoreHalfword LoadStore Offset RegisterName RegisterName
   | SPRelativeLoadStore LoadStore RegisterName Offset
   | LoadAddress BaseSource RegisterName Offset
@@ -26,4 +26,4 @@ data THUMBInstruction
   | ThumbSoftwareInterrupt Value
   | ThumbBranch Offset
   | LongBranchWLink LowHigh Offset
-  deriving (Show, Read, Eq)
+  deriving (Show, Eq)

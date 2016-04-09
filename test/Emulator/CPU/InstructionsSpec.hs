@@ -2,10 +2,8 @@ module Emulator.CPU.InstructionsSpec where
 
 import Emulator.CPU
 import Emulator.CPU.Instructions
-import Emulator.Types
 
 import Control.Monad.Trans.State
-import Data.Bits
 import Data.Default.Class
 import Test.Hspec
 import Test.Hspec.QuickCheck

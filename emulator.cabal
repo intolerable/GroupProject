@@ -37,6 +37,7 @@ library
     Emulator.Video.TileModes
     Emulator.Video.Util
     Emulator.Video.VideoController
+    Utilities.Bits
     Utilities.Parser.TemplateHaskell
     Utilities.Show
   build-depends:

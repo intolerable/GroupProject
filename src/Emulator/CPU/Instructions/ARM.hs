@@ -8,11 +8,11 @@ data ARMInstruction
   = DataProcessing Opcode SetCondition RegisterName RegisterName (Either (Shifted RegisterName) (Rotated Byte))
   | Multiply Accumulate SetCondition RegisterName RegisterName RegisterName RegisterName
   | MultiplyLong Signed Accumulate SetCondition RegisterName RegisterName RegisterName RegisterName
-  | SingleDataSwap Granularity RegisterName RegisterName RegisterName
+  | SingleDataSwap (Granularity 'Full) RegisterName RegisterName RegisterName
   | BranchExchange RegisterName
-  | HalfwordDataTransferRegister PrePost OffsetDirection WriteBack LoadStore Signed Granularity RegisterName RegisterName RegisterName
-  | HalfwordDataTransferImmediate PrePost OffsetDirection WriteBack LoadStore Signed Granularity RegisterName RegisterName Offset
-  | SingleDataTransfer PrePost OffsetDirection Granularity WriteBack LoadStore RegisterName RegisterName (Either (Shifted RegisterName) Offset)
+  | HalfwordDataTransferRegister PrePost OffsetDirection WriteBack LoadStore Signed (Granularity 'Lower) RegisterName RegisterName RegisterName
+  | HalfwordDataTransferImmediate PrePost OffsetDirection WriteBack LoadStore Signed (Granularity 'Lower) RegisterName RegisterName Offset
+  | SingleDataTransfer PrePost OffsetDirection (Granularity 'Full) WriteBack LoadStore RegisterName RegisterName (Either (Shifted RegisterName) Offset)
   | Undefined
   | BlockDataTransfer PrePost OffsetDirection ForceUserMode WriteBack LoadStore RegisterName RegisterList
   | Branch Link BranchOffset

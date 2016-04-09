@@ -4,9 +4,13 @@ import Emulator.CPU
 import Emulator.Types
 
 import Data.Int
+import GHC.Read
 
 data CPUMode = ARM | THUMB
   deriving (Show, Read, Eq, Ord)
+
+type ARM = 'ARM
+type THUMB = 'THUMB
 
 newtype SetCondition = SetCondition Bool
   deriving (Show, Read, Eq, Ord)
@@ -26,8 +30,31 @@ data AddSub = Add | Subtract
 data LowHigh = Low | High
   deriving (Show, Read, Eq, Ord)
 
-data Granularity = Byte | Word | HalfWord
+data GranularitySize = Lower | Full
   deriving (Show, Read, Eq, Ord)
+
+data Granularity a where
+  Byte :: Granularity a
+  Word :: Granularity 'Full
+  HalfWord :: Granularity 'Lower
+
+deriving instance Show (Granularity a)
+deriving instance Eq (Granularity a)
+deriving instance Ord (Granularity a)
+
+instance Read (Granularity 'Full) where
+  readPrec = parens $ choose
+    [ ("Word", return Word)
+    , ("Byte", return Byte) ]
+  readList = readListDefault
+  readListPrec = readListPrecDefault
+
+instance Read (Granularity 'Lower) where
+  readPrec = parens $ choose
+    [ ("HalfWord", return HalfWord)
+    , ("Byte", return Byte) ]
+  readList = readListDefault
+  readListPrec = readListPrecDefault
 
 newtype Immediate = Immediate Bool
   deriving (Show, Read, Eq, Ord)
