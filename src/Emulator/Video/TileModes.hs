@@ -20,9 +20,11 @@ mode0 _ = do
 
 -- Text Mode
 textBG :: AddressSpace m => Address -> Address -> Address -> m ()
-textBG bgCNT xOff yOff = do
-  bg <- recordBGControl bgCNT
-  bgOffset <- recordBGOffset xOff yOff
+textBG bgCNTAddr xOffAddr yOffAddr = do
+  bg <- recordBGControl bgCNTAddr
+  bgOffset <- recordBGOffset xOffAddr yOffAddr
+  let xOff = -(fromIntegral (xOffset bgOffset) :: GLdouble)
+  let yOff = -(fromIntegral (yOffset bgOffset) :: GLdouble)
   let bgSize = textBGSize $ screenSize bg
   let tileData = getTileBlock $ characterBaseBlock bg
   let mapBlock = getMapBlock $ screenBaseBlock bg
