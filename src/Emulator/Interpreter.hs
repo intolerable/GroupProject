@@ -163,14 +163,13 @@ handleHalfwordDataTransferRegister pp ud wb ls s g base dest offset = do
   bVal <- use (registers.rn base)
   oVal <- use (registers.rn offset)
   let readAddr = (directionToOperator ud) bVal (if pp == Pre then oVal else 0)
+  valHW <- readAddressHalfWord readAddr
   case (g, ls, s) of
     (Byte, Load, True) -> do
-      valHW <- readAddressHalfWord readAddr
       let val = byteExtend $ fromIntegral $ $(bitmask 7 0) valHW
       registers.rn dest .= val
       when ((pp == Post) || ((pp == Pre) && wb)) $
         registers.rn base .= (directionToOperator ud) bVal oVal
-    (Byte, Load, False) -> undefined
     (HalfWord, Load, True) -> undefined
     (HalfWord, Load, False) -> undefined
     (HalfWord, Store, True) -> undefined
