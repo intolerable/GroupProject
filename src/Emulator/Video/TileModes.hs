@@ -14,16 +14,18 @@ tileModes cnt = do
     _ -> undefined
 
 mode0 :: AddressSpace m => LCDControl -> m ()
-mode0 = do
-  return bg0
+mode0 _ = do
+  textBG 0x04000008 0x04000010 0x04000012
+  return ()
 
 -- Text Mode
-bg0 :: AddressSpace m => m ()
-bg0 = do
-  bg <- recordBGControl 0x04000008
-  bgOffset <- recordBGOffset 0x04000010 0x04000020
-  let tileBase = characterBaseBlock bg
-  let tileData = getTileBlock tileBase
+textBG :: AddressSpace m => Address -> Address -> Address -> m ()
+textBG bgCNT xOff yOff = do
+  bg <- recordBGControl bgCNT
+  bgOffset <- recordBGOffset xOff yOff
+  let bgSize = textBGSize $ screenSize bg
+  let tileData = getTileBlock $ characterBaseBlock bg
+  let mapBlock = getMapBlock $ screenBaseBlock bg
   return ()
 
 drawVLines :: String -> Int -> Int -> (GLdouble, GLdouble) -> Address -> IO ()
