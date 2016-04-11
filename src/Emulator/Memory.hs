@@ -5,6 +5,7 @@ import Emulator.Memory.Regions
 import Emulator.Types
 import Utilities.Parser.TemplateHaskell
 
+import Data.Array
 import Data.Bits
 import Data.Proxy
 
@@ -14,6 +15,34 @@ type AddressSpace m =
   , CanRead ROM m
   , CanRead OAM m, CanWrite OAM m
   , CanRead VRAM m, CanWrite VRAM m )
+
+writeAddressByte :: AddressSpace m => Address -> Byte -> m ()
+writeAddressByte addr hw =
+  case addressToRegionType addr of
+    (_, BIOS) -> return ()
+    (_, WRAM) -> writeByte (Proxy :: Proxy WRAM) addr hw
+    (_, GamePakWRAM) -> writeByte (Proxy :: Proxy WRAM) addr hw
+    (_, IORegisters) -> writeByte (Proxy :: Proxy WRAM) addr hw
+    (_, PaletteRAM) -> writeByte (Proxy :: Proxy WRAM) addr hw
+    (_, VRAM) -> writeByte (Proxy :: Proxy VRAM) addr hw
+    (_, ObjAttributes) -> writeByte (Proxy :: Proxy OAM) addr hw
+    (_, GamePakROM) -> return ()
+    (_, GamePakSRAM) -> writeByte (Proxy :: Proxy OAM) addr hw
+    (_, Unused) -> return ()
+
+readAddressByte :: AddressSpace m => Address -> m Byte
+readAddressByte addr =
+  case addressToRegionType addr of
+    (_, BIOS) -> return 0
+    (_, WRAM) -> readByte (Proxy :: Proxy WRAM) addr
+    (_, GamePakWRAM) -> readByte (Proxy :: Proxy WRAM) addr
+    (_, IORegisters) -> readByte (Proxy :: Proxy WRAM) addr
+    (_, PaletteRAM) -> readByte (Proxy :: Proxy WRAM) addr
+    (_, VRAM) -> readByte (Proxy :: Proxy VRAM) addr
+    (_, ObjAttributes) -> readByte (Proxy :: Proxy OAM) addr
+    (_, GamePakROM) -> readByte (Proxy :: Proxy OAM) addr
+    (_, GamePakSRAM) -> readByte (Proxy :: Proxy OAM) addr
+    (_, Unused) -> return 0
 
 writeAddressHalfWord :: AddressSpace m => Address -> HalfWord -> m ()
 writeAddressHalfWord addr hw =
@@ -71,6 +100,8 @@ readAddressWord addr =
     (_, GamePakSRAM) -> readWord (Proxy :: Proxy WRAM) addr
     (_, Unused) -> return 0
 
+readRange :: AddressSpace m => (Address, Address) -> m (Array Address Byte)
+readRange r = listArray r <$> mapM readAddressByte (range r)
 
 readWords :: AddressSpace m => Address -> Int -> m [MWord]
 readWords _ 0 = return []
