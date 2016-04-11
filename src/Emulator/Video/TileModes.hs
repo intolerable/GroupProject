@@ -30,6 +30,12 @@ textBG bgCNTAddr xOffAddr yOffAddr = do
   let mapBlock = getMapBlock $ screenBaseBlock bg
   return ()
 
+getTileBlock :: Byte -> Address
+getTileBlock tileBase = 0x06000000 + (0x00004000 * (fromIntegral tileBase))
+
+getMapBlock :: Byte -> Address
+getMapBlock mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))
+
 -- Draw 32x32 tiles at a time
 drawTileMap :: Int -> Int -> Address -> Address -> (GLdouble, GLdouble) -> IO ()
 drawTileMap 0 _ _ _ _ = return ()
@@ -50,12 +56,6 @@ drawHLine _ (0) _ _ = return ()
 drawHLine fname n (x, y) addr = do
   _ <- drawTile fname (x, x+8) (y, y+8)
   drawHLine fname (n-1) (x+8,y) (addr + 0x00000020)
-
-getTileBlock :: Byte -> Address
-getTileBlock tileBase = 0x06000000 + (0x00004000 * (fromIntegral tileBase))
-
-getMapBlock :: Byte -> Address
-getMapBlock mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))
 
 -- Returns number of tiles to be drawn
 textBGSize :: Byte -> (Int, Int)
