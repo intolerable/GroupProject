@@ -25,9 +25,10 @@ textBG bgCNTAddr xOffAddr yOffAddr = do
   bgOffset <- recordBGOffset xOffAddr yOffAddr
   let xOff = -(fromIntegral (xOffset bgOffset) :: GLdouble)
   let yOff = -(fromIntegral (yOffset bgOffset) :: GLdouble)
-  let bgSize = textBGSize $ screenSize bg
-  let tileData = getTileBlock $ characterBaseBlock bg
+  let charBlock = getTileBlock $ characterBaseBlock bg
   let mapBlock = getMapBlock $ screenBaseBlock bg
+  let col = colorsPalettes bg
+  drawTextBG (fromIntegral (screenSize bg)) col mapBlock charBlock
   return ()
 
 getTileBlock :: Byte -> Address
@@ -35,6 +36,46 @@ getTileBlock tileBase = 0x06000000 + (0x00004000 * (fromIntegral tileBase))
 
 getMapBlock :: Byte -> Address
 getMapBlock mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))
+
+drawTextBG :: AddressSpace m => Int -> Bool -> Address -> Address -> m ()
+drawTextBG 0 True mapBlock charBlock = do
+  map0 <- readTileMap mapBlock
+  return ()
+drawTextBG 0 False mapBlock charBlock = do
+  return ()
+drawTextBG 1 True mapBlock charBlock = do
+  map0 <- readTileMap mapBlock
+  map1 <- readTileMap (mapBlock + 0x00000800)
+  return ()
+drawTextBG 1 False mapBlock charBlock = do
+  return ()
+drawTextBG 2 True mapBlock charBlock = do
+  map0 <- readTileMap mapBlock
+  map1 <- readTileMap (mapBlock + 0x00000800)
+  return ()
+drawTextBG 2 False mapBlock charBlock = do
+  return ()
+drawTextBG _ True mapBlock charBlock = do
+  map0 <- readTileMap mapBlock
+  map1 <- readTileMap (mapBlock + 0x00000800)
+  map2 <- readTileMap (mapBlock + 0x00001000)
+  map3 <- readTileMap (mapBlock + 0x00001800)
+  return ()
+drawTextBG _ False mapBlock charBlock = do
+  return ()
+
+  -- | byt == 0 = (32, 32)
+  -- | byt == 1 = (64, 32)
+  -- | byt == 2 = (32, 64)
+  -- | otherwise = (64, 64)
+
+readTileMap :: AddressSpace m => Address -> m [HalfWord]
+readTileMap _ = undefined
+
+-- readTileMap :: AddressSpace m => Address -> m [HalfWord]
+-- readTileMap addr = do
+--   mem <- readHWords addr 1024
+--   return mem
 
 -- Draw 32x32 tiles at a time
 drawTileMap :: Int -> Int -> Address -> Address -> (GLdouble, GLdouble) -> IO ()
@@ -56,14 +97,6 @@ drawHLine _ (0) _ _ = return ()
 drawHLine fname n (x, y) addr = do
   _ <- drawTile fname (x, x+8) (y, y+8)
   drawHLine fname (n-1) (x+8,y) (addr + 0x00000020)
-
--- Returns number of tiles to be drawn
-textBGSize :: Byte -> (Int, Int)
-textBGSize byt
-  | byt == 0 = (32, 32)
-  | byt == 1 = (64, 32)
-  | byt == 2 = (32, 64)
-  | otherwise = (64, 32)
 
 -- Returns number of tiles to be drawn
 affineBGSize :: Byte -> (Int, Int)
