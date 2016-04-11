@@ -23,22 +23,6 @@ drawTile fname (x1, x2) (y1, y2) = do
     vertex $ Vertex2 x1 (y2 :: GLdouble)
   return bg
 
-
--- drawTile' :: Address -> (GLdouble, GLdouble) -> (GLdouble, GLdouble) -> IO ()
--- drawTile' addr (x1, x2) (y1, y2) = undefined do
---   bg <- loadTestTexture
---   textureFilter Texture2D $= ((Nearest, Nothing), Nearest)
---   renderPrimitive Quads $ do
---     texCoord $ TexCoord2 0 (0 :: GLdouble)
---     vertex $ Vertex2 x1 (y1 :: GLdouble)
---     texCoord $ TexCoord2 1 (0 :: GLdouble)
---     vertex $ Vertex2 x2 (y1 :: GLdouble)
---     texCoord $ TexCoord2 1 (1 :: GLdouble)
---     vertex $ Vertex2 x2 (y2 :: GLdouble)
---     texCoord $ TexCoord2 0 (1 :: GLdouble)
---     vertex $ Vertex2 x1 (y2 :: GLdouble)
---   return bg
-
 -- Temp. function for reading in BMP files
 loadTestTexture :: FileName -> IO TextureObject
 loadTestTexture fname = do

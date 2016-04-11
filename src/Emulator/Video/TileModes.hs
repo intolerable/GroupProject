@@ -5,6 +5,8 @@ import Emulator.Types
 import Emulator.Video.Util
 import Emulator.Video.VideoController
 
+import Data.Array.MArray
+import Data.Array.Storable
 import Graphics.Rendering.OpenGL
 
 tileModes :: AddressSpace m => LCDControl -> m ()
@@ -64,18 +66,8 @@ drawTextBG _ True mapBlock charBlock = do
 drawTextBG _ False mapBlock charBlock = do
   return ()
 
-  -- | byt == 0 = (32, 32)
-  -- | byt == 1 = (64, 32)
-  -- | byt == 2 = (32, 64)
-  -- | otherwise = (64, 64)
-
-readTileMap :: AddressSpace m => Address -> m [HalfWord]
-readTileMap _ = undefined
-
--- readTileMap :: AddressSpace m => Address -> m [HalfWord]
--- readTileMap addr = do
---   mem <- readHWords addr 1024
---   return mem
+readTileMap :: AddressSpace m => Address -> m ()
+readTileMap addr = undefined
 
 -- Draw 32x32 tiles at a time
 drawTileMap :: Int -> Int -> Address -> Address -> (GLdouble, GLdouble) -> IO ()
