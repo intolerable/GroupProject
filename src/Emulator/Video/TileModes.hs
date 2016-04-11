@@ -30,6 +30,15 @@ textBG bgCNTAddr xOffAddr yOffAddr = do
   let mapBlock = getMapBlock $ screenBaseBlock bg
   return ()
 
+-- Draw 32x32 tiles at a time
+drawTileMap :: Int -> Int -> Address -> Address -> (GLdouble, GLdouble) -> IO ()
+drawTileMap 0 _ _ _ _ = return ()
+drawTileMap rows columns tileMap tileSet (xOff, yOff) = undefined
+
+drawHLine' :: Int -> Address -> Address -> (GLdouble, GLdouble) -> IO ()
+drawHLine' 0 _ _ _ = return ()
+drawHLine' columns tileMap tileSet (xOff, yOff) = undefined
+
 drawVLines :: String -> Int -> Int -> (GLdouble, GLdouble) -> Address -> IO ()
 drawVLines _ 0 _ _ _ = return ()
 drawVLines fname n columns (x, y) addr = do
