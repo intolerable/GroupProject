@@ -164,19 +164,22 @@ handleHalfwordDataTransferRegister pp ud wb ls s g base dest offset = do
   oVal <- use (registers.rn offset)
   let readAddr = (directionToOperator ud) bVal (if pp == Pre then oVal else 0)
   valHW <- readAddressHalfWord readAddr
-  case (g, ls, s) of
+  (case (g, ls, s) of
     (Byte, Load, True) -> do
       let val = byteExtend $ fromIntegral $ $(bitmask 7 0) valHW
       registers.rn dest .= val
-      when ((pp == Post) || ((pp == Pre) && wb)) $
+    (HalfWord, Load, True) -> do
+      registers.rn dest .= halfWordExtend valHW
+    (HalfWord, Load, False) -> do
+      registers.rn dest .= fromIntegral valHW
+    (HalfWord, Store, False) -> do
+      destAddr <- use (registers.rn dest)
+      writeAddressHalfWord destAddr valHW
+    (_, _, _) -> error "handleHalfwordDataTransferRegister: Incorrect arguments passed to HalfWordDataTransfer instruction")
+  when (pp == Post) $
         registers.rn base .= (directionToOperator ud) bVal oVal
-    (HalfWord, Load, True) -> undefined
-    (HalfWord, Load, False) -> undefined
-    (HalfWord, Store, True) -> undefined
-    (HalfWord, Store, False) -> undefined
-    (Byte, Store, _) -> error "handleHalfwordDataTransferRegister: Incorrect arguments passed to HalfWordDataTransfer instruction"
-
-  registers.rn dest .= 5
+  when ((pp == Pre) && wb) $
+        registers.rn base .= bVal
 
 handleSingleDataSwap :: Monad m => (Granularity 'Full) -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
 handleSingleDataSwap g base dest src = case g of
