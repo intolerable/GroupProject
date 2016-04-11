@@ -3,7 +3,9 @@ module Emulator.Memory where
 import Emulator.Memory.AddressSpace
 import Emulator.Memory.Regions
 import Emulator.Types
+import Utilities.Parser.TemplateHaskell
 
+import Data.Bits
 import Data.Proxy
 
 type AddressSpace m =
@@ -69,3 +71,35 @@ readAddressWord addr =
     (_, GamePakSRAM) -> readWord (Proxy :: Proxy WRAM) addr
     (_, Unused) -> return 0
 
+
+readWords :: AddressSpace m => Address -> Int -> m [MWord]
+readWords _ 0 = return []
+readWords a n = (:) <$> readAddressWord a <*> readWords (a + 4) (n - 1)
+
+readBytes :: AddressSpace m => Address -> Int -> m [Byte]
+readBytes _ 0 = return []
+readBytes a 1 = do
+  hw <- readAddressHalfWord a
+  return [readLowerByte hw]
+readBytes a 2 = do
+  hw <- readAddressHalfWord a
+  return [readLowerByte hw, readUpperByte hw]
+readBytes a 3 = (++) <$> readBytes a 2 <*> readBytes (a+2) 1
+readBytes a n = do
+  w <- readAddressWord a
+  let b = splitWord w
+  ws <- readBytes (a+4) (n-4)
+  return $ b ++ ws
+  where
+    splitWord :: MWord -> [Byte]
+    splitWord w = 
+      [fromIntegral $ ($(bitmask 31 24) w) `shiftR` 24,
+      fromIntegral $ ($(bitmask 22 16) w) `shiftR` 16,
+      fromIntegral $ ($(bitmask 15 8) w) `shiftR` 8,
+      fromIntegral $ $(bitmask 7 0) w]
+
+readUpperByte :: HalfWord -> Byte
+readUpperByte hw = fromIntegral $ ($(bitmask 15 8) hw) `shiftR` 8 
+
+readLowerByte :: HalfWord -> Byte
+readLowerByte hw = fromIntegral $ $(bitmask 7 0) hw
