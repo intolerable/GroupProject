@@ -123,14 +123,14 @@ readBytes a n = do
   return $ b ++ ws
   where
     splitWord :: MWord -> [Byte]
-    splitWord w = 
+    splitWord w =
       [fromIntegral $ ($(bitmask 31 24) w) `shiftR` 24,
       fromIntegral $ ($(bitmask 22 16) w) `shiftR` 16,
       fromIntegral $ ($(bitmask 15 8) w) `shiftR` 8,
       fromIntegral $ $(bitmask 7 0) w]
 
 readUpperByte :: HalfWord -> Byte
-readUpperByte hw = fromIntegral $ ($(bitmask 15 8) hw) `shiftR` 8 
+readUpperByte hw = fromIntegral $ ($(bitmask 15 8) hw) `shiftR` 8
 
 readLowerByte :: HalfWord -> Byte
 readLowerByte hw = fromIntegral $ $(bitmask 7 0) hw
