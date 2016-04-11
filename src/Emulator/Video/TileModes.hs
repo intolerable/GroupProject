@@ -39,11 +39,10 @@ drawHLine fname n (x, y) addr = do
   drawHLine fname (n-1) (x+8,y) (addr + 0x00000020)
 
 getTileBlock :: Byte -> Address
-getTileBlock tileBase
-  | tileBase == 0 = 0x06000000
-  | tileBase == 1 = 0x06004000
-  | tileBase == 2 = 0x06008000
-  | otherwise = 0x0600C000
+getTileBlock tileBase = 0x06000000 + (0x00004000 * (fromIntegral tileBase))
+
+getMapBlock :: Byte -> Address
+getMapBlock mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))
 
 -- Returns number of tiles to be drawn
 textBGSize :: Byte -> (Int, Int)
