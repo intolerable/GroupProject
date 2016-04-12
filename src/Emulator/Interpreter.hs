@@ -2,6 +2,7 @@ module Emulator.Interpreter where
 
 import Emulator.CPU
 import Emulator.CPU.Instructions
+import Emulator.Debug
 import Emulator.Memory
 import Emulator.Memory.AddressSpace
 import Emulator.Types
@@ -18,6 +19,7 @@ import Data.Array.Unboxed
 import Data.Bits
 import Data.ByteString.Lazy (ByteString)
 import Data.Default.Class
+import Data.Text.Format
 import Data.Word
 import qualified Control.Monad.State.Class as State
 import qualified Data.ByteString.Lazy as BS
@@ -55,6 +57,9 @@ newtype SystemT m a =
 runSystemT :: SystemT m a -> SystemState -> m (a, SystemState)
 runSystemT (SystemT a) x = runStateT a x
 
+instance MonadIO m => Debug (SystemT m) where
+  debug lvl str = liftIO $ debug lvl str
+
 instance Monad m => CanWrite WRAM (SystemT m) where
   writeByte _ a b = SystemT $ zoom sysRAM $ modify (// [(a, b)])
 
@@ -85,13 +90,14 @@ interpretLoop = go True
     go inc = do
       when inc $ sysRegisters.r15 += 4
       pc <- prefetched <$> use (sysRegisters.r15) -- adjusted for prefetch
-      liftIO $ putStrLn $ showHex pc
       newInstr <- readAddressWord pc
-      liftIO $ putStrLn $ showHex newInstr
       case parseARM newInstr of
-        Left err -> error $ "interpretLoop: instruction parse failed (" ++ err ++ ")"
+        Left err -> do
+          debug Error $ format "{} {} {}" (showHex pc, showHex newInstr, show err)
+          error $ "interpretLoop: instruction parse failed (" ++ err ++ ")"
         Right (cond, instr) -> do
-          liftIO $ print (cond, instr)
+          debug Info $ format "pc: {}, instr: {}, condition: {}\n        {}"
+            (showHex pc, showHex newInstr, show cond, show instr)
           conditionally cond $ interpretARM instr
           go True
 
@@ -254,8 +260,8 @@ handleMultiply acc (SetCondition cond) dest opReg0 opReg1 opReg2 = do
 handleMultiplyLong :: Monad m => Signed -> Accumulate -> SetCondition -> RegisterName -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
 handleMultiplyLong s acc (SetCondition cond) destHi destLo or0 or1 = do
   or0Val <- use (registers.rn or0)
-  or1Val <- use (registers.rn or1)    
-  case s of 
+  or1Val <- use (registers.rn or1)
+  case s of
     True -> do
       let op0 = fromIntegral or0Val :: Integer
       let op1 = fromIntegral or1Val :: Integer

@@ -21,7 +21,7 @@ display = do
 
 animate' :: TMVar SystemState -> GLUT.IdleCallback
 animate' chan = do
-  liftIO $ print "waiting"
+  liftIO $ putStrLn "waiting"
   mem <- atomically $ takeTMVar chan
   void $ flip runSystemT mem $ do
     --readAddressWord 0x08000000 >>= liftIO . print

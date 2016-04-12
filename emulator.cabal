@@ -24,6 +24,7 @@ library
     Emulator.CPU.Instructions.THUMB.Parser
     Emulator.CPU.Instructions.Types
     Emulator.CPU.Interrupts
+    Emulator.Debug
     Emulator.Input
     Emulator.Interpreter
     Emulator.Memory
@@ -54,6 +55,8 @@ library
     mtl,
     stm,
     template-haskell,
+    text,
+    text-format,
     transformers,
     vector
   hs-source-dirs: src/
@@ -71,6 +74,7 @@ library
     KindSignatures
     LambdaCase
     MultiParamTypeClasses
+    OverloadedStrings
     RankNTypes
     ScopedTypeVariables
     StandaloneDeriving
