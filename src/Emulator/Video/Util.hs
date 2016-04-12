@@ -3,13 +3,17 @@ module Emulator.Video.Util where
 import Emulator.Types
 
 import Codec.Picture
+import Data.Array.Storable
 import Data.Vector.Storable
 import Graphics.Rendering.OpenGL
 
 type FileName = String
 
-drawTile :: FileName -> (GLdouble, GLdouble) -> (GLdouble, GLdouble) -> IO TextureObject
-drawTile fname (x1, x2) (y1, y2) = do
+drawTile :: StorableArray Address Byte -> (GLdouble, GLdouble) -> (GLdouble, GLdouble) -> IO TextureObject
+drawTile _ _ _ = undefined
+
+drawTile' :: FileName -> (GLdouble, GLdouble) -> (GLdouble, GLdouble) -> IO TextureObject
+drawTile' fname (x1, x2) (y1, y2) = do
   bg <- loadTestTexture fname
   textureFilter Texture2D $= ((Nearest, Nothing), Nearest)
   renderPrimitive Quads $ do
