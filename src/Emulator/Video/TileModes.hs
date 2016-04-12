@@ -9,11 +9,6 @@ import Control.Monad.IO.Class
 import Data.Array.MArray
 import Graphics.Rendering.OpenGL
 
-type TextBG0Reg = 0x04000008 0x04000010 0x04000012
-type TextBG1Reg = 0x0400000A 0x04000014 0x04000016
-type TextBG2Reg = 0x0400000C 0x04000018 0x0400001A
-type TextBG3Reg = 0x0400000E 0x0400001C 0x0400001E
-
 tileModes :: (AddressSpace m, MonadIO m) => LCDControl -> m ()
 tileModes cnt = do
   palette <- readRange (0x05000000, 0x050001FF)
@@ -23,15 +18,15 @@ tileModes cnt = do
 
 mode0 :: (AddressSpace m, MonadIO m) => Palette -> LCDControl -> m ()
 mode0 palette _ = do
-  textBG TextBG0Reg palette
-  textBG TextBG1Reg palette
-  textBG TextBG2Reg palette
-  textBG TextBG3Reg palette
+  textBG 0x04000008 0x04000010 0x04000012 palette
+  textBG 0x0400000A 0x04000014 0x04000016 palette
+  textBG 0x0400000C 0x04000018 0x0400001A palette
+  textBG 0x0400000E 0x0400001C 0x0400001E palette
 
 mode1 :: (AddressSpace m, MonadIO m) => Palette -> LCDControl -> m ()
 mode1 palette _ = do
-  textBG TextBG0Reg palette
-  textBG TextBG1Reg palette
+  textBG 0x04000008 0x04000010 0x04000012 palette
+  textBG 0x0400000A 0x04000014 0x04000016 palette
   affineBG
 
 mode2 :: (AddressSpace m, MonadIO m) => LCDControl -> m ()
