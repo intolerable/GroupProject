@@ -6,7 +6,6 @@ import Emulator.Video.Util
 import Emulator.Video.VideoController
 
 import Control.Monad.IO.Class
-import Data.Array.MArray
 import Graphics.Rendering.OpenGL
 
 tileModes :: (AddressSpace m, MonadIO m) => LCDControl -> m ()
@@ -86,18 +85,18 @@ drawTextBG _ _colFormat mapBlock charBlock (_xOff, _yOff) _palette = do
 readTileMap :: (AddressSpace m, MonadIO m) => Address -> m (TileMap)
 readTileMap addr = do
   memBlock <- readRange (addr, addr + 0x000007FF)
-  mapMem <- liftIO $ thaw memBlock
-  return mapMem
+  --mapMem <- liftIO $ thaw memBlock
+  return memBlock
 
 readCharBlocks :: (AddressSpace m, MonadIO m) => Address -> Bool -> m (TileSet)
 readCharBlocks addr False = do
   memBlock <- readRange (addr, addr + 0x00007FFF)
-  charMem <- liftIO $ thaw memBlock
-  return charMem
+  --charMem <- liftIO $ thaw memBlock
+  return memBlock
 readCharBlocks addr True = do
   memBlock <- readRange (addr, addr + 0x0000FFFF)
-  charMem <- liftIO $ thaw memBlock
-  return charMem
+  --charMem <- liftIO $ thaw memBlock
+  return memBlock
 
 -- Draw 32x32 tiles at a time
 drawTileMap :: Int -> Int -> Bool -> TileMap -> TileSet -> TextBGOffset -> Palette -> IO ()

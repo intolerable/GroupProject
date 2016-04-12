@@ -9,8 +9,8 @@ import Data.Vector.Storable
 import Graphics.Rendering.OpenGL
 
 type FileName = String
-type TileMap = StorableArray Address Byte
-type TileSet = StorableArray Address Byte
+type TileMap = Array Address Byte
+type TileSet = Array Address Byte
 type TextBGOffset = (GLdouble, GLdouble)
 type Palette = Array Address Byte
 
