@@ -6,27 +6,29 @@ import Emulator.Video.Util
 import Emulator.Video.VideoController
 
 import Control.Monad.IO.Class
+import Data.Array
 import Data.Array.MArray
 import Data.Array.Storable
 import Graphics.Rendering.OpenGL
 
 tileModes :: (AddressSpace m, MonadIO m) => LCDControl -> m ()
 tileModes cnt = do
+  palette <- readRange (0x05000000, 0x050001FF)
   case bgMode cnt of
-    0 -> mode0 cnt
+    0 -> mode0 palette cnt
     _ -> undefined
 
-mode0 :: (AddressSpace m, MonadIO m) => LCDControl -> m ()
-mode0 _ = do
-  textBG 0x04000008 0x04000010 0x04000012
-  textBG 0x0400000A 0x04000014 0x04000016
-  textBG 0x0400000C 0x04000018 0x0400001A
-  textBG 0x0400000E 0x0400001C 0x0400001E
+mode0 :: (AddressSpace m, MonadIO m) => Array Address Byte -> LCDControl -> m ()
+mode0 palette _ = do
+  textBG 0x04000008 0x04000010 0x04000012 palette
+  textBG 0x0400000A 0x04000014 0x04000016 palette
+  textBG 0x0400000C 0x04000018 0x0400001A palette
+  textBG 0x0400000E 0x0400001C 0x0400001E palette
 
-mode1 :: (AddressSpace m, MonadIO m) => LCDControl -> m ()
-mode1 _ = do
-  textBG 0x04000008 0x04000010 0x04000012
-  textBG 0x0400000A 0x04000014 0x04000016
+mode1 :: (AddressSpace m, MonadIO m) => Array Address Byte -> LCDControl -> m ()
+mode1 palette _ = do
+  textBG 0x04000008 0x04000010 0x04000012 palette
+  textBG 0x0400000A 0x04000014 0x04000016 palette
   affineBG
 
 mode2 :: (AddressSpace m, MonadIO m) => LCDControl -> m ()
@@ -35,21 +37,21 @@ mode2 _ = do
   affineBG
 
 -- Text Mode
-textBG :: (AddressSpace m, MonadIO m) => Address -> Address -> Address -> m ()
-textBG bgCNTAddr xOffAddr yOffAddr = do
+textBG :: (AddressSpace m, MonadIO m) => Address -> Address -> Address -> Array Address Byte -> m ()
+textBG bgCNTAddr xOffAddr yOffAddr palette = do
   bg <- recordBGControl bgCNTAddr
   bgOffset <- recordBGOffset xOffAddr yOffAddr
   let xOff = -(fromIntegral (xOffset bgOffset) :: GLdouble)
   let yOff = -(fromIntegral (yOffset bgOffset) :: GLdouble)
-  let charBlock = getTileBlock $ characterBaseBlock bg
+  let charBlock = getBaseCharBlock $ characterBaseBlock bg
   let mapBlock = getMapBlock $ screenBaseBlock bg
   let paletteFormat = colorsPalettes bg
-  palette <- readRange (0x05000000, 0x050001FF)
   drawTextBG (fromIntegral (screenSize bg)) paletteFormat mapBlock charBlock (xOff, yOff)
   return ()
 
-getTileBlock :: Byte -> Address
-getTileBlock tileBase = 0x06000000 + (0x00004000 * (fromIntegral tileBase))
+-- Gets the base memory addres for the tile
+getBaseCharBlock :: Byte -> Address
+getBaseCharBlock tileBase = 0x06000000 + (0x00004000 * (fromIntegral tileBase))
 
 getMapBlock :: Byte -> Address
 getMapBlock mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))
@@ -99,7 +101,7 @@ readTileMap addr = do
 
 readCharBlocks :: (AddressSpace m, MonadIO m) => Address -> Bool -> m (TileSet)
 readCharBlocks addr False = do
-  memBlock <- readRange (addr, addr + 0x00003FFF)
+  memBlock <- readRange (addr, addr + 0x00007FFF)
   charMem <- liftIO $ thaw memBlock
   return charMem
 readCharBlocks addr True = do
