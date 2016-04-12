@@ -303,7 +303,7 @@ handleMultiplyLong s acc (SetCondition cond) destHi destLo or0 or1 = do
 handleBranchExchange :: Monad m => RegisterName -> SystemT m ()
 handleBranchExchange opReg = do
   op' <- use (registers.rn opReg)
-  let thumb = op' `testBit` 0 
+  let thumb = op' `testBit` 0
   let realOp = op' .&. 0xFFFFFFFE
   registers.r15 .= realOp
   flags.thumbStateBit .= thumb
