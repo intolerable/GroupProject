@@ -21,13 +21,13 @@ writeAddressByte addr hw =
   case addressToRegionType addr of
     (_, BIOS) -> return ()
     (_, WRAM) -> writeByte (Proxy :: Proxy WRAM) addr hw
-    (_, GamePakWRAM) -> writeByte (Proxy :: Proxy WRAM) addr hw
-    (_, IORegisters) -> writeByte (Proxy :: Proxy WRAM) addr hw
-    (_, PaletteRAM) -> writeByte (Proxy :: Proxy WRAM) addr hw
+    (_, GamePakWRAM) -> error "Undefined memory proxy location!"
+    (_, IORegisters) -> error "Undefined memory proxy location!"
+    (_, PaletteRAM) -> error "Undefined memory proxy location!"
     (_, VRAM) -> writeByte (Proxy :: Proxy VRAM) addr hw
     (_, ObjAttributes) -> writeByte (Proxy :: Proxy OAM) addr hw
     (_, GamePakROM) -> return ()
-    (_, GamePakSRAM) -> writeByte (Proxy :: Proxy OAM) addr hw
+    (_, GamePakSRAM) -> error "Undefined memory proxy location!"
     (_, Unused) -> return ()
 
 readAddressByte :: AddressSpace m => Address -> m Byte
@@ -35,13 +35,13 @@ readAddressByte addr =
   case addressToRegionType addr of
     (_, BIOS) -> return 0
     (_, WRAM) -> readByte (Proxy :: Proxy WRAM) addr
-    (_, GamePakWRAM) -> readByte (Proxy :: Proxy WRAM) addr
-    (_, IORegisters) -> readByte (Proxy :: Proxy WRAM) addr
-    (_, PaletteRAM) -> readByte (Proxy :: Proxy WRAM) addr
+    (_, GamePakWRAM) -> error "Undefined memory proxy location!"
+    (_, IORegisters) -> error "Undefined memory proxy location!"
+    (_, PaletteRAM) -> error "Undefined memory proxy location!"
     (_, VRAM) -> readByte (Proxy :: Proxy VRAM) addr
     (_, ObjAttributes) -> readByte (Proxy :: Proxy OAM) addr
-    (_, GamePakROM) -> readByte (Proxy :: Proxy OAM) addr
-    (_, GamePakSRAM) -> readByte (Proxy :: Proxy OAM) addr
+    (_, GamePakROM) -> readByte (Proxy :: Proxy ROM) addr
+    (_, GamePakSRAM) -> error "Undefined memory proxy location!"
     (_, Unused) -> return 0
 
 writeAddressHalfWord :: AddressSpace m => Address -> HalfWord -> m ()
@@ -49,13 +49,13 @@ writeAddressHalfWord addr hw =
   case addressToRegionType addr of
     (_, BIOS) -> return ()
     (_, WRAM) -> writeHalfWord (Proxy :: Proxy WRAM) addr hw
-    (_, GamePakWRAM) -> writeHalfWord (Proxy :: Proxy WRAM) addr hw
-    (_, IORegisters) -> writeHalfWord (Proxy :: Proxy WRAM) addr hw
-    (_, PaletteRAM) -> writeHalfWord (Proxy :: Proxy WRAM) addr hw
+    (_, GamePakWRAM) -> error "Undefined memory proxy location!"
+    (_, IORegisters) -> error "Undefined memory proxy location!"
+    (_, PaletteRAM) -> error "Undefined memory proxy location!"
     (_, VRAM) -> writeHalfWord (Proxy :: Proxy VRAM) addr hw
     (_, ObjAttributes) -> writeHalfWord (Proxy :: Proxy OAM) addr hw
     (_, GamePakROM) -> return ()
-    (_, GamePakSRAM) -> writeHalfWord (Proxy :: Proxy OAM) addr hw
+    (_, GamePakSRAM) -> error "Undefined memory proxy location!"
     (_, Unused) -> return ()
 
 readAddressHalfWord :: AddressSpace m => Address -> m HalfWord
@@ -63,13 +63,13 @@ readAddressHalfWord addr =
   case addressToRegionType addr of
     (_, BIOS) -> return 0
     (_, WRAM) -> readHalfWord (Proxy :: Proxy WRAM) addr
-    (_, GamePakWRAM) -> readHalfWord (Proxy :: Proxy WRAM) addr
-    (_, IORegisters) -> readHalfWord (Proxy :: Proxy WRAM) addr
-    (_, PaletteRAM) -> readHalfWord (Proxy :: Proxy WRAM) addr
+    (_, GamePakWRAM) -> error "Undefined memory proxy location!"
+    (_, IORegisters) -> error "Undefined memory proxy location!"
+    (_, PaletteRAM) -> error "Undefined memory proxy location!"
     (_, VRAM) -> readHalfWord (Proxy :: Proxy VRAM) addr
     (_, ObjAttributes) -> readHalfWord (Proxy :: Proxy OAM) addr
-    (_, GamePakROM) -> readHalfWord (Proxy :: Proxy OAM) addr
-    (_, GamePakSRAM) -> readHalfWord (Proxy :: Proxy OAM) addr
+    (_, GamePakROM) -> readHalfWord (Proxy :: Proxy ROM) addr
+    (_, GamePakSRAM) -> error "Undefined memory proxy location!"
     (_, Unused) -> return 0
 
 writeAddressWord :: AddressSpace m => Address -> MWord -> m ()
@@ -77,13 +77,13 @@ writeAddressWord addr hw =
   case addressToRegionType addr of
     (_, BIOS) -> return ()
     (_, WRAM) -> writeWord (Proxy :: Proxy WRAM) addr hw
-    (_, GamePakWRAM) -> writeWord (Proxy :: Proxy WRAM) addr hw
-    (_, IORegisters) -> writeWord (Proxy :: Proxy WRAM) addr hw
-    (_, PaletteRAM) -> writeWord (Proxy :: Proxy WRAM) addr hw
+    (_, GamePakWRAM) -> error "Undefined memory proxy location!"
+    (_, IORegisters) -> error "Undefined memory proxy location!"
+    (_, PaletteRAM) -> error "Undefined memory proxy location!"
     (_, VRAM) -> writeWord (Proxy :: Proxy WRAM) addr hw
-    (_, ObjAttributes) -> writeWord (Proxy :: Proxy WRAM) addr hw
+    (_, ObjAttributes) -> error "Undefined memory proxy location!"
     (_, GamePakROM) -> return ()
-    (_, GamePakSRAM) -> writeWord (Proxy :: Proxy WRAM) addr hw
+    (_, GamePakSRAM) -> error "Undefined memory proxy location!"
     (_, Unused) -> return ()
 
 readAddressWord :: AddressSpace m => Address -> m MWord
@@ -91,13 +91,13 @@ readAddressWord addr =
   case addressToRegionType addr of
     (_, BIOS) -> return 0
     (_, WRAM) -> readWord (Proxy :: Proxy WRAM) addr
-    (_, GamePakWRAM) -> readWord (Proxy :: Proxy WRAM) addr
-    (_, IORegisters) -> readWord (Proxy :: Proxy WRAM) addr
-    (_, PaletteRAM) -> readWord (Proxy :: Proxy WRAM) addr
-    (_, VRAM) -> readWord (Proxy :: Proxy WRAM) addr
-    (_, ObjAttributes) -> readWord (Proxy :: Proxy WRAM) addr
-    (_, GamePakROM) -> readWord (Proxy :: Proxy WRAM) addr
-    (_, GamePakSRAM) -> readWord (Proxy :: Proxy WRAM) addr
+    (_, GamePakWRAM) -> error "Undefined memory proxy location!"
+    (_, IORegisters) -> error "Undefined memory proxy location!"
+    (_, PaletteRAM) -> error "Undefined memory proxy location!"
+    (_, VRAM) -> error "Undefined memory proxy location!"
+    (_, ObjAttributes) -> error "Undefined memory proxy location!"
+    (_, GamePakROM) -> readWord (Proxy :: Proxy ROM) addr
+    (_, GamePakSRAM) -> error "Undefined memory proxy location!"
     (_, Unused) -> return 0
 
 readRange :: AddressSpace m => (Address, Address) -> m (Array Address Byte)
