@@ -10,6 +10,10 @@ import Data.Array.MArray
 import Data.Array.Storable
 import Graphics.Rendering.OpenGL
 
+type TileMap = StorableArray Address Byte
+type TileSet = StorableArray Address Byte
+type TextBGOffset = (GLdouble, GLdouble)
+
 tileModes :: (AddressSpace m, MonadIO m) => LCDControl -> m ()
 tileModes cnt = do
   case bgMode cnt of
@@ -41,7 +45,7 @@ getMapBlock :: Byte -> Address
 getMapBlock mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))
 
 -- if False then Colour is 4bpp aka S-tiles
-drawTextBG :: (AddressSpace m, MonadIO m) => Int -> Bool -> Address -> Address -> (GLdouble, GLdouble) -> m ()
+drawTextBG :: (AddressSpace m, MonadIO m) => Int -> Bool -> Address -> Address -> TextBGOffset -> m ()
 drawTextBG 0 False mapBlock charBlock (xOff, yOff) = do
   map0 <- readTileMap mapBlock
   tileset <- readCharBlocks charBlock False
@@ -77,13 +81,13 @@ drawTextBG _ True mapBlock charBlock (xOff, yOff) = do
   -- | byt == 2 = (32, 64)
   -- | otherwise = (64, 64)
 
-readTileMap :: (AddressSpace m, MonadIO m) => Address -> m (StorableArray Address Byte)
+readTileMap :: (AddressSpace m, MonadIO m) => Address -> m (TileMap)
 readTileMap addr = do
   memBlock <- readRange (addr, addr + 0x000007FF)
   mapMem <- liftIO $ thaw memBlock
   return mapMem
 
-readCharBlocks :: (AddressSpace m, MonadIO m) => Address -> Bool -> m (StorableArray Address Byte)
+readCharBlocks :: (AddressSpace m, MonadIO m) => Address -> Bool -> m (TileSet)
 readCharBlocks addr False = do
   memBlock <- readRange (addr, addr + 0x00003FFF)
   charMem <- liftIO $ thaw memBlock
@@ -94,25 +98,25 @@ readCharBlocks addr True = do
   return charMem
 
 -- Draw 32x32 tiles at a time
-drawTileMap :: Int -> Int -> Address -> Address -> (GLdouble, GLdouble) -> IO ()
+drawTileMap :: Int -> Int -> TileMap -> TileSet -> TextBGOffset -> IO ()
 drawTileMap 0 _ _ _ _ = return ()
 drawTileMap rows columns tileMap tileSet (xOff, yOff) = undefined
 
-drawHLine' :: Int -> Address -> Address -> (GLdouble, GLdouble) -> IO ()
-drawHLine' 0 _ _ _ = return ()
-drawHLine' columns tileMap tileSet (xOff, yOff) = undefined
+-- Draw 32 tile row. call drawTile to draw each tile
+drawHLine :: Int -> TileMap -> TileSet -> TextBGOffset -> IO ()
+drawHLine 0 _ _ _ = return ()
+drawHLine columns tileMapRow tileSet (xOff, yOff) = undefined
 
-drawVLines :: String -> Int -> Int -> (GLdouble, GLdouble) -> Address -> IO ()
-drawVLines _ 0 _ _ _ = return ()
-drawVLines fname n columns (x, y) addr = do
-  drawHLine fname columns (x, y) addr
-  drawVLines fname (n-1) columns (x, y+8) addr
+--drawTile' ::
 
-drawHLine :: String -> Int -> (GLdouble, GLdouble) -> Address -> IO ()
-drawHLine _ (0) _ _ = return ()
-drawHLine fname n (x, y) addr = do
-  _ <- drawTile fname (x, x+8) (y, y+8)
-  drawHLine fname (n-1) (x+8,y) (addr + 0x00000020)
+-- drawVLines :: String -> Int -> Int -> TextBGOffset -> Address -> IO ()
+-- drawVLines _ 0 _ _ _ = return ()
+-- drawVLines fname n columns (x, y) addr = do
+--   drawHLine fname columns (x, y) addr
+--   drawVLines fname (n-1) columns (x, y+8) addr
+
+affineBG :: (AddressSpace m, MonadIO m) => m ()
+affineBG = undefined
 
 -- Returns number of tiles to be drawn
 affineBGSize :: Byte -> (Int, Int)
