@@ -43,8 +43,9 @@ textBG bgCNTAddr xOffAddr yOffAddr = do
   let yOff = -(fromIntegral (yOffset bgOffset) :: GLdouble)
   let charBlock = getTileBlock $ characterBaseBlock bg
   let mapBlock = getMapBlock $ screenBaseBlock bg
-  let col = colorsPalettes bg
-  drawTextBG (fromIntegral (screenSize bg)) col mapBlock charBlock (xOff, yOff)
+  let paletteFormat = colorsPalettes bg
+  palette <- readRange (0x05000000, 0x050001FF)
+  drawTextBG (fromIntegral (screenSize bg)) paletteFormat mapBlock charBlock (xOff, yOff)
   return ()
 
 getTileBlock :: Byte -> Address
