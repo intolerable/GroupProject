@@ -31,7 +31,7 @@ textBG bgCNTAddr xOffAddr yOffAddr = do
   let charBlock = getTileBlock $ characterBaseBlock bg
   let mapBlock = getMapBlock $ screenBaseBlock bg
   let col = colorsPalettes bg
-  drawTextBG (fromIntegral (screenSize bg)) col mapBlock charBlock
+  drawTextBG (fromIntegral (screenSize bg)) col mapBlock charBlock (xOff, yOff)
   return ()
 
 getTileBlock :: Byte -> Address
@@ -41,35 +41,35 @@ getMapBlock :: Byte -> Address
 getMapBlock mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))
 
 -- if False then Colour is 4bpp aka S-tiles
-drawTextBG :: (AddressSpace m, MonadIO m) => Int -> Bool -> Address -> Address -> m ()
-drawTextBG 0 False mapBlock charBlock = do
+drawTextBG :: (AddressSpace m, MonadIO m) => Int -> Bool -> Address -> Address -> (GLdouble, GLdouble) -> m ()
+drawTextBG 0 False mapBlock charBlock (xOff, yOff) = do
   map0 <- readTileMap mapBlock
   tileset <- readCharBlocks charBlock False
   return ()
-drawTextBG 0 True mapBlock charBlock = do
+drawTextBG 0 True mapBlock charBlock (xOff, yOff) = do
   return ()
-drawTextBG 1 False mapBlock charBlock = do
-  map0 <- readTileMap mapBlock
-  map1 <- readTileMap (mapBlock + 0x00000800)
-  tileset <- readCharBlocks charBlock False
-  return ()
-drawTextBG 1 True mapBlock charBlock = do
-  return ()
-drawTextBG 2 False mapBlock charBlock = do
+drawTextBG 1 False mapBlock charBlock (xOff, yOff) = do
   map0 <- readTileMap mapBlock
   map1 <- readTileMap (mapBlock + 0x00000800)
   tileset <- readCharBlocks charBlock False
   return ()
-drawTextBG 2 True mapBlock charBlock = do
+drawTextBG 1 True mapBlock charBlock (xOff, yOff) = do
   return ()
-drawTextBG _ False mapBlock charBlock = do
+drawTextBG 2 False mapBlock charBlock (xOff, yOff) = do
+  map0 <- readTileMap mapBlock
+  map1 <- readTileMap (mapBlock + 0x00000800)
+  tileset <- readCharBlocks charBlock False
+  return ()
+drawTextBG 2 True mapBlock charBlock (xOff, yOff) = do
+  return ()
+drawTextBG _ False mapBlock charBlock (xOff, yOff) = do
   map0 <- readTileMap mapBlock
   map1 <- readTileMap (mapBlock + 0x00000800)
   map2 <- readTileMap (mapBlock + 0x00001000)
   map3 <- readTileMap (mapBlock + 0x00001800)
   tileset <- readCharBlocks charBlock False
   return ()
-drawTextBG _ True mapBlock charBlock = do
+drawTextBG _ True mapBlock charBlock (xOff, yOff) = do
   return ()
 
   -- | byt == 0 = (32, 32)
