@@ -40,31 +40,36 @@ getTileBlock tileBase = 0x06000000 + (0x00004000 * (fromIntegral tileBase))
 getMapBlock :: Byte -> Address
 getMapBlock mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))
 
+-- if False then Colour is 4bpp aka S-tiles
 drawTextBG :: (AddressSpace m, MonadIO m) => Int -> Bool -> Address -> Address -> m ()
-drawTextBG 0 True mapBlock charBlock = do
-  map0 <- readTileMap mapBlock
-  return ()
 drawTextBG 0 False mapBlock charBlock = do
-  return ()
-drawTextBG 1 True mapBlock charBlock = do
   map0 <- readTileMap mapBlock
-  map1 <- readTileMap (mapBlock + 0x00000800)
+  tileset <- readCharBlocks charBlock False
+  return ()
+drawTextBG 0 True mapBlock charBlock = do
   return ()
 drawTextBG 1 False mapBlock charBlock = do
-  return ()
-drawTextBG 2 True mapBlock charBlock = do
   map0 <- readTileMap mapBlock
   map1 <- readTileMap (mapBlock + 0x00000800)
+  tileset <- readCharBlocks charBlock False
+  return ()
+drawTextBG 1 True mapBlock charBlock = do
   return ()
 drawTextBG 2 False mapBlock charBlock = do
+  map0 <- readTileMap mapBlock
+  map1 <- readTileMap (mapBlock + 0x00000800)
+  tileset <- readCharBlocks charBlock False
   return ()
-drawTextBG _ True mapBlock charBlock = do
+drawTextBG 2 True mapBlock charBlock = do
+  return ()
+drawTextBG _ False mapBlock charBlock = do
   map0 <- readTileMap mapBlock
   map1 <- readTileMap (mapBlock + 0x00000800)
   map2 <- readTileMap (mapBlock + 0x00001000)
   map3 <- readTileMap (mapBlock + 0x00001800)
+  tileset <- readCharBlocks charBlock False
   return ()
-drawTextBG _ False mapBlock charBlock = do
+drawTextBG _ True mapBlock charBlock = do
   return ()
 
   -- | byt == 0 = (32, 32)
@@ -77,6 +82,16 @@ readTileMap addr = do
   memBlock <- readRange (addr, addr + 0x000007FF)
   mapMem <- liftIO $ thaw memBlock
   return mapMem
+
+readCharBlocks :: (AddressSpace m, MonadIO m) => Address -> Bool -> m (StorableArray Address Byte)
+readCharBlocks addr False = do
+  memBlock <- readRange (addr, addr + 0x00003FFF)
+  charMem <- liftIO $ thaw memBlock
+  return charMem
+readCharBlocks addr True = do
+  memBlock <- readRange (addr, addr + 0x0000FFFF)
+  charMem <- liftIO $ thaw memBlock
+  return charMem
 
 -- Draw 32x32 tiles at a time
 drawTileMap :: Int -> Int -> Address -> Address -> (GLdouble, GLdouble) -> IO ()
