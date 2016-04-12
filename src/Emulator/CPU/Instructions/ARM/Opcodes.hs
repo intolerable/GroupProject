@@ -181,64 +181,56 @@ bic dest src1 src2 cCode = do
 -- Test instruction
 tst :: (HasFlags s, HasRegisters s, MonadState s m)
     => a -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
-tst _ src1 src2 cCode = do
+tst _ src1 src2 _ = do
   res1 <- use $ registers.src1
   res2 <- use $ registers.src2
   let val = res1 .&. res2
-  -- Update flags if condition code is true
-  when cCode $ do
-    -- FIXME: This actually should be the carry flag from the shifted register
-    -- IF the shifted register is used as an operand. Unfortunately we don't
-    -- have shifted registers yet so this can stay false for now.
-    flags.carry .= False
-    flags.zero .= (val == 0)
-    flags.negative .= isNegative val
+  -- Always update flags (for TST, TEQ, CMP, CMN)
+  flags.negative .= isNegative val
+  flags.zero .= (val == 0)
+  -- TODO: carry from barrel shifter
+  flags.carry .= False
+  -- overflow is untouched
 
 -- Test exclusive (XOR)
 teq :: (HasFlags s, HasRegisters s, MonadState s m)
     => a -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
-teq _ src1 src2 cCode = do
+teq _ src1 src2 _ = do
   res1 <- use $ registers.src1
   res2 <- use $ registers.src2
   let val = res1 `xor` res2
-  -- Update flags if condition code is true
-  when cCode $ do
-    -- FIXME: This actually should be the carry flag from the shifted register
-    -- IF the shifted register is used as an operand. Unfortunately we don't
-    -- have shifted registers yet so this can stay false for now.
-    flags.carry .= False
-    flags.zero .= (val == 0)
-    flags.negative .= isNegative val
+  -- Always update flags (for TST, TEQ, CMP, CMN)
+  flags.negative .= isNegative val
+  flags.zero .= (val == 0)
+  -- TODO: carry from barrel shifter
+  flags.carry .= False
+  -- overflow is untouched
 
 -- Compare
 cmp :: (HasFlags s, HasRegisters s, MonadState s m)
     => a -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
-cmp _ src1 src2 cCode = do
+cmp _ src1 src2 _ = do
   res1 <- use $ registers.src1
   res2 <- use $ registers.src2
   let val = res1 - res2
-  -- Update flags if condition code is true
-  when cCode $ do
-    flags.zero .= (val == 0)
-    flags.negative .= isNegative val
-    -- TODO: Maybe detect this, but it's kind of contrived
-    flags.overflow .= False
-    flags.carry .= False
+  -- Always update flags (for TST, TEQ, CMP, CMN)
+  flags.zero .= (val == 0)
+  flags.negative .= isNegative val
+  flags.carry .= False
+  flags.overflow .= isOverflow (-) res1 res2 val
 
 -- Compare negative
 cmn :: (HasFlags s, HasRegisters s, MonadState s m)
     => a -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
-cmn _ src1 src2 cCode = do
+cmn _ src1 src2 _ = do
   res1 <- use $ registers.src1
   res2 <- use $ registers.src2
   let val = res1 + res2
-  -- Update flags if condition code is true
-  when cCode $ do
-    flags.zero .= (val == 0)
-    flags.negative .= isNegative val
-    -- TODO: Maybe detect this, but it's kind of contrived
-    flags.overflow .= False
-    flags.carry .= False
+  -- Always update flags (for TST, TEQ, CMP, CMN)
+  flags.zero .= (val == 0)
+  flags.negative .= isNegative val
+  flags.carry .= False
+  flags.overflow .= isOverflow (+) res1 res2 val
 
 -- Logical Exclusive Or
 eor :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -270,3 +262,8 @@ checkCarry a b = ((c .&. 0x00000000FFFFFFFF) `xor` c) /= 0
 
 isNegative :: MWord -> Bool
 isNegative a = (a .&. 0x80000000) > 0
+
+isOverflow :: (a ~ Integer) => (a -> a -> a) -> MWord -> MWord -> MWord -> Bool
+isOverflow f arg1 arg2 result = (fromIntegral result) /= preciseResult
+  where
+    preciseResult = ((fromIntegral arg1) `f` (fromIntegral arg2)) :: Integer
