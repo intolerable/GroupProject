@@ -204,7 +204,7 @@ handleSingleDataSwap g base dest src = case g of
     writeAddressWord swapAddr srcVal
 
 handleMultiply :: Monad m => Accumulate -> SetCondition -> RegisterName -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
-handleMultiply acc (SetCondition cond) dest opReg0 opReg1 opReg2 = do 
+handleMultiply acc (SetCondition cond) dest opReg0 opReg1 opReg2 = do
   val <- (*) <$> use (registers.rn opReg1) <*> use (registers.rn opReg2)
   case acc of
     False -> registers.rn dest .= val
