@@ -6,7 +6,6 @@ import Emulator.Video.Util
 import Emulator.Video.VideoController
 
 import Control.Monad.IO.Class
-import Data.Array
 import Data.Array.MArray
 import Data.Array.Storable
 import Graphics.Rendering.OpenGL
@@ -18,14 +17,14 @@ tileModes cnt = do
     0 -> mode0 palette cnt
     _ -> undefined
 
-mode0 :: (AddressSpace m, MonadIO m) => Array Address Byte -> LCDControl -> m ()
+mode0 :: (AddressSpace m, MonadIO m) => Palette -> LCDControl -> m ()
 mode0 palette _ = do
   textBG 0x04000008 0x04000010 0x04000012 palette
   textBG 0x0400000A 0x04000014 0x04000016 palette
   textBG 0x0400000C 0x04000018 0x0400001A palette
   textBG 0x0400000E 0x0400001C 0x0400001E palette
 
-mode1 :: (AddressSpace m, MonadIO m) => Array Address Byte -> LCDControl -> m ()
+mode1 :: (AddressSpace m, MonadIO m) => Palette -> LCDControl -> m ()
 mode1 palette _ = do
   textBG 0x04000008 0x04000010 0x04000012 palette
   textBG 0x0400000A 0x04000014 0x04000016 palette
@@ -37,55 +36,55 @@ mode2 _ = do
   affineBG
 
 -- Text Mode
-textBG :: (AddressSpace m, MonadIO m) => Address -> Address -> Address -> Array Address Byte -> m ()
+textBG :: (AddressSpace m, MonadIO m) => Address -> Address -> Address -> Palette -> m ()
 textBG bgCNTAddr xOffAddr yOffAddr palette = do
   bg <- recordBGControl bgCNTAddr
   bgOffset <- recordBGOffset xOffAddr yOffAddr
   let xOff = -(fromIntegral (xOffset bgOffset) :: GLdouble)
   let yOff = -(fromIntegral (yOffset bgOffset) :: GLdouble)
   let charBlock = getBaseCharBlock $ characterBaseBlock bg
-  let mapBlock = getMapBlock $ screenBaseBlock bg
+  let mapBlock = getBaseMapBlock $ screenBaseBlock bg
   let paletteFormat = colorsPalettes bg
-  drawTextBG (fromIntegral (screenSize bg)) paletteFormat mapBlock charBlock (xOff, yOff)
+  drawTextBG (fromIntegral (screenSize bg)) paletteFormat mapBlock charBlock (xOff, yOff) palette
   return ()
 
 -- Gets the base memory addres for the tile
 getBaseCharBlock :: Byte -> Address
 getBaseCharBlock tileBase = 0x06000000 + (0x00004000 * (fromIntegral tileBase))
 
-getMapBlock :: Byte -> Address
-getMapBlock mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))
+getBaseMapBlock :: Byte -> Address
+getBaseMapBlock mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))
 
 -- if False then Colour is 4bpp aka S-tiles
-drawTextBG :: (AddressSpace m, MonadIO m) => Int -> Bool -> Address -> Address -> TextBGOffset -> m ()
-drawTextBG 0 False mapBlock charBlock (xOff, yOff) = do
+drawTextBG :: (AddressSpace m, MonadIO m) => Int -> Bool -> Address -> Address -> TextBGOffset -> Palette -> m ()
+drawTextBG 0 False mapBlock charBlock (xOff, yOff) palette = do
   map0 <- readTileMap mapBlock
   tileset <- readCharBlocks charBlock False
   return ()
-drawTextBG 0 True mapBlock charBlock (xOff, yOff) = do
+drawTextBG 0 True mapBlock charBlock (xOff, yOff) palette = do
   return ()
-drawTextBG 1 False mapBlock charBlock (xOff, yOff) = do
-  map0 <- readTileMap mapBlock
-  map1 <- readTileMap (mapBlock + 0x00000800)
-  tileset <- readCharBlocks charBlock False
-  return ()
-drawTextBG 1 True mapBlock charBlock (xOff, yOff) = do
-  return ()
-drawTextBG 2 False mapBlock charBlock (xOff, yOff) = do
+drawTextBG 1 False mapBlock charBlock (xOff, yOff) palette = do
   map0 <- readTileMap mapBlock
   map1 <- readTileMap (mapBlock + 0x00000800)
   tileset <- readCharBlocks charBlock False
   return ()
-drawTextBG 2 True mapBlock charBlock (xOff, yOff) = do
+drawTextBG 1 True mapBlock charBlock (xOff, yOff) palette = do
   return ()
-drawTextBG _ False mapBlock charBlock (xOff, yOff) = do
+drawTextBG 2 False mapBlock charBlock (xOff, yOff) palette = do
+  map0 <- readTileMap mapBlock
+  map1 <- readTileMap (mapBlock + 0x00000800)
+  tileset <- readCharBlocks charBlock False
+  return ()
+drawTextBG 2 True mapBlock charBlock (xOff, yOff) palette = do
+  return ()
+drawTextBG _ False mapBlock charBlock (xOff, yOff) palette = do
   map0 <- readTileMap mapBlock
   map1 <- readTileMap (mapBlock + 0x00000800)
   map2 <- readTileMap (mapBlock + 0x00001000)
   map3 <- readTileMap (mapBlock + 0x00001800)
   tileset <- readCharBlocks charBlock False
   return ()
-drawTextBG _ True mapBlock charBlock (xOff, yOff) = do
+drawTextBG _ True mapBlock charBlock (xOff, yOff) palette = do
   return ()
 
   -- | byt == 0 = (32, 32)
