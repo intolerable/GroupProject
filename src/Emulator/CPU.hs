@@ -3,11 +3,10 @@ module Emulator.CPU
   , Flags()
   , mkFlags
   , HasFlags(..)
-  , HasSign(..)
+  , HasNegative(..)
   , HasZero(..)
   , HasCarry(..)
   , HasOverflow(..)
-  , HasStickyOverflow(..)
   , HasIrqDisable(..)
   , HasFiqDisable(..)
   , HasThumbStateBit(..)
@@ -67,14 +66,17 @@ data CPUMode = User
   deriving (Show, Read, Eq)
 
 data Flags = Flags -- Status Register
-  { _flagsSign :: Bool -- ^ sign
-  , _flagsZero :: Bool -- ^ zero
-  , _flagsCarry :: Bool -- ^ carry
-  , _flagsOverflow :: Bool -- ^ overflow
-  , _flagsStickyOverflow :: Bool -- ^ stickyOverflow
-  , _flagsIrqDisable :: Bool -- ^ irqDisable
-  , _flagsFiqDisable :: Bool -- ^ fiqDisable
-  , _flagsThumbStateBit :: Bool } -- ^ thumbStateBit
+  { -- condition code flags
+    _flagsNegative :: Bool -- ^ negative (bit 31)
+  , _flagsZero :: Bool -- ^ zero (bit 30)
+  , _flagsCarry :: Bool -- ^ carry (bit 29)
+  , _flagsOverflow :: Bool -- ^ overflow (bit 28)
+   -- bits 8:27 are reserved
+   -- control bits
+  , _flagsIrqDisable :: Bool -- ^ irqDisable (bit 7)
+  , _flagsFiqDisable :: Bool -- ^ fiqDisable (bit 6)
+  , _flagsThumbStateBit :: Bool } -- ^ thumbStateBit (bit 5)
+   -- TODO: missing mode bits!
   deriving (Show, Read, Eq)
 
 makeLensesWith defaultFieldRules ''Flags
@@ -86,13 +88,12 @@ instance HasFlags Flags where
   flags = iso id id
 
 instance Default Flags where
-  def = Flags False False False False False False False False
+  def = Flags False False False False False False False
 
-mkFlags :: Bool -- ^ sign
+mkFlags :: Bool -- ^ negative
         -> Bool -- ^ zero
         -> Bool -- ^ carry
         -> Bool -- ^ overflow
-        -> Bool -- ^ stickyOverflow
         -> Bool -- ^ irqDisable
         -> Bool -- ^ fiqDisable
         -> Bool -- ^ thumbStateBit
@@ -101,11 +102,10 @@ mkFlags = Flags
 
 applyFlags :: Flags -> MWord -> MWord
 applyFlags f w =
-  w & bitAt 31 .~ (f ^. sign)
+  w & bitAt 31 .~ (f ^. negative)
     & bitAt 30 .~ (f ^. zero)
     & bitAt 29 .~ (f ^. carry)
     & bitAt 28 .~ (f ^. overflow)
-    & bitAt 27 .~ (f ^. stickyOverflow)
     & bitAt 7 .~ (f ^. irqDisable)
     & bitAt 6 .~ (f ^. fiqDisable)
     & bitAt 5 .~ (f ^. thumbStateBit)
@@ -116,7 +116,6 @@ extractFlags =
         <*> tb 30
         <*> tb 29
         <*> tb 28
-        <*> tb 27
         <*> tb 7
         <*> tb 6
         <*> tb 5

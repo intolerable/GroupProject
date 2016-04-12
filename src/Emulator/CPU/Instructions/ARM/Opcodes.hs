@@ -51,7 +51,7 @@ add dest src1 src2 cCode = do
   -- Update flags if the condition is true
   when cCode $ do
     flags.zero .= (val == 0)
-    flags.sign .= checkSign val
+    flags.negative .= isNegative val
     flags.overflow .= checkCarry res1 res2
     flags.carry .= checkCarry res1 res2
 
@@ -66,7 +66,7 @@ adc dest src1 src2 cCode = do
   -- Update flags if condition code is true
   when cCode $ do
     flags.zero .= (val == 0)
-    flags.sign .= checkSign val
+    flags.negative .= isNegative val
     flags.overflow .= (checkCarry res1 res2)
     when (checkCarry res1 res2) $ do
         flags.carry .= True
@@ -83,7 +83,7 @@ sub dest src1 src2 cCode = do
   -- Update flags if condition code is true
   when cCode $ do
     flags.zero .= (val == 0)
-    flags.sign .= checkSign val
+    flags.negative .= isNegative val
     -- TODO: Maybe detect this, but it's kind of contrived
     flags.overflow .= False
     flags.carry .= False
@@ -99,7 +99,7 @@ sbc dest src1 src2 cCode = do
   -- Update flags if condition code is true
   when cCode $ do
     flags.zero .= (val == 0)
-    flags.sign .= checkSign val
+    flags.negative .= isNegative val
     -- TODO: Maybe detect this, but it's kind of contrived
     flags.overflow .= False
     flags.carry .= False
@@ -132,7 +132,7 @@ and dest src1 src2 cCode = do
     -- have shifted registers yet so this can stay false for now.
     flags.carry .= False
     flags.zero .= (val == 0)
-    flags.sign .= checkSign val
+    flags.negative .= isNegative val
 
 orr :: (HasFlags s, HasRegisters s, MonadState s m)
     => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
@@ -146,7 +146,7 @@ orr dest src1 src2 cCode = do
     -- used and flags, TODO
     flags.carry .= False
     flags.zero .= (val == 0)
-    flags.sign .= checkSign val
+    flags.negative .= isNegative val
 
 -- not
 mvn :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -160,7 +160,7 @@ mvn dest _ src2 cCode = do
     -- used and flags, TODO
     flags.carry .= False
     flags.zero .= (val == 0)
-    flags.sign .= checkSign val
+    flags.negative .= isNegative val
 
 -- Bit clear
 bic :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -175,7 +175,7 @@ bic dest src1 src2 cCode = do
     -- used and flags, TODO
     flags.carry .= False
     flags.zero .= (val == 0)
-    flags.sign .= checkSign val
+    flags.negative .= isNegative val
 
 
 -- Test instruction
@@ -192,7 +192,7 @@ tst _ src1 src2 cCode = do
     -- have shifted registers yet so this can stay false for now.
     flags.carry .= False
     flags.zero .= (val == 0)
-    flags.sign .= checkSign val
+    flags.negative .= isNegative val
 
 -- Test exclusive (XOR)
 teq :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -208,7 +208,7 @@ teq _ src1 src2 cCode = do
     -- have shifted registers yet so this can stay false for now.
     flags.carry .= False
     flags.zero .= (val == 0)
-    flags.sign .= checkSign val
+    flags.negative .= isNegative val
 
 -- Compare
 cmp :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -220,7 +220,7 @@ cmp _ src1 src2 cCode = do
   -- Update flags if condition code is true
   when cCode $ do
     flags.zero .= (val == 0)
-    flags.sign .= checkSign val
+    flags.negative .= isNegative val
     -- TODO: Maybe detect this, but it's kind of contrived
     flags.overflow .= False
     flags.carry .= False
@@ -235,7 +235,7 @@ cmn _ src1 src2 cCode = do
   -- Update flags if condition code is true
   when cCode $ do
     flags.zero .= (val == 0)
-    flags.sign .= checkSign val
+    flags.negative .= isNegative val
     -- TODO: Maybe detect this, but it's kind of contrived
     flags.overflow .= False
     flags.carry .= False
@@ -253,7 +253,7 @@ eor dest src1 src2 cCode = do
     -- FIXME: see above
     flags.carry .= False
     flags.zero .= (val == 0)
-    flags.sign .= checkSign val
+    flags.negative .= isNegative val
 
 -- Move instruction
 mov :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -268,5 +268,5 @@ checkCarry a b = ((c .&. 0x00000000FFFFFFFF) `xor` c) /= 0
     c :: DWord
     c = fromIntegral a + fromIntegral b
 
-checkSign :: MWord -> Bool
-checkSign a = (a .&. 0x80000000) > 0
+isNegative :: MWord -> Bool
+isNegative a = (a .&. 0x80000000) > 0
