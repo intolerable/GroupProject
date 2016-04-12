@@ -18,6 +18,7 @@ import Data.Array.Unboxed
 import Data.Bits
 import Data.ByteString.Lazy (ByteString)
 import Data.Default.Class
+import Data.Word
 import qualified Control.Monad.State.Class as State
 import qualified Data.ByteString.Lazy as BS
 
@@ -116,6 +117,8 @@ interpretARM instr =
       handleBlockDataTranfer pp ud user wb ls base rlist
     Multiply acc cond dest or0 or1 or2 ->
       handleMultiply acc cond dest or0 or1 or2
+    MultiplyLong s acc cond destHi destLo or0 or1 ->
+      handleMultiplyLong s acc cond destHi destLo or0 or1
     _ -> error "interpretARM: unknown instruction"
 
 handleSingleDataTransfer :: Monad m
@@ -213,6 +216,49 @@ handleMultiply acc (SetCondition cond) dest opReg0 opReg1 opReg2 = do
     flags.negative .= testBit endVal 31
     flags.zero .= (endVal == 0)
     flags.carry .= False
+
+handleMultiplyLong :: Monad m => Signed -> Accumulate -> SetCondition -> RegisterName -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
+handleMultiplyLong s acc (SetCondition cond) destHi destLo or0 or1 = do
+  or0Val <- use (registers.rn or0)
+  or1Val <- use (registers.rn or1)    
+  case s of 
+    True -> do
+      let op0 = fromIntegral or0Val :: Integer
+      let op1 = fromIntegral or1Val :: Integer
+      case acc of
+        False -> do
+          let result = op0 * op1
+          (registers.rn destHi) .= fromIntegral ((result .&. 0xFFFFFFFF00000000) `shiftR` 32)
+          (registers.rn destLo) .= fromIntegral (result .&. 0x00000000FFFFFFFF)
+        True -> do
+          dhVal <- use (registers.rn destHi)
+          dlVal <- use (registers.rn destLo)
+          let op2 = ((fromIntegral $ dhVal :: Integer) `shiftL` 32) .&. (fromIntegral dlVal :: Integer)
+          let result = op0 * op1 + op2
+          (registers.rn destHi) .= fromIntegral ((result .&. 0xFFFFFFFF00000000) `shiftR` 32)
+          (registers.rn destLo) .= fromIntegral (result .&. 0x00000000FFFFFFFF)
+    False -> do
+      let op0 = fromIntegral or0Val :: Word64
+      let op1 = fromIntegral or1Val :: Word64
+      case acc of
+        False -> do
+          let result = op0 * op1
+          (registers.rn destHi) .= fromIntegral ((result .&. 0xFFFFFFFF00000000) `shiftR` 32)
+          (registers.rn destLo) .= fromIntegral (result .&. 0x00000000FFFFFFFF)
+        True -> do
+          dhVal <- use (registers.rn destHi)
+          dlVal <- use (registers.rn destLo)
+          let op2 = ((fromIntegral $ dhVal :: Word64) `shiftL` 32) .&. (fromIntegral dlVal :: Word64)
+          let result = op0 * op1 + op2
+          (registers.rn destHi) .= fromIntegral ((result .&. 0xFFFFFFFF00000000) `shiftR` 32)
+          (registers.rn destLo) .= fromIntegral (result .&. 0x00000000FFFFFFFF)
+  when cond $ do
+    val <- use (registers.rn destHi)
+    valLower <- use (registers.rn destLo)
+    flags.negative .= val `testBit` 31
+    flags.zero .= ((val + valLower) == 0)
+    flags.carry .= False
+    flags.overflow .= False
 
 directionToOperator :: Num a => OffsetDirection -> (a -> a -> a)
 directionToOperator d = case d of
