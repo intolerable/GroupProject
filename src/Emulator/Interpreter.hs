@@ -109,6 +109,8 @@ interpretARM instr =
       (functionFromOpcode opcode) (registerLens dest) (registerLens op1) (operand2Lens op2) setCond
     HalfwordDataTransferRegister pp ud wb ls s g base dest offset ->
       handleHalfwordDataTransferRegister pp ud wb ls s g base dest offset
+    HalfwordDataTransferImmediate pp ud wb ls s g base dest offset ->
+      handleHalfWordDataTransferImmediate pp ud wb ls s g base dest offset
     SingleDataSwap g base dest src ->
       handleSingleDataSwap g base dest src
     SingleDataTransfer pp ud g wb ls dest src op2 ->
@@ -193,6 +195,31 @@ handleHalfwordDataTransferRegister pp ud wb ls s g base dest offset = do
         registers.rn base .= (directionToOperator ud) bVal oVal
   when ((pp == Pre) && wb) $
         registers.rn base .= bVal
+
+handleHalfWordDataTransferImmediate :: Monad m => PrePost -> OffsetDirection -> WriteBack -> LoadStore -> Signed -> (Granularity 'Lower) -> RegisterName -> RegisterName -> Offset -> SystemT m ()
+handleHalfWordDataTransferImmediate pp ud wb ls s g base dest offset = do
+  bVal <- use (registers.rn base)
+  let oVal = offset
+  let readAddr = (directionToOperator ud) bVal (if pp == Pre then oVal else 0)
+  valHW <- readAddressHalfWord readAddr
+  (case (g, ls, s) of
+    (Byte, Load, True) -> do
+      let val = byteExtend $ fromIntegral $ $(bitmask 7 0) valHW
+      registers.rn dest .= val
+    (HalfWord, Load, True) -> do
+      registers.rn dest .= halfWordExtend valHW
+    (HalfWord, Load, False) -> do
+      registers.rn dest .= fromIntegral valHW
+    (HalfWord, Store, False) -> do
+      destAddr <- use (registers.rn dest)
+      writeAddressHalfWord destAddr valHW
+    (_, _, _) -> error "handleHalfwordDataTransferImmediate: Incorrect arguments passed to HalfWordDataTransfer instruction")
+  when (pp == Post) $
+        registers.rn base .= (directionToOperator ud) bVal oVal
+  when ((pp == Pre) && wb) $
+        registers.rn base .= bVal
+
+
 
 handleSingleDataSwap :: Monad m => (Granularity 'Full) -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
 handleSingleDataSwap g base dest src = case g of
