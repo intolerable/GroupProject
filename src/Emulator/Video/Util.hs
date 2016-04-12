@@ -8,6 +8,9 @@ import Data.Vector.Storable
 import Graphics.Rendering.OpenGL
 
 type FileName = String
+type TileMap = StorableArray Address Byte
+type TileSet = StorableArray Address Byte
+type TextBGOffset = (GLdouble, GLdouble)
 
 drawTile :: StorableArray Address Byte -> (GLdouble, GLdouble) -> (GLdouble, GLdouble) -> IO TextureObject
 drawTile _ _ _ = undefined
@@ -26,6 +29,8 @@ drawTile' fname (x1, x2) (y1, y2) = do
     texCoord $ TexCoord2 0 (1 :: GLdouble)
     vertex $ Vertex2 x1 (y2 :: GLdouble)
   return bg
+
+--loadTile :: StorableArray Address Byte
 
 -- Temp. function for reading in BMP files
 loadTestTexture :: FileName -> IO TextureObject

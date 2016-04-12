@@ -38,6 +38,7 @@ module Emulator.CPU
   , registerLens
   , rn
   , shiftedRegisterLens
+  , shiftedCarryRegisterLens
   , operand2Lens
   , Shifted(..)
   , Condition(..)
@@ -197,17 +198,30 @@ data ShiftType = LogicalLeft -- ^ a logical left shift
 shiftTypeFromByte :: Byte -> Maybe ShiftType
 shiftTypeFromByte = fromByte
 
--- | Apply the given 'ShiftType' to the given machine word with the supplied magnitude.
 applyShiftType :: ShiftType -- ^ shift type to use
-               -> MWord -- ^ the machine word which should be shifted
-               -> Int -- ^ how many bits the machine word should be shifted by
-               -> MWord
-applyShiftType st x s =
-  case st of
-    LogicalLeft -> x `shiftL` s
-    LogicalRight -> x `shiftR` s
-    ArithRight -> fromIntegral $ (fromIntegral x :: Int32) `shiftR` s
-    RotateRight -> x `rotateR` s
+                  -> MWord -- ^ the machine word which should be shifted
+                  -> Int -- ^ how many bits the machine word should be shifted by
+                  -> Bool -- ^ the previous value of the carry flag
+                  -> MWord
+applyShiftType st x s oldc = snd $ applyShiftTypeWithCarry st x s oldc
+
+-- | Apply the given 'ShiftType' to the given machine word with the supplied magnitude. Also includes whether
+--     the result was carried.
+applyShiftTypeWithCarry :: ShiftType -- ^ shift type to use
+                        -> MWord -- ^ the machine word which should be shifted
+                        -> Int -- ^ how many bits the machine word should be shifted by
+                        -> Bool -- ^ the previous value of the carry flag
+                        -> (Bool, MWord)
+applyShiftTypeWithCarry st x s oldc =
+  case (st, s) of
+    (LogicalLeft, 0) -> (oldc, x)
+    (LogicalLeft, sv) -> (testBit x (32 - sv), x `shiftL` sv)
+    (LogicalRight, 0) -> (oldc, x)
+    (LogicalRight, sv) -> (testBit x (sv - 1), x `shiftR` sv)
+    (ArithRight, 0) -> (testBit x 31, fromIntegral $ (fromIntegral x :: Int32) `shiftR` 32)
+    (ArithRight, sv) -> (testBit x (sv - 1), fromIntegral $ (fromIntegral x :: Int32) `shiftR` sv)
+    (RotateRight, 0) -> (testBit x 0, if oldc then (x `rotateR` 1) `setBit` 31 else x `rotateR` 1)
+    (RotateRight, sv) -> (testBit x (sv - 1), x `rotateR` sv)
 
 -- | A 'Shifted' register is either shifted by a predefined byte value, or the value
 --     in another register. It can also be shifted in a variety of ways.
@@ -244,14 +258,20 @@ registerLens (RegisterName n) =
 rn :: RegisterName -> Lens' Registers MWord
 rn = registerLens
 
-shiftedRegisterLens :: Shifted RegisterName -> Getter Registers MWord
-shiftedRegisterLens (AmountShift byte shiftType regName) =
-  registerLens regName.(to (\x -> applyShiftType shiftType x (fromIntegral byte)))
-shiftedRegisterLens (RegisterShift shiftReg shiftType regName) =
+shiftedCarryRegisterLens :: Shifted RegisterName -> Getter Registers (Bool, MWord)
+shiftedCarryRegisterLens (AmountShift byte shiftType regName) = to $ \r -> do
+  let oldc = r ^. flags.carry
+  let val = r ^. registerLens regName
+  applyShiftTypeWithCarry shiftType val (fromIntegral byte) oldc
+shiftedCarryRegisterLens (RegisterShift shiftReg shiftType regName) =
   to $ \r -> do
     let val = r ^. registerLens regName
     let offset = fromIntegral $ r ^. registerLens shiftReg :: Byte
-    applyShiftType shiftType val (fromIntegral offset)
+    let oldc = r ^. flags.carry
+    applyShiftTypeWithCarry shiftType val (fromIntegral offset) oldc
+
+shiftedRegisterLens :: Shifted RegisterName -> Getter Registers MWord
+shiftedRegisterLens r = shiftedCarryRegisterLens r . _2
 
 operand2Lens :: Either (Shifted RegisterName) (Rotated Byte) -> Getter Registers MWord
 operand2Lens (Left r) = shiftedRegisterLens r
