@@ -123,15 +123,15 @@ interpretARM instr =
 
 handleSingleDataTransfer :: Monad m
                          => PrePost -> OffsetDirection -> (Granularity 'Full) -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> SystemT m ()
-handleSingleDataTransfer _pp ud gran _wb ls base _target op2 = do
-  _addr <- offsetDir <$> use (registers.registerLens base) <*> use (registers.targetLens)
+handleSingleDataTransfer _pp ud gran _wb ls base target op2 = do
+  addr <- offsetDir <$> use (registers.rn base) <*> use (registers.offsetLens)
   case (ls, gran) of
-    (Load, Byte) -> undefined
-    (Load, Word) -> undefined
-    (Store, Byte) -> undefined
-    (Store, Word) -> undefined
+    (Load, Byte) -> error "sdt load byte"
+    (Load, Word) -> error "sdt load word"
+    (Store, Byte) -> error "sdt store byte"
+    (Store, Word) -> use (registers.rn target) >>= writeAddressWord ($(bitmask 31 2) addr)
   where
-    targetLens = case op2 of { Left x -> shiftedRegisterLens x; Right x -> to (const x) }
+    offsetLens = case op2 of { Left x -> shiftedRegisterLens x; Right x -> to (const x) }
     offsetDir = case ud of { Up -> (+); Down -> (-) }
 
 handleBlockDataTranfer :: Monad m => PrePost -> OffsetDirection -> ForceUserMode -> WriteBack -> LoadStore -> RegisterName -> RegisterList -> SystemT m ()
