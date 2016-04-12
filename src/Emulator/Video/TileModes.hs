@@ -7,7 +7,6 @@ import Emulator.Video.VideoController
 
 import Control.Monad.IO.Class
 import Data.Array.MArray
-import Data.Array.Storable
 import Graphics.Rendering.OpenGL
 
 tileModes :: (AddressSpace m, MonadIO m) => LCDControl -> m ()
@@ -57,34 +56,26 @@ getBaseMapBlock mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))
 
 -- if False then Colour is 4bpp aka S-tiles
 drawTextBG :: (AddressSpace m, MonadIO m) => Int -> Bool -> Address -> Address -> TextBGOffset -> Palette -> m ()
-drawTextBG 0 False mapBlock charBlock (xOff, yOff) palette = do
-  map0 <- readTileMap mapBlock
-  tileset <- readCharBlocks charBlock False
+drawTextBG 0 _colFormat mapBlock charBlock (_xOff, _yOff) _palette = do
+  _map0 <- readTileMap mapBlock
+  _tileSet <- readCharBlocks charBlock False
   return ()
-drawTextBG 0 True mapBlock charBlock (xOff, yOff) palette = do
+drawTextBG 1 _colFormat mapBlock charBlock (_xOff, _yOff) _palette = do
+  _map0 <- readTileMap mapBlock
+  _map1 <- readTileMap (mapBlock + 0x00000800)
+  _tileSet <- readCharBlocks charBlock False
   return ()
-drawTextBG 1 False mapBlock charBlock (xOff, yOff) palette = do
-  map0 <- readTileMap mapBlock
-  map1 <- readTileMap (mapBlock + 0x00000800)
-  tileset <- readCharBlocks charBlock False
+drawTextBG 2 _colFormat mapBlock charBlock (_xOff, _yOff) _palette = do
+  _map0 <- readTileMap mapBlock
+  _map1 <- readTileMap (mapBlock + 0x00000800)
+  _tileSet <- readCharBlocks charBlock False
   return ()
-drawTextBG 1 True mapBlock charBlock (xOff, yOff) palette = do
-  return ()
-drawTextBG 2 False mapBlock charBlock (xOff, yOff) palette = do
-  map0 <- readTileMap mapBlock
-  map1 <- readTileMap (mapBlock + 0x00000800)
-  tileset <- readCharBlocks charBlock False
-  return ()
-drawTextBG 2 True mapBlock charBlock (xOff, yOff) palette = do
-  return ()
-drawTextBG _ False mapBlock charBlock (xOff, yOff) palette = do
-  map0 <- readTileMap mapBlock
-  map1 <- readTileMap (mapBlock + 0x00000800)
-  map2 <- readTileMap (mapBlock + 0x00001000)
-  map3 <- readTileMap (mapBlock + 0x00001800)
-  tileset <- readCharBlocks charBlock False
-  return ()
-drawTextBG _ True mapBlock charBlock (xOff, yOff) palette = do
+drawTextBG _ _colFormat mapBlock charBlock (_xOff, _yOff) _palette = do
+  _map0 <- readTileMap mapBlock
+  _map1 <- readTileMap (mapBlock + 0x00000800)
+  _map2 <- readTileMap (mapBlock + 0x00001000)
+  _map3 <- readTileMap (mapBlock + 0x00001800)
+  _tileSet <- readCharBlocks charBlock False
   return ()
 
   -- | byt == 0 = (32, 32)
@@ -109,16 +100,14 @@ readCharBlocks addr True = do
   return charMem
 
 -- Draw 32x32 tiles at a time
-drawTileMap :: Int -> Int -> TileMap -> TileSet -> TextBGOffset -> IO ()
-drawTileMap 0 _ _ _ _ = return ()
-drawTileMap rows columns tileMap tileSet (xOff, yOff) = undefined
+drawTileMap :: Int -> Int -> TileMap -> TileSet -> TextBGOffset -> Palette -> IO ()
+drawTileMap 0 _ _ _ _ _ = return ()
+drawTileMap _rows _columns _tileMap _tileSet (_xOff, _yOff) _palette = undefined
 
 -- Draw 32 tile row. call drawTile to draw each tile
 drawHLine :: Int -> TileMap -> TileSet -> TextBGOffset -> IO ()
 drawHLine 0 _ _ _ = return ()
-drawHLine columns tileMapRow tileSet (xOff, yOff) = undefined
-
---drawTile' ::
+drawHLine _columns _tileMapRow _tileSet (_xOff, _yOff) = undefined
 
 -- drawVLines :: String -> Int -> Int -> TextBGOffset -> Address -> IO ()
 -- drawVLines _ 0 _ _ _ = return ()
