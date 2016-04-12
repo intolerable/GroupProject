@@ -31,5 +31,4 @@ instance Arbitrary Flags where
                       <*> arbitrary
                       <*> arbitrary
                       <*> arbitrary
-                      <*> arbitrary
   shrink = const []

@@ -25,15 +25,15 @@ spec = do
      checkCarry maxBound 1 `shouldBe` True
      checkCarry maxBound maxBound `shouldBe` True
 
-  describe "checkSign" $ do
+  describe "isNegative" $ do
 
-    prop "x & 0x80000000 == checkSign x" $ \x ->
-      (x .&. 0x80000000 > 0) == checkSign x
+    prop "x & 0x80000000 == isNegative x" $ \x ->
+      (x .&. 0x80000000 > 0) == isNegative x
 
     it "should detect the sign bit" $ do
-      checkSign 0 `shouldBe` False
-      checkSign 1 `shouldBe` False
-      checkSign 100 `shouldBe` False
-      checkSign (-1) `shouldBe` True
-      checkSign (-100) `shouldBe` True
-      checkSign maxBound `shouldBe` True
+      isNegative 0 `shouldBe` False
+      isNegative 1 `shouldBe` False
+      isNegative 100 `shouldBe` False
+      isNegative (-1) `shouldBe` True
+      isNegative (-100) `shouldBe` True
+      isNegative maxBound `shouldBe` True
