@@ -1,6 +1,6 @@
 module Emulator.CPU.Instructions
-  ( conditionally
-  , runCondition
+  ( runCondition
+  , conditionally
   , module Export ) where
 
 import Emulator.CPU
@@ -16,11 +16,15 @@ import Control.Lens
 import Control.Monad.State.Class
 import Prelude hiding (Ordering(..))
 
+-- | @conditionally cond act@ runs @act@ if the current state registers match up with
+--     the given condition.
 conditionally :: (HasFlags s, MonadState s m) => Condition -> m a -> m ()
 conditionally cond act = do
   res <- runCondition cond
   when res $ void act
 
+-- | Check if the current state registers match up with the given condition - if the
+--     instruction would be executed, returns @True@, and if it wouldn't, returns @False@.
 runCondition :: (HasFlags s, MonadState s m) => Condition -> m Bool
 runCondition cond =
   case cond of
