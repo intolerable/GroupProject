@@ -23,7 +23,20 @@ tileModes cnt = do
 mode0 :: (AddressSpace m, MonadIO m) => LCDControl -> m ()
 mode0 _ = do
   textBG 0x04000008 0x04000010 0x04000012
-  return ()
+  textBG 0x0400000A 0x04000014 0x04000016
+  textBG 0x0400000C 0x04000018 0x0400001A
+  textBG 0x0400000E 0x0400001C 0x0400001E
+
+mode1 :: (AddressSpace m, MonadIO m) => LCDControl -> m ()
+mode1 _ = do
+  textBG 0x04000008 0x04000010 0x04000012
+  textBG 0x0400000A 0x04000014 0x04000016
+  affineBG
+
+mode2 :: (AddressSpace m, MonadIO m) => LCDControl -> m ()
+mode2 _ = do
+  affineBG
+  affineBG
 
 -- Text Mode
 textBG :: (AddressSpace m, MonadIO m) => Address -> Address -> Address -> m ()
