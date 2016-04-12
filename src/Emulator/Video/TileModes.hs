@@ -5,23 +5,24 @@ import Emulator.Types
 import Emulator.Video.Util
 import Emulator.Video.VideoController
 
+import Control.Monad.IO.Class
 import Data.Array.MArray
 import Data.Array.Storable
 import Graphics.Rendering.OpenGL
 
-tileModes :: AddressSpace m => LCDControl -> m ()
+tileModes :: (AddressSpace m, MonadIO m) => LCDControl -> m ()
 tileModes cnt = do
   case bgMode cnt of
     0 -> mode0 cnt
     _ -> undefined
 
-mode0 :: AddressSpace m => LCDControl -> m ()
+mode0 :: (AddressSpace m, MonadIO m) => LCDControl -> m ()
 mode0 _ = do
   textBG 0x04000008 0x04000010 0x04000012
   return ()
 
 -- Text Mode
-textBG :: AddressSpace m => Address -> Address -> Address -> m ()
+textBG :: (AddressSpace m, MonadIO m) => Address -> Address -> Address -> m ()
 textBG bgCNTAddr xOffAddr yOffAddr = do
   bg <- recordBGControl bgCNTAddr
   bgOffset <- recordBGOffset xOffAddr yOffAddr
@@ -39,7 +40,7 @@ getTileBlock tileBase = 0x06000000 + (0x00004000 * (fromIntegral tileBase))
 getMapBlock :: Byte -> Address
 getMapBlock mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))
 
-drawTextBG :: AddressSpace m => Int -> Bool -> Address -> Address -> m ()
+drawTextBG :: (AddressSpace m, MonadIO m) => Int -> Bool -> Address -> Address -> m ()
 drawTextBG 0 True mapBlock charBlock = do
   map0 <- readTileMap mapBlock
   return ()
@@ -66,8 +67,16 @@ drawTextBG _ True mapBlock charBlock = do
 drawTextBG _ False mapBlock charBlock = do
   return ()
 
-readTileMap :: AddressSpace m => Address -> m ()
-readTileMap addr = undefined
+  -- | byt == 0 = (32, 32)
+  -- | byt == 1 = (64, 32)
+  -- | byt == 2 = (32, 64)
+  -- | otherwise = (64, 64)
+
+readTileMap :: (AddressSpace m, MonadIO m) => Address -> m (StorableArray Address Byte)
+readTileMap addr = do
+  memBlock <- readRange (addr, addr + 0x000007FF)
+  mapMem <- liftIO $ thaw memBlock
+  return mapMem
 
 -- Draw 32x32 tiles at a time
 drawTileMap :: Int -> Int -> Address -> Address -> (GLdouble, GLdouble) -> IO ()

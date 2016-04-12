@@ -34,7 +34,7 @@ animate _ = do
   clear [GLUT.ColorBuffer]
   GLUT.swapBuffers
 
-backgroundMode :: AddressSpace m => m ()
+backgroundMode :: (AddressSpace m, MonadIO m) => m ()
 backgroundMode = do
   record <- recordLCDControl
   if bgMode record <= 2 then
