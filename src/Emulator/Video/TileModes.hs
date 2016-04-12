@@ -10,10 +10,6 @@ import Data.Array.MArray
 import Data.Array.Storable
 import Graphics.Rendering.OpenGL
 
-type TileMap = StorableArray Address Byte
-type TileSet = StorableArray Address Byte
-type TextBGOffset = (GLdouble, GLdouble)
-
 tileModes :: (AddressSpace m, MonadIO m) => LCDControl -> m ()
 tileModes cnt = do
   case bgMode cnt of
