@@ -15,6 +15,7 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State
 import Data.Array.Unboxed
+import Data.Bits
 import Data.ByteString.Lazy (ByteString)
 import Data.Default.Class
 import qualified Control.Monad.State.Class as State
@@ -113,6 +114,8 @@ interpretARM instr =
       handleSingleDataTransfer pp ud g wb ls dest src op2
     BlockDataTransfer pp ud user wb ls base rlist ->
       handleBlockDataTranfer pp ud user wb ls base rlist
+    Multiply acc cond dest or0 or1 or2 ->
+      handleMultiply acc cond dest or0 or1 or2
     _ -> error "interpretARM: unknown instruction"
 
 handleSingleDataTransfer :: Monad m
@@ -196,6 +199,20 @@ handleSingleDataSwap g base dest src = case g of
     registers.rn dest <~ readAddressWord swapAddr
     srcVal <- use (registers.rn src)
     writeAddressWord swapAddr srcVal
+
+handleMultiply :: Monad m => Accumulate -> SetCondition -> RegisterName -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
+handleMultiply acc (SetCondition cond) dest opReg0 opReg1 opReg2 = do 
+  val <- (*) <$> use (registers.rn opReg1) <*> use (registers.rn opReg2)
+  case acc of
+    False -> registers.rn dest .= val
+    True -> do
+      offset <- use (registers.rn opReg0)
+      registers.rn dest .= (val + offset)
+  when cond $ do
+    endVal <- use (registers.rn dest)
+    flags.negative .= testBit endVal 31
+    flags.zero .= (endVal == 0)
+    flags.carry .= False
 
 directionToOperator :: Num a => OffsetDirection -> (a -> a -> a)
 directionToOperator d = case d of
