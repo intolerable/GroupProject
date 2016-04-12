@@ -2,4 +2,4 @@
 .cabal-sandbox
 cabal.sandbox.config
 dist/
-gba_bios.bin
+res/gba_bios.bin
