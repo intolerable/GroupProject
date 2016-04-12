@@ -100,14 +100,15 @@ readCharBlocks addr True = do
   return charMem
 
 -- Draw 32x32 tiles at a time
-drawTileMap :: Int -> Int -> TileMap -> TileSet -> TextBGOffset -> Palette -> IO ()
-drawTileMap 0 _ _ _ _ _ = return ()
-drawTileMap _rows _columns _tileMap _tileSet (_xOff, _yOff) _palette = undefined
+drawTileMap :: Int -> Int -> Bool -> TileMap -> TileSet -> TextBGOffset -> Palette -> IO ()
+drawTileMap 0 _ _ _ _ _ _ = return ()
+drawTileMap _rows columns _colFormat tileMap tileSet bgOffset palette = do
+  drawHLine columns tileMap tileSet bgOffset palette
 
 -- Draw 32 tile row. call drawTile to draw each tile
-drawHLine :: Int -> TileMap -> TileSet -> TextBGOffset -> IO ()
-drawHLine 0 _ _ _ = return ()
-drawHLine _columns _tileMapRow _tileSet (_xOff, _yOff) = undefined
+drawHLine :: Int -> TileMap -> TileSet -> TextBGOffset -> Palette -> IO ()
+drawHLine 0 _ _ _ _ = return ()
+drawHLine _columns _tileMapRow _tileSet (_xOff, _yOff) _palette = undefined
 
 -- drawVLines :: String -> Int -> Int -> TextBGOffset -> Address -> IO ()
 -- drawVLines _ 0 _ _ _ = return ()
