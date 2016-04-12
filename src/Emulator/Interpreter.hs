@@ -119,7 +119,14 @@ interpretARM instr =
       handleMultiply acc cond dest or0 or1 or2
     MultiplyLong s acc cond destHi destLo or0 or1 ->
       handleMultiplyLong s acc cond destHi destLo or0 or1
-    _ -> error "interpretARM: unknown instruction"
+    BranchExchange or0 ->
+      handleBranchExchange or0
+    CoprocessorDataTransfer -> error "Unimplemented instruction: Coprocessor data transfer"
+    CoprocessorDataOperation -> error "Unimplemented instruction: Coprocessor data operation"
+    CoprocessorRegisterTransfer -> error "Unimplemented instruction: Coprocessor register transfer"
+    Emulator.CPU.Instructions.Undefined -> error "Interpreter received undefined instruction"
+    Emulator.CPU.Instructions.SoftwareInterrupt -> error "Uninmplemented instruction: Software interrupt"
+    --_ -> error "interpretARM: unknown instruction"
 
 handleSingleDataTransfer :: Monad m
                          => PrePost -> OffsetDirection -> (Granularity 'Full) -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> SystemT m ()
@@ -259,6 +266,14 @@ handleMultiplyLong s acc (SetCondition cond) destHi destLo or0 or1 = do
     flags.zero .= ((val + valLower) == 0)
     flags.carry .= False
     flags.overflow .= False
+
+handleBranchExchange :: Monad m => RegisterName -> SystemT m ()
+handleBranchExchange opReg = do
+  op' <- use (registers.rn opReg)
+  let thumb = op' `testBit` 0 
+  let realOp = op' .&. 0xFFFFFFFE
+  registers.r15 .= realOp
+  flags.thumbStateBit .= thumb
 
 directionToOperator :: Num a => OffsetDirection -> (a -> a -> a)
 directionToOperator d = case d of
