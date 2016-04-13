@@ -44,14 +44,14 @@ library
     Utilities.Show
   build-depends:
     base >= 4.6 && < 4.10,
+    GLUT,
+    JuicyPixels,
+    OpenGL,
     array,
     binary,
     bytestring,
     containers,
     data-default-class,
-    GLUT,
-    JuicyPixels,
-    OpenGL,
     lens,
     mtl,
     optparse-applicative,
