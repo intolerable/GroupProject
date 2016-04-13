@@ -262,7 +262,7 @@ checkCarry a b = ((c .&. 0x00000000FFFFFFFF) `xor` c) /= 0
     c = fromIntegral a + fromIntegral b
 
 isNegative :: MWord -> Bool
-isNegative a = (a .&. 0x80000000) > 0
+isNegative a = (fromIntegral a :: Int32) < 0
 
 isUnsignedOverflow :: (a ~ Integer) => (a -> a -> a) -> MWord -> MWord -> MWord -> Bool
 isUnsignedOverflow f arg1 arg2 result = (fromIntegral result) /= preciseResult
