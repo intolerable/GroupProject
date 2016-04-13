@@ -53,7 +53,7 @@ add dest src1 src2 cCode = do
   when cCode $ do
     flags.negative .= isNegative val
     flags.zero .= (val == 0)
-    flags.carry .= isUnsignedOverflow (+) res1 res2 val
+    flags.carry .= isUnsignedOverflow (+) [res1, res2] val
     flags.overflow .= isSignedOverflow (+) res1 res2 val
 
 -- Arithmetic add with carry
@@ -218,7 +218,7 @@ cmp _ src1 src2 _ = do
   flags.zero .= (val == 0)
   flags.negative .= isNegative val
   flags.carry .= False
-  flags.overflow .= isUnsignedOverflow (-) res1 res2 val
+  flags.overflow .= isUnsignedOverflow (-) [res1, res2] val
 
 -- Compare negative
 cmn :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -231,7 +231,7 @@ cmn _ src1 src2 _ = do
   flags.zero .= (val == 0)
   flags.negative .= isNegative val
   flags.carry .= False
-  flags.overflow .= isUnsignedOverflow (+) res1 res2 val
+  flags.overflow .= isUnsignedOverflow (+) [res1, res2] val
 
 -- Logical Exclusive Or
 eor :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -264,12 +264,13 @@ checkCarry a b = ((c .&. 0x00000000FFFFFFFF) `xor` c) /= 0
 isNegative :: MWord -> Bool
 isNegative a = (fromIntegral a :: Int32) < 0
 
-isUnsignedOverflow :: (a ~ Integer) => (a -> a -> a) -> MWord -> MWord -> MWord -> Bool
-isUnsignedOverflow f arg1 arg2 result = (fromIntegral result) /= preciseResult
+-- Following functions take lists for cases Rm + Rn + Carry
+isUnsignedOverflow :: (a ~ Integer) => (a -> a -> a) -> [MMWord -> MWordWord] -> MWord -> Bool
+isUnsignedOverflow f args result = (fromIntegral result) /= preciseResult
   where
-    preciseResult = ((fromIntegral arg1) `f` (fromIntegral arg2)) :: Integer
+    preciseResult = foldl1 f $ map fromIntegral args :: Integer
 
-isSignedOverflow :: (a ~ Int32) => (a -> a -> a) -> MWord -> MWord -> MWord -> Bool
-isSignedOverflow f arg1 arg2 result = (fromIntegral signedResult :: Integer) /= (fromIntegral result :: Integer)
+isSignedOverflow :: (a ~ Int32) => (a -> a -> a) -> [MWord] -> MWord -> Bool
+isSignedOverflow f args result = (fromIntegral signedResult :: Integer) /= (fromIntegral result :: Integer)
   where
-    signedResult = (fromIntegral arg1 :: Int32) `f` (fromIntegral arg2 :: Int32) :: Int32
+    signedResult = foldl1 f $ map fromIntegral args :: Int32
