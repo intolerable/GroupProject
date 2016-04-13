@@ -26,6 +26,7 @@ import qualified Data.ByteString.Lazy as BS
 
 data SystemState =
   SystemState { _systemStateSysRegisters :: Registers
+              , _systemStateSysBIOS :: Memory
               , _systemStateSysROM :: Memory
               , _systemStateSysRAM :: Memory
               , _systemStateSysOAM :: Memory
@@ -34,15 +35,16 @@ data SystemState =
 
 makeFields ''SystemState
 
-buildInitialState :: ByteString -> SystemState
-buildInitialState bs =
-  SystemState (def & r15 .~ 0x08000000) romArray initialRAM initialVRAM initialOAM
+buildInitialState :: ByteString -> ByteString -> SystemState
+buildInitialState rom bios =
+  SystemState (def & r15 .~ 0x08000000) biosArray romArray initialRAM initialVRAM initialOAM
     where
       initialRAM = accumArray const 0 (0x02000000, 0x0203FFFF) []
       initialVRAM = accumArray const 0 (0x06000000, 0x06017FFF) []
       initialOAM = accumArray const 0 (0x07000000, 0x070003FF) []
       -- not totally sure that this is producing the correct output
-      romArray = accumArray (flip const) 0 (0x08000000, 0x0DFFFFFF) $ zip [0x8000000..] $ BS.unpack bs
+      romArray = accumArray (flip const) 0 (0x08000000, 0x0DFFFFFF) $ zip [0x08000000..] $ BS.unpack rom
+      biosArray = accumArray (flip const) 0 (0x00000000, 0x00003FFF) $ zip [0x00000000..] $ BS.unpack bios
 
 instance HasRegisters SystemState where
   registers = sysRegisters
@@ -68,6 +70,9 @@ instance Monad m => CanRead WRAM (SystemT m) where
 
 instance Monad m => CanRead ROM (SystemT m) where
   readByte _ a = SystemT $ zoom sysROM $ gets (! a)
+
+instance Monad m => CanRead BIOS (SystemT m) where
+  readByte _ a = SystemT $ zoom sysBIOS $ gets (! a)
 
 instance Monad m => CanWrite VRAM (SystemT m) where
   writeByte _ a b = SystemT $ zoom sysVRAM $ modify (// [(a, b)])

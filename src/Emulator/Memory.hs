@@ -13,6 +13,7 @@ type AddressSpace m =
   ( Functor m, Monad m
   , CanRead WRAM m, CanWrite WRAM m
   , CanRead ROM m
+  , CanRead BIOS m
   , CanRead OAM m, CanWrite OAM m
   , CanRead VRAM m, CanWrite VRAM m )
 
@@ -33,7 +34,7 @@ writeAddressByte addr hw =
 readAddressByte :: AddressSpace m => Address -> m Byte
 readAddressByte addr =
   case addressToRegionType addr of
-    (_, BIOS) -> return 0
+    (_, BIOS) -> readByte (Proxy :: Proxy BIOS) addr
     (_, WRAM) -> readByte (Proxy :: Proxy WRAM) addr
     (_, GamePakWRAM) -> error "Undefined memory proxy location!"
     (_, IORegisters) -> error "Undefined memory proxy location!"
@@ -61,7 +62,7 @@ writeAddressHalfWord addr hw =
 readAddressHalfWord :: AddressSpace m => Address -> m HalfWord
 readAddressHalfWord addr =
   case addressToRegionType addr of
-    (_, BIOS) -> return 0
+    (_, BIOS) -> readHalfWord (Proxy :: Proxy BIOS) addr
     (_, WRAM) -> readHalfWord (Proxy :: Proxy WRAM) addr
     (_, GamePakWRAM) -> error "Undefined memory proxy location!"
     (_, IORegisters) -> error "Undefined memory proxy location!"
@@ -89,7 +90,7 @@ writeAddressWord addr hw =
 readAddressWord :: AddressSpace m => Address -> m MWord
 readAddressWord addr =
   case addressToRegionType addr of
-    (_, BIOS) -> return 0
+    (_, BIOS) -> readWord (Proxy :: Proxy BIOS) addr
     (_, WRAM) -> readWord (Proxy :: Proxy WRAM) addr
     (_, GamePakWRAM) -> error "Undefined memory proxy location!"
     (_, IORegisters) -> error "Undefined memory proxy location!"

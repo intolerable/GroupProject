@@ -1,15 +1,19 @@
-module Emulator.Args where
+module Emulator.Args
+  ( Args(..)
+  , getArgs ) where
 
 import Options.Applicative
 
 data Args =
   Args { headless :: Bool
-       , biosFileLocation :: FilePath }
+       , biosFile :: FilePath
+       , romFile :: FilePath }
   deriving (Show, Read, Eq, Ord)
 
 args :: Parser Args
 args = Args <$> switch (long "headless" <> help "whether to run the emulator with display disabled")
-            <*> pure "./res/gba_bios.bin"
+            <*> strArgument (metavar "BIOS_FILE")
+            <*> strArgument (metavar "ROM_FILE")
 
 getArgs :: IO Args
 getArgs = execParser opts

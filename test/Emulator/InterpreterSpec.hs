@@ -17,7 +17,7 @@ spec = do
   describe "interpretARM" $ do
 
     romFile <- runIO $ ByteString.readFile "./res/suite.gba"
-    let initialSystem = buildInitialState romFile
+    let initialSystem = buildInitialState romFile ByteString.empty
 
     it "should be able to handle a branch instruction" $ do
       let run instr = snd $ runIdentity $ runSystemT instr initialSystem

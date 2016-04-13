@@ -20,6 +20,7 @@ import Data.Bits
 import Data.ByteString (ByteString)
 import Graphics.Rendering.OpenGL
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as LBS
 import qualified Graphics.UI.GLUT as GLUT
 
 -- | Launches the emulator. Currently only initializes GL and fires off the main loop.
@@ -27,9 +28,11 @@ import qualified Graphics.UI.GLUT as GLUT
 --     can be run in headless mode \/ debug mode \/ with various other options.
 main :: IO ()
 main = do
-  getArgs >>= print
-  initGL
-  GLUT.mainLoop
+  args <- getArgs
+  unless (headless args) $ do
+    initGL
+    GLUT.mainLoop
+  loadROM (romFile args) (biosFile args)
 
 -- | Initialize OpenGL and set up the window ready to render sprite- and tile-based 2D
 --     graphics. We enable double-buffering and alpha modes, create a window with a
@@ -63,15 +66,16 @@ reshape (Size x y) = do
   viewport $= (GLUT.Position 0 0, Size x y)
 
 -- | Load a ROM from a given file path, and then start executing the ROM.
-loadROM :: FilePath -> IO ()
-loadROM fp =
+loadROM :: FilePath -> FilePath -> IO ()
+loadROM fp bios =
   readROM fp >>= \case
     Left err -> putStrLn err
-    Right (rh, _, bs) ->
+    Right (rh, _, bs) -> do
+      biosBS <- LBS.readFile bios
       case parseARM (mwordFromBS (rh ^. startLocation)) of
         Right (AL, Branch (Link False) _) ->
           void $ runSystemT interpretLoop $
-            buildInitialState bs
+            buildInitialState bs biosBS
         _ -> error "loadROM: undefined"
 
 mwordFromBS :: ByteString -> MWord
