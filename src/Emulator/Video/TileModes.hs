@@ -108,18 +108,18 @@ readCharBlocks addr True = do
 -- Draw 32x32 tiles at a time
 drawTileMap :: AddressIO m => Int -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> MapBaseAddress -> SetBaseAddress -> m ()
 drawTileMap 0 _ _ _ _ _ _ _ = return ()
-drawTileMap rows colFormat tileMap tileSet bgOffset palette baseAddr setBaseAddr = do
+drawTileMap rows pixFormat tileMap tileSet bgOffset palette baseAddr setBaseAddr = do
   let tileMapRow = ixmap (baseAddr, baseAddr + 0x0000003F) (id) tileMap :: TileMap
-  drawHLine 0x00000000 colFormat tileMapRow tileSet bgOffset palette setBaseAddr
-  drawTileMap (rows-1) colFormat tileMap tileSet bgOffset palette (baseAddr + 0x00000040) setBaseAddr
+  drawHLine 0x00000000 pixFormat tileMapRow tileSet bgOffset palette setBaseAddr
+  drawTileMap (rows-1) pixFormat tileMap tileSet bgOffset palette (baseAddr + 0x00000040) setBaseAddr
   return ()
 
 drawHLine :: AddressIO m => Address -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> SetBaseAddress -> m ()
 drawHLine 0x00000040 _ _ _ _ _ _ = return ()
-drawHLine columns colFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr = do
-  let (tileIdx, _, _, _) = parseScreenEntry (tileMapRow!(columns + 0x00000001)) (tileMapRow!columns) colFormat setBaseAddr
+drawHLine columns pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr = do
+  let (tileIdx, _, _, _) = parseScreenEntry (tileMapRow!(columns + 0x00000001)) (tileMapRow!columns) pixFormat setBaseAddr
   let _tile = tileSet!tileIdx
-  drawHLine (columns + 0x00000001) colFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
+  drawHLine (columns + 0x00000001) pixFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
   return ()
 
 -- a is the upper byte, b is the lower
