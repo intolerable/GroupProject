@@ -89,11 +89,6 @@ drawTextBG _ _pixFormat tileMapAddr tileSetAddr (_xOff, _yOff) _palette = do
   _tileSet <- readCharBlocks tileSetAddr False
   return ()
 
-  -- | byt == 0 = (32, 32)
-  -- | byt == 1 = (64, 32)
-  -- | byt == 2 = (32, 64)
-  -- | otherwise = (64, 64)
-
 readTileMap :: AddressIO m => Address -> m (TileMap)
 readTileMap addr = do
   memBlock <- readRange (addr, addr + 0x000007FF)
