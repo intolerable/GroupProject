@@ -116,7 +116,7 @@ rsb :: (HasFlags s, HasRegisters s, MonadState s m)
     => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
 rsb dest src1 src2 cCode = sub dest src2 src1 cCode
 
--- Logical AND
+-- Logical/bitwise AND
 and :: (HasFlags s, HasRegisters s, MonadState s m)
     => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
 and dest src1 src2 cCode = do
@@ -126,13 +126,12 @@ and dest src1 src2 cCode = do
   registers.dest .= val
   -- Update flags if condition code is true
   when cCode $ do
-    -- FIXME: This actually should be the carry flag from the shifted register
-    -- IF the shifted register is used as an operand. Unfortunately we don't
-    -- have shifted registers yet so this can stay false for now.
-    flags.carry .= False
-    flags.zero .= (val == 0)
     flags.negative .= isNegative val
+    flags.zero .= (val == 0)
+    -- TODO: carry from barrel shifter
+    flags.carry .= False
 
+-- Logical/bitwise OR
 orr :: (HasFlags s, HasRegisters s, MonadState s m)
     => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
 orr dest src1 src2 cCode = do
@@ -142,10 +141,9 @@ orr dest src1 src2 cCode = do
   registers.dest .= val
   -- Update flags if condition code is true
   when cCode $ do
-    -- used and flags, TODO
-    flags.carry .= False
-    flags.zero .= (val == 0)
     flags.negative .= isNegative val
+    flags.zero .= (val == 0)
+    -- TODO: carry from barrel shifter
 
 -- not
 mvn :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -203,7 +201,6 @@ teq _ src1 src2 _ = do
   flags.zero .= (val == 0)
   -- TODO: carry from barrel shifter
   flags.carry .= False
-  -- overflow is untouched
 
 -- Compare
 cmp :: (HasFlags s, HasRegisters s, MonadState s m)
