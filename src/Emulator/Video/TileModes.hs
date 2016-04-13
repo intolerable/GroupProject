@@ -119,6 +119,9 @@ drawHLine :: AddressIO m => Int -> PixFormat -> TileMap -> TileSet -> TextBGOffs
 drawHLine 0 _ _ _ _ _ = return ()
 drawHLine _columns _colFormat _tileMapRow _tileSet (_xOff, _yOff) _palette = undefined
 
+convIntToAddr :: Int -> PixFormat -> Address
+convIntToAddr n False = (0x00000020 + 0x00000020 * fromIntegral n)
+convIntToAddr n True = (0x00000040 + 0x00000040 * fromIntegral n)
 
 -- drawVLines :: String -> Int -> Int -> TextBGOffset -> Address -> IO ()
 -- drawVLines _ 0 _ _ _ = return ()
