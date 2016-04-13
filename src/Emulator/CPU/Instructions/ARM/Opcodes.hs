@@ -1,4 +1,24 @@
-module Emulator.CPU.Instructions.ARM.Opcodes where
+module Emulator.CPU.Instructions.ARM.Opcodes
+  ( functionFromOpcode
+  , and
+  , eor
+  , sub
+  , rsb
+  , add
+  , adc
+  , sbc
+  , rsc
+  , tst
+  , teq
+  , cmp
+  , cmn
+  , orr
+  , mov
+  , bic
+  , mvn
+  , checkCarry
+  , isNegative )
+  where
 
 import Emulator.Types
 import Emulator.CPU
