@@ -137,81 +137,75 @@ and :: (HasFlags s, HasRegisters s, MonadState s m)
     => DestRegister -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
 and dest src1 src2 cCode = do
   res1 <- use $ registers.src1
-  (_, res2) <- use $ registers.src2
+  (cy, res2) <- use $ registers.src2
   let val = res1 .&. res2
   registers.dest .= val
   when cCode $ do
     flags.negative .= isNegative val
     flags.zero .= (val == 0)
-    -- TODO: carry from barrel shifter
-    flags.carry .= False
+    flags.carry .= cy
 
 -- Logical/bitwise OR
 orr :: (HasFlags s, HasRegisters s, MonadState s m)
     => DestRegister -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
 orr dest src1 src2 cCode = do
   res1 <- use $ registers.src1
-  (_, res2) <- use $ registers.src2
+  (cy, res2) <- use $ registers.src2
   let val = res1 .|. res2
   registers.dest .= val
   when cCode $ do
     flags.negative .= isNegative val
     flags.zero .= (val == 0)
-    -- TODO: carry from barrel shifter
-    flags.carry .= False
+    flags.carry .= cy
 
 -- Move Negative (aka Move NOT)
 mvn :: (HasFlags s, HasRegisters s, MonadState s m)
     => DestRegister -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
 mvn dest _ src2 cCode = do
-  (_, res2) <- use $ registers.src2
+  (cy, res2) <- use $ registers.src2
   let val = complement res2
   registers.dest .= val
   when cCode $ do
     flags.negative .= isNegative val
     flags.zero .= (val == 0)
-    -- TODO: carry from barrel shifter
-    flags.carry .= False
+    flags.carry .= cy
 
 -- Bit clear
 bic :: (HasFlags s, HasRegisters s, MonadState s m)
     => DestRegister -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
 bic dest src1 src2 cCode = do
   res1 <- use $ registers.src1
-  (_, res2) <- use $ registers.src2
+  (cy, res2) <- use $ registers.src2
   let val = res1 .&. (complement res2)
   registers.dest .= val
   when cCode $ do
     flags.negative .= isNegative val
     flags.zero .= (val == 0)
-    -- TODO: carry from barrel shifter
-    flags.carry .= False
+    flags.carry .= cy
 
 -- Test instruction
 tst :: (HasFlags s, HasRegisters s, MonadState s m)
     => a -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
 tst _ src1 src2 _ = do
   res1 <- use $ registers.src1
-  (_, res2) <- use $ registers.src2
+  (cy, res2) <- use $ registers.src2
   let val = res1 .&. res2
   -- Always update flags (for TST, TEQ, CMP, CMN)
   flags.negative .= isNegative val
   flags.zero .= (val == 0)
-  -- TODO: carry from barrel shifter
-  flags.carry .= False
+  flags.carry .= cy
 
 -- Test exclusive (XOR)
 teq :: (HasFlags s, HasRegisters s, MonadState s m)
     => a -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
 teq _ src1 src2 _ = do
   res1 <- use $ registers.src1
-  (_, res2) <- use $ registers.src2
+  (cy, res2) <- use $ registers.src2
   let val = res1 `xor` res2
   -- Always update flags (for TST, TEQ, CMP, CMN)
   flags.negative .= isNegative val
   flags.zero .= (val == 0)
-  -- TODO: carry from barrel shifter
-  flags.carry .= False
+  flags.carry .= cy
 
 -- Compare
 cmp :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -244,27 +238,25 @@ eor :: (HasFlags s, HasRegisters s, MonadState s m)
     => DestRegister -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
 eor dest src1 src2 cCode = do
   res1 <- use $ registers.src1
-  (_, res2) <- use $ registers.src2
+  (cy, res2) <- use $ registers.src2
   let val = res1 `xor` res2
   registers.dest .= val
   when cCode $ do
     flags.zero .= (val == 0)
     flags.negative .= isNegative val
-    -- TODO: carry from barrel shifter
-    flags.carry .= False
+    flags.carry .= cy
 
 -- Move instruction
 mov :: (HasFlags s, HasRegisters s, MonadState s m)
     => DestRegister -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
 mov dest _ src2 cCode = do
-  (_, val) <- use $ registers.src2
+  (cy, val) <- use $ registers.src2
   registers.dest .= val
   when cCode $ do
     -- val is expected to be post-shift for the flags!
     flags.zero .= (val == 0)
     flags.negative .= isNegative val
-    -- TODO: carry from barrel shifter
-    flags.carry .= False
+    flags.carry .= cy
 
 checkCarry :: MWord -> MWord -> Bool
 checkCarry a b = ((c .&. 0x00000000FFFFFFFF) `xor` c) /= 0
