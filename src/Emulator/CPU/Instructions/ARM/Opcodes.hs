@@ -204,8 +204,8 @@ cmp _ src1 src2 _ = do
   -- Always update flags (for TST, TEQ, CMP, CMN)
   flags.zero .= (val == 0)
   flags.negative .= isNegative val
-  flags.carry .= False
-  flags.overflow .= isUnsignedOverflow (-) [res1, res2] val
+  flags.carry .= not $ isUnsignedOverflow (-) [res1, res2] val
+  flags.overflow .= isSignedOverflow (-) [res1, res2] val
 
 -- Compare negative
 cmn :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -217,8 +217,8 @@ cmn _ src1 src2 _ = do
   -- Always update flags (for TST, TEQ, CMP, CMN)
   flags.zero .= (val == 0)
   flags.negative .= isNegative val
-  flags.carry .= False
-  flags.overflow .= isUnsignedOverflow (+) [res1, res2] val
+  flags.carry .= not $ isUnsignedOverflow (-) [res1, res2] val
+  flags.overflow .= isSignedOverflow (-) [res1, res2] val
 
 -- Logical Exclusive Or
 eor :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -229,17 +229,23 @@ eor dest src1 src2 cCode = do
   let val = res1 `xor` res2
   registers.dest .= val
   when cCode $ do
-    -- FIXME: see above
-    flags.carry .= False
     flags.zero .= (val == 0)
     flags.negative .= isNegative val
+    -- TODO: carry from barrel shifter
+    flags.carry .= False
 
 -- Move instruction
 mov :: (HasFlags s, HasRegisters s, MonadState s m)
     => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
 mov dest _ src2 _ = do
-  res1 <- use $ registers.src2
-  registers.dest .= res1
+  val <- use $ registers.src2
+  registers.dest .= val
+  when cCode $ do
+    -- val is expected to be post-shift for the flags!
+    flags.zero .= (val == 0)
+    flags.negative .= isNegative val
+    -- TODO: carry from barrel shifter
+    flags.carry .= False
 
 checkCarry :: MWord -> MWord -> Bool
 checkCarry a b = ((c .&. 0x00000000FFFFFFFF) `xor` c) /= 0
