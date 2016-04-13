@@ -30,7 +30,6 @@ import Data.Bits
 import Data.Int (Int32)
 import Prelude hiding (Ordering(..), and)
 
-type RegisterLabel = Lens' Registers MWord
 type SrcRegister = Getting MWord Registers MWord
 type DestRegister = ASetter' Registers MWord
 type ConditionCode = Bool
