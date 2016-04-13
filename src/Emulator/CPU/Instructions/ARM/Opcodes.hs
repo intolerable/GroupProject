@@ -54,7 +54,7 @@ add dest src1 src2 cCode = do
     flags.negative .= isNegative val
     flags.zero .= (val == 0)
     flags.carry .= isUnsignedOverflow (+) [res1, res2] val
-    flags.overflow .= isSignedOverflow (+) res1 res2 val
+    flags.overflow .= isSignedOverflow (+) [res1, res2] val
 
 -- Arithmetic add with carry
 adc :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -62,16 +62,16 @@ adc :: (HasFlags s, HasRegisters s, MonadState s m)
 adc dest src1 src2 cCode = do
   res1 <- use $ registers.src1
   res2 <- use $ registers.src2
-  let val = res1 + res2
+  isCy <- use $ flags.carry
+  let cy = if isCy then 1 else 0
+  let val = res1 + res2 + cy
   registers.dest .= val
   -- Update flags if condition code is true
   when cCode $ do
     flags.negative .= isNegative val
     flags.zero .= (val == 0)
-    flags.overflow .= (checkCarry res1 res2)
-    when (checkCarry res1 res2) $ do
-        flags.carry .= True
-        registers.dest .= 1
+    flags.carry .= isUnsignedOverflow (+) [res1, res2, cy] val
+    flags.overflow .= isSignedOverflow (+) [res1, res2, cy] val
 
 -- Arithmetic subtract
 sub :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -83,11 +83,10 @@ sub dest src1 src2 cCode = do
   registers.dest .= val
   -- Update flags if condition code is true
   when cCode $ do
-    flags.zero .= (val == 0)
     flags.negative .= isNegative val
-    -- TODO: Maybe detect this, but it's kind of contrived
-    flags.overflow .= False
-    flags.carry .= False
+    flags.zero .= (val == 0)
+    flags.carry .= isUnsignedOverflow (-) [res1, res2] val
+    flags.overflow .= isSignedOverflow (-) [res1, res2] val
 
 -- Subtract with carry
 sbc :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -95,18 +94,17 @@ sbc :: (HasFlags s, HasRegisters s, MonadState s m)
 sbc dest src1 src2 cCode = do
   res1 <- use $ registers.src1
   res2 <- use $ registers.src2
-  let val = res1 - res2
+  isCy <- use $ flags.carry
+  -- SBC uses NOT(Carry)
+  let cy = if isCy then 0 else 1
+  let val = res1 + res2 + cy
   registers.dest .= val
   -- Update flags if condition code is true
   when cCode $ do
-    flags.zero .= (val == 0)
     flags.negative .= isNegative val
-    -- TODO: Maybe detect this, but it's kind of contrived
-    flags.overflow .= False
-    flags.carry .= False
-    when (checkCarry res1 res2) $ do
-        flags.carry .= True
-        registers.dest .= 1
+    flags.zero .= (val == 0)
+    flags.carry .= isUnsignedOverflow (-) [res1, res2, cy] val
+    flags.overflow .= isSignedOverflow (-) [res1, res2, cy] val
 
 -- Subtract with carry reversed
 rsc :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -265,7 +263,7 @@ isNegative :: MWord -> Bool
 isNegative a = (fromIntegral a :: Int32) < 0
 
 -- Following functions take lists for cases Rm + Rn + Carry
-isUnsignedOverflow :: (a ~ Integer) => (a -> a -> a) -> [MMWord -> MWordWord] -> MWord -> Bool
+isUnsignedOverflow :: (a ~ Integer) => (a -> a -> a) -> [MWord] -> MWord -> Bool
 isUnsignedOverflow f args result = (fromIntegral result) /= preciseResult
   where
     preciseResult = foldl1 f $ map fromIntegral args :: Integer
