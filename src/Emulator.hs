@@ -2,6 +2,7 @@ module Emulator
   ( main
   , loadROM ) where
 
+import Emulator.Args
 import Emulator.CPU
 import Emulator.CPU.Instructions.ARM
 import Emulator.CPU.Instructions.ARM.Parser
@@ -26,6 +27,7 @@ import qualified Graphics.UI.GLUT as GLUT
 --     can be run in headless mode \/ debug mode \/ with various other options.
 main :: IO ()
 main = do
+  getArgs >>= print
   initGL
   GLUT.mainLoop
 

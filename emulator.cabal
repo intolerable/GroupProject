@@ -15,6 +15,7 @@ cabal-version:       >=1.10
 library
   exposed-modules:
     Emulator
+    Emulator.Args
     Emulator.CPU
     Emulator.CPU.Instructions
     Emulator.CPU.Instructions.ARM
@@ -53,6 +54,7 @@ library
     OpenGL,
     lens,
     mtl,
+    optparse-applicative,
     stm,
     template-haskell,
     text,
