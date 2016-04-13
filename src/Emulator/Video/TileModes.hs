@@ -2,7 +2,6 @@ module Emulator.Video.TileModes where
 
 import Emulator.Memory
 import Emulator.Types
-import Emulator.Video.Util
 import Emulator.Video.VideoController
 
 import Control.Monad.IO.Class
@@ -109,15 +108,17 @@ readCharBlocks addr True = do
 -- Draw 32x32 tiles at a time
 drawTileMap :: AddressIO m => Int -> Int -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> Address -> m ()
 drawTileMap 0 _ _ _ _ _ _ _ = return ()
-drawTileMap _rows columns _colFormat tileMap tileSet bgOffset palette baseAddr = do
-  let tileMapRow = ixmap (baseAddr, baseAddr + 0x0000003F) (+0) tileMap :: TileMap
-  drawHLine columns tileMapRow tileSet bgOffset palette
+drawTileMap rows columns colFormat tileMap tileSet bgOffset palette baseAddr = do
+  let tileMapRow = ixmap (baseAddr, baseAddr + 0x0000003F) (id) tileMap :: TileMap
+  drawHLine columns colFormat tileMapRow tileSet bgOffset palette
+  drawTileMap (rows-1) columns colFormat tileMap tileSet bgOffset palette (baseAddr + 0x00000040)
   return ()
 
 -- Draw 32 tile row. call drawTile to draw each tile
-drawHLine :: AddressIO m => Int -> TileMap -> TileSet -> TextBGOffset -> Palette -> m ()
-drawHLine 0 _ _ _ _ = return ()
-drawHLine _columns _tileMapRow _tileSet (_xOff, _yOff) _palette = undefined
+drawHLine :: AddressIO m => Int -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> m ()
+drawHLine 0 _ _ _ _ _ = return ()
+drawHLine _columns _colFormat _tileMapRow _tileSet (_xOff, _yOff) _palette = undefined
+
 
 -- drawVLines :: String -> Int -> Int -> TextBGOffset -> Address -> IO ()
 -- drawVLines _ 0 _ _ _ = return ()
