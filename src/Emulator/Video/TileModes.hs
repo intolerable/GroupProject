@@ -6,7 +6,9 @@ import Emulator.Video.VideoController
 
 import Control.Monad.IO.Class
 import Data.Array.IArray
+import Data.Bits
 import Graphics.Rendering.OpenGL
+import Utilities.Parser.TemplateHaskell
 
 type AddressIO m = (AddressSpace m, MonadIO m)
 type Palette = Array Address Byte
@@ -118,6 +120,15 @@ drawTileMap rows columns colFormat tileMap tileSet bgOffset palette baseAddr = d
 drawHLine :: AddressIO m => Int -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> m ()
 drawHLine 0 _ _ _ _ _ = return ()
 drawHLine _columns _colFormat _tileMapRow _tileSet (_xOff, _yOff) _palette = undefined
+
+parseScreenEntry :: Byte -> Byte -> PixFormat -> (Address, Bool, Bool, Int)
+parseScreenEntry a b pixFormat = (tileIdx, hFlip, vFlip, palBank)
+  where
+    hword = ((fromIntegral a :: HalfWord) `shiftL` 8) .|. ((fromIntegral b :: HalfWord) .&. 0xFF) :: HalfWord
+    tileIdx = convIntToAddr (fromIntegral $ $(bitmask 9 0) hword :: Int) pixFormat
+    hFlip = (testBit hword 10)
+    vFlip = (testBit hword 11)
+    palBank = (fromIntegral $ $(bitmask 15 12) hword :: Int)
 
 convIntToAddr :: Int -> PixFormat -> Address
 convIntToAddr n False = (0x00000020 + 0x00000020 * fromIntegral n)
