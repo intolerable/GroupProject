@@ -6,35 +6,43 @@ import Emulator.Video.Util
 import Emulator.Video.VideoController
 
 import Control.Monad.IO.Class
+import Data.Array.IArray
 import Graphics.Rendering.OpenGL
 
-tileModes :: (AddressSpace m, MonadIO m) => LCDControl -> m ()
+type AddressIO m = (AddressSpace m, MonadIO m)
+type Palette = Array Address Byte
+type PixFormat = Bool
+type TextBGOffset = (GLdouble, GLdouble)
+type TileMap = Array Address Byte
+type TileSet = Array Address Byte
+
+tileModes :: AddressIO m => LCDControl -> m ()
 tileModes cnt = do
   palette <- readRange (0x05000000, 0x050001FF)
   case bgMode cnt of
     0 -> mode0 palette cnt
     _ -> undefined
 
-mode0 :: (AddressSpace m, MonadIO m) => Palette -> LCDControl -> m ()
+mode0 :: AddressIO m => Palette -> LCDControl -> m ()
 mode0 palette _ = do
   textBG 0x04000008 0x04000010 0x04000012 palette
   textBG 0x0400000A 0x04000014 0x04000016 palette
   textBG 0x0400000C 0x04000018 0x0400001A palette
   textBG 0x0400000E 0x0400001C 0x0400001E palette
 
-mode1 :: (AddressSpace m, MonadIO m) => Palette -> LCDControl -> m ()
+mode1 :: AddressIO m => Palette -> LCDControl -> m ()
 mode1 palette _ = do
   textBG 0x04000008 0x04000010 0x04000012 palette
   textBG 0x0400000A 0x04000014 0x04000016 palette
   affineBG
 
-mode2 :: (AddressSpace m, MonadIO m) => LCDControl -> m ()
+mode2 :: AddressIO m => LCDControl -> m ()
 mode2 _ = do
   affineBG
   affineBG
 
 -- Text Mode
-textBG :: (AddressSpace m, MonadIO m) => Address -> Address -> Address -> Palette -> m ()
+textBG :: AddressIO m => Address -> Address -> Address -> Palette -> m ()
 textBG bgCNTAddr xOffAddr yOffAddr palette = do
   bg <- recordBGControl bgCNTAddr
   bgOffset <- recordBGOffset xOffAddr yOffAddr
@@ -54,22 +62,22 @@ getBaseMapBlock :: Byte -> Address
 getBaseMapBlock mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))
 
 -- if False then Colour is 4bpp aka S-tiles
-drawTextBG :: (AddressSpace m, MonadIO m) => Int -> Bool -> Address -> Address -> TextBGOffset -> Palette -> m ()
-drawTextBG 0 _colFormat mapBlock charBlock (_xOff, _yOff) _palette = do
+drawTextBG :: AddressIO m => Int -> PixFormat -> Address -> Address -> TextBGOffset -> Palette -> m ()
+drawTextBG 0 _pixFormat mapBlock charBlock (_xOff, _yOff) _palette = do
   _map0 <- readTileMap mapBlock
   _tileSet <- readCharBlocks charBlock False
   return ()
-drawTextBG 1 _colFormat mapBlock charBlock (_xOff, _yOff) _palette = do
-  _map0 <- readTileMap mapBlock
-  _map1 <- readTileMap (mapBlock + 0x00000800)
-  _tileSet <- readCharBlocks charBlock False
-  return ()
-drawTextBG 2 _colFormat mapBlock charBlock (_xOff, _yOff) _palette = do
+drawTextBG 1 _pixFormat mapBlock charBlock (_xOff, _yOff) _palette = do
   _map0 <- readTileMap mapBlock
   _map1 <- readTileMap (mapBlock + 0x00000800)
   _tileSet <- readCharBlocks charBlock False
   return ()
-drawTextBG _ _colFormat mapBlock charBlock (_xOff, _yOff) _palette = do
+drawTextBG 2 _pixFormat mapBlock charBlock (_xOff, _yOff) _palette = do
+  _map0 <- readTileMap mapBlock
+  _map1 <- readTileMap (mapBlock + 0x00000800)
+  _tileSet <- readCharBlocks charBlock False
+  return ()
+drawTextBG _ _pixFormat mapBlock charBlock (_xOff, _yOff) _palette = do
   _map0 <- readTileMap mapBlock
   _map1 <- readTileMap (mapBlock + 0x00000800)
   _map2 <- readTileMap (mapBlock + 0x00001000)
@@ -82,13 +90,13 @@ drawTextBG _ _colFormat mapBlock charBlock (_xOff, _yOff) _palette = do
   -- | byt == 2 = (32, 64)
   -- | otherwise = (64, 64)
 
-readTileMap :: (AddressSpace m, MonadIO m) => Address -> m (TileMap)
+readTileMap :: AddressIO m => Address -> m (TileMap)
 readTileMap addr = do
   memBlock <- readRange (addr, addr + 0x000007FF)
   --mapMem <- liftIO $ thaw memBlock
   return memBlock
 
-readCharBlocks :: (AddressSpace m, MonadIO m) => Address -> Bool -> m (TileSet)
+readCharBlocks :: AddressIO m => Address -> PixFormat -> m (TileSet)
 readCharBlocks addr False = do
   memBlock <- readRange (addr, addr + 0x00007FFF)
   --charMem <- liftIO $ thaw memBlock
@@ -99,13 +107,15 @@ readCharBlocks addr True = do
   return memBlock
 
 -- Draw 32x32 tiles at a time
-drawTileMap :: Int -> Int -> Bool -> TileMap -> TileSet -> TextBGOffset -> Palette -> IO ()
-drawTileMap 0 _ _ _ _ _ _ = return ()
-drawTileMap _rows columns _colFormat tileMap tileSet bgOffset palette = do
-  drawHLine columns tileMap tileSet bgOffset palette
+drawTileMap :: AddressIO m => Int -> Int -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> Address -> m ()
+drawTileMap 0 _ _ _ _ _ _ _ = return ()
+drawTileMap _rows columns _colFormat tileMap tileSet bgOffset palette baseAddr = do
+  let tileMapRow = ixmap (baseAddr, baseAddr + 0x0000003F) (+0) tileMap :: TileMap
+  drawHLine columns tileMapRow tileSet bgOffset palette
+  return ()
 
 -- Draw 32 tile row. call drawTile to draw each tile
-drawHLine :: Int -> TileMap -> TileSet -> TextBGOffset -> Palette -> IO ()
+drawHLine :: AddressIO m => Int -> TileMap -> TileSet -> TextBGOffset -> Palette -> m ()
 drawHLine 0 _ _ _ _ = return ()
 drawHLine _columns _tileMapRow _tileSet (_xOff, _yOff) _palette = undefined
 
@@ -115,7 +125,7 @@ drawHLine _columns _tileMapRow _tileSet (_xOff, _yOff) _palette = undefined
 --   drawHLine fname columns (x, y) addr
 --   drawVLines fname (n-1) columns (x, y+8) addr
 
-affineBG :: (AddressSpace m, MonadIO m) => m ()
+affineBG :: AddressIO m => m ()
 affineBG = undefined
 
 -- Returns number of tiles to be drawn

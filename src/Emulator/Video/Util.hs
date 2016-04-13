@@ -3,16 +3,11 @@ module Emulator.Video.Util where
 import Emulator.Types
 
 import Codec.Picture
-import Data.Array
 import Data.Array.Storable
 import Data.Vector.Storable
 import Graphics.Rendering.OpenGL
 
 type FileName = String
-type TileMap = Array Address Byte
-type TileSet = Array Address Byte
-type TextBGOffset = (GLdouble, GLdouble)
-type Palette = Array Address Byte
 
 drawTile :: StorableArray Address Byte -> (GLdouble, GLdouble) -> (GLdouble, GLdouble) -> IO TextureObject
 drawTile _ _ _ = undefined
