@@ -16,6 +16,8 @@ type PixFormat = Bool
 type TextBGOffset = (GLdouble, GLdouble)
 type TileMap = Array Address Byte
 type TileSet = Array Address Byte
+type MapBaseAddress = Address
+type SetBaseAddress = Address
 
 tileModes :: AddressIO m => LCDControl -> m ()
 tileModes cnt = do
