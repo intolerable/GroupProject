@@ -7,6 +7,7 @@ import Control.Lens
 import Control.Monad.State.Class
 import Control.Monad
 import Data.Bits
+import Data.Int (Int32)
 import Prelude hiding (Ordering(..), and)
 
 type RegisterLabel = Lens' Registers MWord
@@ -217,7 +218,7 @@ cmp _ src1 src2 _ = do
   flags.zero .= (val == 0)
   flags.negative .= isNegative val
   flags.carry .= False
-  flags.overflow .= isOverflow (-) res1 res2 val
+  flags.overflow .= isUnsignedOverflow (-) res1 res2 val
 
 -- Compare negative
 cmn :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -230,7 +231,7 @@ cmn _ src1 src2 _ = do
   flags.zero .= (val == 0)
   flags.negative .= isNegative val
   flags.carry .= False
-  flags.overflow .= isOverflow (+) res1 res2 val
+  flags.overflow .= isUnsignedOverflow (+) res1 res2 val
 
 -- Logical Exclusive Or
 eor :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -263,7 +264,12 @@ checkCarry a b = ((c .&. 0x00000000FFFFFFFF) `xor` c) /= 0
 isNegative :: MWord -> Bool
 isNegative a = (a .&. 0x80000000) > 0
 
-isOverflow :: (a ~ Integer) => (a -> a -> a) -> MWord -> MWord -> MWord -> Bool
-isOverflow f arg1 arg2 result = (fromIntegral result) /= preciseResult
+isUnsignedOverflow :: (a ~ Integer) => (a -> a -> a) -> MWord -> MWord -> MWord -> Bool
+isUnsignedOverflow f arg1 arg2 result = (fromIntegral result) /= preciseResult
   where
     preciseResult = ((fromIntegral arg1) `f` (fromIntegral arg2)) :: Integer
+
+isSignedOverflow :: (a ~ Int32) => (a -> a -> a) -> MWord -> MWord -> MWord -> Bool
+isSignedOverflow f arg1 arg2 result = (fromIntegral signedResult :: Integer) /= (fromIntegral result :: Integer)
+  where
+    signedResult = (fromIntegral arg1 :: Int32) `f` (fromIntegral arg2 :: Int32) :: Int32
