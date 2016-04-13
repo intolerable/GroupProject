@@ -134,12 +134,6 @@ convIntToAddr :: Int -> PixFormat -> Address
 convIntToAddr n False = (0x00000020 + 0x00000020 * fromIntegral n)
 convIntToAddr n True = (0x00000040 + 0x00000040 * fromIntegral n)
 
--- drawVLines :: String -> Int -> Int -> TextBGOffset -> Address -> IO ()
--- drawVLines _ 0 _ _ _ = return ()
--- drawVLines fname n columns (x, y) addr = do
---   drawHLine fname columns (x, y) addr
---   drawVLines fname (n-1) columns (x, y+8) addr
-
 affineBG :: AddressIO m => m ()
 affineBG = undefined
 
