@@ -273,9 +273,15 @@ shiftedCarryRegisterLens (RegisterShift shiftReg shiftType regName) =
 shiftedRegisterLens :: Shifted RegisterName -> Getter Registers MWord
 shiftedRegisterLens r = shiftedCarryRegisterLens r . _2
 
-operand2Lens :: Either (Shifted RegisterName) (Rotated Byte) -> Getter Registers MWord
-operand2Lens (Left r) = shiftedRegisterLens r
-operand2Lens (Right (Rotated x b)) = to $ const $ fromIntegral b `rotateL` (x * 2)
+operand2Lens :: Either (Shifted RegisterName) (Rotated Byte) -> Getter Registers (Bool, MWord)
+operand2Lens (Left r) = shiftedCarryRegisterLens r
+operand2Lens (Right (Rotated x b)) =
+  case x * 2 of
+    0 -> to $ \r ->
+      let oldc = r ^. cpsr.carry in
+      (oldc, fromIntegral b)
+    n -> to $ const $
+      (testBit x (32 - n), fromIntegral x `rotateL` n)
 
 fromByte :: forall a. (Enum a, Bounded a) => Byte -> Maybe a
 fromByte b =
