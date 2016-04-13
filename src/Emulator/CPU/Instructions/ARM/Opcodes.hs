@@ -57,7 +57,6 @@ functionFromOpcode opcode =
 
 ---------------------
 -- Data processing instructions
--- TODO: almost all flags need checking/fixing
 ---------------------
 
 -- Standard arithmetic add
