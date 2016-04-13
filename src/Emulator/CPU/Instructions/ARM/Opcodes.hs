@@ -139,8 +139,9 @@ orr dest src1 src2 cCode = do
     flags.negative .= isNegative val
     flags.zero .= (val == 0)
     -- TODO: carry from barrel shifter
+    flags.carry .= False
 
--- not
+-- Move Negative (aka Move NOT)
 mvn :: (HasFlags s, HasRegisters s, MonadState s m)
     => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
 mvn dest _ src2 cCode = do
@@ -148,10 +149,10 @@ mvn dest _ src2 cCode = do
   let val = complement res2
   registers.dest .= val
   when cCode $ do
-    -- used and flags, TODO
-    flags.carry .= False
-    flags.zero .= (val == 0)
     flags.negative .= isNegative val
+    flags.zero .= (val == 0)
+    -- TODO: carry from barrel shifter
+    flags.carry .= False
 
 -- Bit clear
 bic :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -162,11 +163,10 @@ bic dest src1 src2 cCode = do
   let val = res1 .&. (complement res2)
   registers.dest .= val
   when cCode $ do
-    -- used and flags, TODO
-    flags.carry .= False
-    flags.zero .= (val == 0)
     flags.negative .= isNegative val
-
+    flags.zero .= (val == 0)
+    -- TODO: carry from barrel shifter
+    flags.carry .= False
 
 -- Test instruction
 tst :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -180,7 +180,6 @@ tst _ src1 src2 _ = do
   flags.zero .= (val == 0)
   -- TODO: carry from barrel shifter
   flags.carry .= False
-  -- overflow is untouched
 
 -- Test exclusive (XOR)
 teq :: (HasFlags s, HasRegisters s, MonadState s m)
