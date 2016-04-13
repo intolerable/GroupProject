@@ -204,7 +204,7 @@ cmp _ src1 src2 _ = do
   -- Always update flags (for TST, TEQ, CMP, CMN)
   flags.zero .= (val == 0)
   flags.negative .= isNegative val
-  flags.carry .= not $ isUnsignedOverflow (-) [res1, res2] val
+  flags.carry .= not (isUnsignedOverflow (-) [res1, res2] val)
   flags.overflow .= isSignedOverflow (-) [res1, res2] val
 
 -- Compare negative
@@ -217,7 +217,7 @@ cmn _ src1 src2 _ = do
   -- Always update flags (for TST, TEQ, CMP, CMN)
   flags.zero .= (val == 0)
   flags.negative .= isNegative val
-  flags.carry .= not $ isUnsignedOverflow (-) [res1, res2] val
+  flags.carry .= not (isUnsignedOverflow (-) [res1, res2] val)
   flags.overflow .= isSignedOverflow (-) [res1, res2] val
 
 -- Logical Exclusive Or
@@ -237,7 +237,7 @@ eor dest src1 src2 cCode = do
 -- Move instruction
 mov :: (HasFlags s, HasRegisters s, MonadState s m)
     => DestRegister -> SrcRegister -> SrcRegister -> ConditionCode -> m ()
-mov dest _ src2 _ = do
+mov dest _ src2 cCode = do
   val <- use $ registers.src2
   registers.dest .= val
   when cCode $ do
