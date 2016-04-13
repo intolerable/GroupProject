@@ -118,8 +118,10 @@ drawHLine :: AddressIO m => Address -> PixFormat -> TileMap -> TileSet -> TextBG
 drawHLine 0x00000040 _ _ _ _ _ _ = return ()
 drawHLine columns pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr = do
   let (tileIdx, _, _, _) = parseScreenEntry (tileMapRow!(columns + 0x00000001)) (tileMapRow!columns) pixFormat setBaseAddr
-  let _tile = tileSet!tileIdx
-  drawHLine (columns + 0x00000001) pixFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
+  let _tile = if pixFormat
+      then (ixmap (tileIdx, tileIdx + 0x0000003F) (id) tileSet :: TileSet)
+      else (ixmap (tileIdx, tileIdx + 0x0000001F) (id) tileSet :: TileSet)
+  drawHLine (columns + 0x00000002) pixFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
   return ()
 
 -- a is the upper byte, b is the lower
