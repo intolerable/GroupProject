@@ -117,7 +117,7 @@ drawTileMap rows colFormat tileMap tileSet bgOffset palette baseAddr setBaseAddr
 drawHLine :: AddressIO m => Address -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> SetBaseAddress -> m ()
 drawHLine 0x00000040 _ _ _ _ _ _ = return ()
 drawHLine columns colFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr = do
-  let screenEntry@(tileIdx, _, _, _) = parseScreenEntry (tileMapRow!(columns + 0x00000001)) (tileMapRow!columns) colFormat setBaseAddr
+  let (tileIdx, _, _, _) = parseScreenEntry (tileMapRow!(columns + 0x00000001)) (tileMapRow!columns) colFormat setBaseAddr
   let _tile = tileSet!tileIdx
   drawHLine (columns + 0x00000001) colFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
   return ()
