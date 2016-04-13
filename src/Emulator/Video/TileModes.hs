@@ -65,10 +65,11 @@ getBaseMapBlock :: Byte -> Address
 getBaseMapBlock mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))
 
 -- if False then Colour is 4bpp aka S-tiles
-drawTextBG :: AddressIO m => Int -> PixFormat -> Address -> Address -> TextBGOffset -> Palette -> m ()
-drawTextBG 0 _pixFormat mapBlock charBlock (_xOff, _yOff) _palette = do
-  _map0 <- readTileMap mapBlock
-  _tileSet <- readCharBlocks charBlock False
+drawTextBG :: AddressIO m => Int -> PixFormat -> MapBaseAddress -> SetBaseAddress -> TextBGOffset -> Palette -> m ()
+drawTextBG 0 pixFormat mapBlock charBlock offSet palette = do
+  map0 <- readTileMap mapBlock
+  tileSet <- readCharBlocks charBlock False
+  drawTileMap 32 pixFormat map0 tileSet offSet palette mapBlock charBlock
   return ()
 drawTextBG 1 _pixFormat mapBlock charBlock (_xOff, _yOff) _palette = do
   _map0 <- readTileMap mapBlock
@@ -110,24 +111,27 @@ readCharBlocks addr True = do
   return memBlock
 
 -- Draw 32x32 tiles at a time
-drawTileMap :: AddressIO m => Int -> Int -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> Address -> m ()
+drawTileMap :: AddressIO m => Int -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> MapBaseAddress -> SetBaseAddress -> m ()
 drawTileMap 0 _ _ _ _ _ _ _ = return ()
-drawTileMap rows columns colFormat tileMap tileSet bgOffset palette baseAddr = do
+drawTileMap rows colFormat tileMap tileSet bgOffset palette baseAddr setBaseAddr = do
   let tileMapRow = ixmap (baseAddr, baseAddr + 0x0000003F) (id) tileMap :: TileMap
-  drawHLine columns colFormat tileMapRow tileSet bgOffset palette
-  drawTileMap (rows-1) columns colFormat tileMap tileSet bgOffset palette (baseAddr + 0x00000040)
+  drawHLine 0x00000000 colFormat tileMapRow tileSet bgOffset palette setBaseAddr
+  drawTileMap (rows-1) colFormat tileMap tileSet bgOffset palette (baseAddr + 0x00000040) setBaseAddr
   return ()
 
--- Draw 32 tile row. call drawTile to draw each tile
-drawHLine :: AddressIO m => Int -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> m ()
-drawHLine 0 _ _ _ _ _ = return ()
-drawHLine _columns _colFormat _tileMapRow _tileSet (_xOff, _yOff) _palette = undefined
+drawHLine :: AddressIO m => Address -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> SetBaseAddress -> m ()
+drawHLine 0x00000040 _ _ _ _ _ _ = return ()
+drawHLine columns colFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr = do
+  let _ = parseScreenEntry (tileMapRow!columns) (tileMapRow!(columns + 0x00000001)) colFormat setBaseAddr
 
-parseScreenEntry :: Byte -> Byte -> PixFormat -> (Address, Bool, Bool, Int)
-parseScreenEntry a b pixFormat = (tileIdx, hFlip, vFlip, palBank)
+  drawHLine (columns + 0x00000001) colFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
+  return ()
+
+parseScreenEntry :: Byte -> Byte -> PixFormat -> SetBaseAddress -> (Address, Bool, Bool, Int)
+parseScreenEntry a b pixFormat setBaseAddr = (tileIdx, hFlip, vFlip, palBank)
   where
     hword = ((fromIntegral a :: HalfWord) `shiftL` 8) .|. ((fromIntegral b :: HalfWord) .&. 0xFF) :: HalfWord
-    tileIdx = convIntToAddr (fromIntegral $ $(bitmask 9 0) hword :: Int) pixFormat
+    tileIdx = setBaseAddr + convIntToAddr (fromIntegral $ $(bitmask 9 0) hword :: Int) pixFormat
     hFlip = (testBit hword 10)
     vFlip = (testBit hword 11)
     palBank = (fromIntegral $ $(bitmask 15 12) hword :: Int)
