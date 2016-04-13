@@ -66,7 +66,6 @@ adc dest src1 src2 cCode = do
   let cy = if isCy then 1 else 0
   let val = res1 + res2 + cy
   registers.dest .= val
-  -- Update flags if condition code is true
   when cCode $ do
     flags.negative .= isNegative val
     flags.zero .= (val == 0)
@@ -81,7 +80,6 @@ sub dest src1 src2 cCode = do
   res2 <- use $ registers.src2
   let val = res1 - res2
   registers.dest .= val
-  -- Update flags if condition code is true
   when cCode $ do
     flags.negative .= isNegative val
     flags.zero .= (val == 0)
@@ -99,7 +97,6 @@ sbc dest src1 src2 cCode = do
   let cy = if isCy then 0 else 1
   let val = res1 + res2 + cy
   registers.dest .= val
-  -- Update flags if condition code is true
   when cCode $ do
     flags.negative .= isNegative val
     flags.zero .= (val == 0)
@@ -124,7 +121,6 @@ and dest src1 src2 cCode = do
   res2 <- use $ registers.src2
   let val = res1 .&. res2
   registers.dest .= val
-  -- Update flags if condition code is true
   when cCode $ do
     flags.negative .= isNegative val
     flags.zero .= (val == 0)
@@ -139,7 +135,6 @@ orr dest src1 src2 cCode = do
   res2 <- use $ registers.src2
   let val = res1 .|. res2
   registers.dest .= val
-  -- Update flags if condition code is true
   when cCode $ do
     flags.negative .= isNegative val
     flags.zero .= (val == 0)
@@ -152,7 +147,6 @@ mvn dest _ src2 cCode = do
   res2 <- use $ registers.src2
   let val = complement res2
   registers.dest .= val
-  -- Update flags if condition code is true
   when cCode $ do
     -- used and flags, TODO
     flags.carry .= False
@@ -167,7 +161,6 @@ bic dest src1 src2 cCode = do
   res2 <- use $ registers.src2
   let val = res1 .&. (complement res2)
   registers.dest .= val
-  -- Update flags if condition code is true
   when cCode $ do
     -- used and flags, TODO
     flags.carry .= False
@@ -236,7 +229,6 @@ eor dest src1 src2 cCode = do
   res2 <- use $ registers.src2
   let val = res1 `xor` res2
   registers.dest .= val
-  -- Update flags if condition code is true
   when cCode $ do
     -- FIXME: see above
     flags.carry .= False
