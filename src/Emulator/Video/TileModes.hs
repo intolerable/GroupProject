@@ -134,6 +134,12 @@ parseScreenEntry a b pixFormat setBaseAddr = (tileIdx, hFlip, vFlip, palBank)
     vFlip = (testBit hword 11)
     palBank = (fromIntegral $ $(bitmask 15 12) hword :: Int)
 
+-- If pixel format is 8bpp then TileSet is read in chunks of 40h
+-- If not then TileSet is read in chunks of 20h
+getTile :: PixFormat -> Address -> TileSet -> Tile
+getTile True tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000003F) (id) tileSet :: Tile)
+getTile False tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000001F) (id) tileSet :: Tile)
+
 convIntToAddr :: Int -> PixFormat -> Address
 convIntToAddr n False = (0x00000020 + 0x00000020 * fromIntegral n)
 convIntToAddr n True = (0x00000040 + 0x00000040 * fromIntegral n)
