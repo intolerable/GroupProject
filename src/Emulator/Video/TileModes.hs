@@ -122,6 +122,7 @@ drawHLine columns colFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr 
   drawHLine (columns + 0x00000001) colFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
   return ()
 
+-- a is the upper byte, b is the lower
 parseScreenEntry :: Byte -> Byte -> PixFormat -> SetBaseAddress -> (Address, Bool, Bool, Int)
 parseScreenEntry a b pixFormat setBaseAddr = (tileIdx, hFlip, vFlip, palBank)
   where
