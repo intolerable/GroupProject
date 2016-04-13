@@ -51,10 +51,10 @@ add dest src1 src2 cCode = do
   registers.dest .= val
   -- Update flags if the condition is true
   when cCode $ do
-    flags.zero .= (val == 0)
     flags.negative .= isNegative val
-    flags.overflow .= checkCarry res1 res2
-    flags.carry .= checkCarry res1 res2
+    flags.zero .= (val == 0)
+    flags.carry .= isUnsignedOverflow (+) res1 res2 val
+    flags.overflow .= isSignedOverflow (+) res1 res2 val
 
 -- Arithmetic add with carry
 adc :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -66,8 +66,8 @@ adc dest src1 src2 cCode = do
   registers.dest .= val
   -- Update flags if condition code is true
   when cCode $ do
-    flags.zero .= (val == 0)
     flags.negative .= isNegative val
+    flags.zero .= (val == 0)
     flags.overflow .= (checkCarry res1 res2)
     when (checkCarry res1 res2) $ do
         flags.carry .= True
