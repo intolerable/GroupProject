@@ -14,6 +14,7 @@ type AddressIO m = (AddressSpace m, MonadIO m)
 type Palette = Array Address Byte
 type PixFormat = Bool
 type TextBGOffset = (GLdouble, GLdouble)
+type Tile = Array Address Byte
 type TileMap = Array Address Byte
 type TileSet = Array Address Byte
 type MapBaseAddress = Address
@@ -116,13 +117,14 @@ drawTileMap rows pixFormat tileMap tileSet bgOffset palette baseAddr setBaseAddr
 
 drawHLine :: AddressIO m => Address -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> SetBaseAddress -> m ()
 drawHLine 0x00000040 _ _ _ _ _ _ = return ()
-drawHLine columns pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr = do
-  let (tileIdx, _, _, _) = parseScreenEntry (tileMapRow!(columns + 0x00000001)) (tileMapRow!columns) pixFormat setBaseAddr
-  let _tile = if pixFormat
-      then (ixmap (tileIdx, tileIdx + 0x0000003F) (id) tileSet :: TileSet)
-      else (ixmap (tileIdx, tileIdx + 0x0000001F) (id) tileSet :: TileSet)
-  drawHLine (columns + 0x00000002) pixFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
+drawHLine mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr = do
+  let (tileIdx, _, _, _) = parseScreenEntry upperByte lowerByte pixFormat setBaseAddr
+  let _tile = getTile pixFormat tileIdx tileSet
+  drawHLine (mapIndex + 0x00000002) pixFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
   return ()
+  where
+    upperByte = (tileMapRow!(mapIndex + 0x00000001))
+    lowerByte = (tileMapRow!mapIndex)
 
 -- a is the upper byte, b is the lower
 parseScreenEntry :: Byte -> Byte -> PixFormat -> SetBaseAddress -> (Address, Bool, Bool, Int)
