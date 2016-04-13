@@ -248,7 +248,7 @@ checkCarry a b = ((c .&. 0x00000000FFFFFFFF) `xor` c) /= 0
     c = fromIntegral a + fromIntegral b
 
 isNegative :: MWord -> Bool
-isNegative a = (fromIntegral a :: Int32) < 0
+isNegative a = testBitDefault a 31
 
 -- Following functions take lists for cases Rm + Rn + Carry
 isUnsignedOverflow :: (a ~ Integer) => (a -> a -> a) -> [MWord] -> MWord -> Bool
