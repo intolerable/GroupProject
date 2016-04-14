@@ -152,8 +152,9 @@ getTile True tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000003F) (id) tileS
 getTile False tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000001F) (id) tileSet :: Tile)
 
 convIntToAddr :: Int -> PixFormat -> Address
-convIntToAddr n False = (0x00000020 + 0x00000020 * fromIntegral n)
-convIntToAddr n True = (0x00000040 + 0x00000040 * fromIntegral n)
+convIntToAddr 0 _ = 0x00000000
+convIntToAddr n True = (0x00000040 * fromIntegral n)
+convIntToAddr n _ = (0x00000020 * fromIntegral n)
 
 affineBG :: AddressIO m => m ()
 affineBG = undefined
