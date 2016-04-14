@@ -12,14 +12,15 @@ import Graphics.Rendering.OpenGL
 import Utilities.Parser.TemplateHaskell
 
 type AddressIO m = (AddressSpace m, MonadIO m)
+type TileMapBaseAddress = Address
 type Palette = Array Address Byte
 type PixFormat = Bool
+type ScreenEntry = (Address, Bool, Bool, Address)
+type TileSetBaseAddress = Address
 type TextBGOffset = (GLdouble, GLdouble)
 type Tile = Array Address Byte
 type TileMap = Array Address Byte
 type TileSet = Array Address Byte
-type MapBaseAddress = Address
-type SetBaseAddress = Address
 
 tileModes :: AddressIO m => LCDControl -> m ()
 tileModes cnt = do
