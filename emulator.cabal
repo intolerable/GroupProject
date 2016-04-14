@@ -37,6 +37,7 @@ library
     Emulator.Types
     Emulator.Video.BitmapModes
     Emulator.Video.Display
+    Emulator.Video.Sprite
     Emulator.Video.TileModes
     Emulator.Video.Util
     Emulator.Video.VideoController
