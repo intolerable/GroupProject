@@ -91,12 +91,10 @@ adc dest src1 src2 cCode = do
     flags.carry .= isUnsignedOverflow (+) [res1, res2, cy] val
     flags.overflow .= isSignedOverflow (+) [res1, res2, cy] val
 
--- Arithmetic subtract
-sub :: (HasFlags s, HasRegisters s, MonadState s m)
-    => DestRegister -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
-sub dest src1 src2 cCode = do
-  res1 <- use $ registers.src1
-  (_, res2) <- use $ registers.src2
+-- Generic function for subtract
+genericSub :: (HasFlags s, HasRegisters s, MonadState s m)
+    => DestRegister -> MWord -> MWord -> ConditionCode -> m ()
+genericSub dest res1 res2 cCode = do
   let val = res1 - res2
   registers.dest .= val
   when cCode $ do
@@ -105,16 +103,29 @@ sub dest src1 src2 cCode = do
     flags.carry .= isUnsignedOverflow (-) [res1, res2] val
     flags.overflow .= isSignedOverflow (-) [res1, res2] val
 
--- Subtract with carry
-sbc :: (HasFlags s, HasRegisters s, MonadState s m)
+-- Arithmetic subtract
+sub :: (HasFlags s, HasRegisters s, MonadState s m)
     => DestRegister -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
-sbc dest src1 src2 cCode = do
+sub dest src1 src2 cCode = do
   res1 <- use $ registers.src1
   (_, res2) <- use $ registers.src2
-  isCy <- use $ flags.carry
+  genericSub dest res1 res2 cCode
+
+-- Arithmetic subtract reversed
+rsb :: (HasFlags s, HasRegisters s, MonadState s m)
+    => DestRegister -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
+rsb dest src1 src2 cCode = do
+  res1 <- use $ registers.src1
+  (_, res2) <- use $ registers.src2
+  genericSub dest res2 res1 cCode
+
+-- Generic function for subtract with carry
+genericSbc :: (HasFlags s, HasRegisters s, MonadState s m)
+    => DestRegister -> MWord -> MWord -> Bool -> ConditionCode -> m ()
+genericSbc dest res1 res2 isCy cCode = do
   -- SBC uses NOT(Carry)
   let cy = if isCy then 0 else 1
-  let val = res1 + res2 + cy
+  let val = res1 - res2 - cy
   registers.dest .= val
   when cCode $ do
     flags.negative .= isNegative val
@@ -122,15 +133,23 @@ sbc dest src1 src2 cCode = do
     flags.carry .= isUnsignedOverflow (-) [res1, res2, cy] val
     flags.overflow .= isSignedOverflow (-) [res1, res2, cy] val
 
+-- Subtract with carry
+sbc :: (HasFlags s, HasRegisters s, MonadState s m)
+    => DestRegister -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
+sbc dest src1 src2 cCode = do
+  res1 <- use $ registers.src1
+  (_, res2) <- use $ registers.src2
+  isCy <- use $ flags.carry
+  genericSbc dest res1 res2 isCy cCode
+
 -- Subtract with carry reversed
 rsc :: (HasFlags s, HasRegisters s, MonadState s m)
     => DestRegister -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
-rsc dest src1 src2 cCode = sbc dest undefined undefined cCode
-
--- Arithmetic subtract reversed
-rsb :: (HasFlags s, HasRegisters s, MonadState s m)
-    => DestRegister -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
-rsb dest src1 src2 cCode = sub dest undefined undefined cCode
+rsc dest src1 src2 cCode = do
+  res1 <- use $ registers.src1
+  (_, res2) <- use $ registers.src2
+  isCy <- use $ flags.carry
+  genericSbc dest res2 res1 isCy cCode
 
 -- Logical/bitwise AND
 and :: (HasFlags s, HasRegisters s, MonadState s m)
