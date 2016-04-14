@@ -6,6 +6,7 @@ import Emulator.Video.VideoController
 
 import Control.Monad.IO.Class
 import Data.Array.IArray
+import Data.Array.Storable
 import Data.Bits
 import Graphics.Rendering.OpenGL
 import Utilities.Parser.TemplateHaskell
@@ -125,6 +126,13 @@ drawHLine mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr
   where
     upperByte = (tileMapRow!(mapIndex + 0x00000001))
     lowerByte = (tileMapRow!mapIndex)
+pixelData :: AddressIO m => PixFormat -> Palette -> Tile -> Address -> m (StorableArray Address HalfWord)
+-- 256/1 palette format
+pixelData True _palette _tile _ = undefined
+-- 16/16 palette format
+pixelData _ palette _tile palBank = do
+  let _bank = ixmap (0x05000000 + palBank, (0x05000000 + palBank + 0x0000001F)) (id) palette :: Palette
+  undefined
 
 -- a is the upper byte, b is the lower
 parseScreenEntry :: Byte -> Byte -> PixFormat -> SetBaseAddress -> (Address, Bool, Bool, Int)
