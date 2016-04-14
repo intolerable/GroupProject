@@ -121,14 +121,14 @@ drawTileMap rows pixFormat tileMap tileSet bgOffset palette baseAddr setBaseAddr
 drawHLine :: AddressIO m => Address -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> TileSetBaseAddress -> m ()
 drawHLine 0x00000040 _ _ _ _ _ _ = return ()
 drawHLine mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr = do
-  let _tile = getTile pixFormat tileIdx tileSet
-  -- pixelData
+  let tile = getTile pixFormat tileIdx tileSet
+  _pixData <- pixelData pixFormat palette tile palBank
   drawHLine (mapIndex + 0x00000002) pixFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
   return ()
   where
     upperByte = (tileMapRow!(mapIndex + 0x00000001))
     lowerByte = (tileMapRow!mapIndex)
-    (tileIdx, _, _, _) = parseScreenEntry upperByte lowerByte pixFormat setBaseAddr
+    (tileIdx, _, _, palBank) = parseScreenEntry upperByte lowerByte pixFormat setBaseAddr
 
 pixelData :: AddressIO m => PixFormat -> Palette -> Tile -> Address -> m (StorableArray Address HalfWord)
 -- 256/1 palette format
