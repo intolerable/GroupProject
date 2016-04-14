@@ -118,10 +118,10 @@ readCharBlocks addr True = do
 -- Draw 32x32 tiles at a time
 drawTileMap :: AddressIO m => Int -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> TileMapBaseAddress -> TileSetBaseAddress -> m ()
 drawTileMap 0 _ _ _ _ _ _ _ = return ()
-drawTileMap rows pixFormat tileMap tileSet bgOffset palette baseAddr setBaseAddr = do
+drawTileMap rows pixFormat tileMap tileSet bgOffset@(xOff, yOff) palette baseAddr setBaseAddr = do
   let tileMapRow = ixmap (baseAddr, baseAddr + 0x0000003F) (id) tileMap :: TileMap
   drawHLine 0x00000000 pixFormat tileMapRow tileSet bgOffset palette setBaseAddr
-  drawTileMap (rows-1) pixFormat tileMap tileSet bgOffset palette (baseAddr + 0x00000040) setBaseAddr
+  drawTileMap (rows-1) pixFormat tileMap tileSet (xOff, yOff + 8) palette (baseAddr + 0x00000040) setBaseAddr
   return ()
 
 drawHLine :: AddressIO m => Address -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> TileSetBaseAddress -> m ()
