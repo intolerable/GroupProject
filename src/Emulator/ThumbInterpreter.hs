@@ -5,6 +5,8 @@ import Emulator.CPU.Instructions
 import Emulator.Interpreter (SystemT)
 import Emulator.Types
 
+import Control.Lens
+
 interpretThumb :: Monad m => THUMBInstruction -> SystemT m ()
 interpretThumb instr =
   case instr of
@@ -52,7 +54,7 @@ interpretThumb instr =
       handleLongBranchWLink lh offset
 
 handleMoveShiftedRegister :: Monad m => Shifted RegisterName -> RegisterName -> SystemT m ()
-handleMoveShiftedRegister = undefined
+handleMoveShiftedRegister sr r = (registers.rn r) <~ use (registers.shiftedRegisterLens sr)
 
 handleAddSubtractImmediate :: Monad m => AddSub -> Offset -> RegisterName -> RegisterName -> SystemT m ()
 handleAddSubtractImmediate = undefined
