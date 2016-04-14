@@ -28,6 +28,7 @@ library
     Emulator.Debug
     Emulator.Input
     Emulator.Interpreter
+    Emulator.ThumbInterpreter
     Emulator.Memory
     Emulator.Memory.AddressSpace
     Emulator.Memory.Regions

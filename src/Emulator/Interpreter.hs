@@ -232,8 +232,6 @@ handleHalfWordDataTransferImmediate pp ud wb ls s g base dest offset = do
   when ((pp == Pre) && wb) $
         registers.rn base .= bVal
 
-
-
 handleSingleDataSwap :: Monad m => (Granularity 'Full) -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
 handleSingleDataSwap g base dest src = case g of
   Byte -> do
