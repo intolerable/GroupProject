@@ -143,7 +143,7 @@ parseScreenEntry a b pixFormat setBaseAddr = (tileIdx, hFlip, vFlip, palBank)
     tileIdx = setBaseAddr + convIntToAddr (fromIntegral $ $(bitmask 9 0) hword :: Int) pixFormat
     hFlip = (testBit hword 10)
     vFlip = (testBit hword 11)
-    palBank = (fromIntegral $ $(bitmask 15 12) hword :: Int)
+    palBank = convIntToAddr (fromIntegral $ $(bitmask 15 12) hword :: Int) False
 
 -- If pixel format is 8bpp then TileSet is read in chunks of 40h
 -- If not then TileSet is read in chunks of 20h
