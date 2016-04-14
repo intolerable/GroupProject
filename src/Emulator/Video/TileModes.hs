@@ -2,6 +2,7 @@ module Emulator.Video.TileModes where
 
 import Emulator.Memory
 import Emulator.Types
+import Emulator.Video.Util
 import Emulator.Video.VideoController
 
 import Control.Monad.IO.Class
@@ -13,10 +14,10 @@ import Graphics.Rendering.OpenGL
 import Utilities.Parser.TemplateHaskell
 
 type AddressIO m = (AddressSpace m, MonadIO m)
-type TileMapBaseAddress = Address
 type Palette = Array Address Byte
 type PixFormat = Bool
 type ScreenEntry = (Address, Bool, Bool, Address)
+type TileMapBaseAddress = Address
 type TileSetBaseAddress = Address
 type TextBGOffset = (GLdouble, GLdouble)
 type Tile = Array Address Byte
@@ -104,17 +105,14 @@ drawTextBG _ pixFormat tileMapAddr tileSetAddr offSet@(xOff, yOff) palette = do
 readTileMap :: AddressIO m => Address -> m (TileMap)
 readTileMap addr = do
   memBlock <- readRange (addr, addr + 0x000007FF)
-  --mapMem <- liftIO $ thaw memBlock
   return memBlock
 
 readCharBlocks :: AddressIO m => Address -> PixFormat -> m (TileSet)
 readCharBlocks addr False = do
   memBlock <- readRange (addr, addr + 0x00007FFF)
-  --charMem <- liftIO $ thaw memBlock
   return memBlock
 readCharBlocks addr True = do
   memBlock <- readRange (addr, addr + 0x0000FFFF)
-  --charMem <- liftIO $ thaw memBlock
   return memBlock
 
 -- Draw 32x32 tiles at a time
