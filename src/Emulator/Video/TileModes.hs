@@ -128,7 +128,8 @@ drawHLine :: AddressIO m => Address -> PixFormat -> TileMap -> TileSet -> TextBG
 drawHLine 0x00000040 _ _ _ _ _ _ = return ()
 drawHLine mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr = do
   let tile = getTile pixFormat tileIdx tileSet
-  _pixData <- pixelData pixFormat palette tile palBank
+  pixData <- pixelData pixFormat palette tile palBank
+  liftIO $ drawTile pixData (xOff, xOff + 8) (yOff, yOff + 8)
   drawHLine (mapIndex + 0x00000002) pixFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
   return ()
   where
