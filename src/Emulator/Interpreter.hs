@@ -205,9 +205,9 @@ handleHalfwordDataTransferRegister pp ud wb ls s g base dest offset = do
       writeAddressHalfWord destAddr valHW
     (_, _, _) -> error "handleHalfwordDataTransferRegister: Incorrect arguments passed to HalfWordDataTransfer instruction")
   when (pp == Post) $
-        registers.rn base .= (directionToOperator ud) bVal oVal
+    registers.rn base .= (directionToOperator ud) bVal oVal
   when ((pp == Pre) && wb) $
-        registers.rn base .= bVal
+    registers.rn base .= bVal
 
 handleHalfWordDataTransferImmediate :: Monad m => PrePost -> OffsetDirection -> WriteBack -> LoadStore -> Signed -> (Granularity 'Lower) -> RegisterName -> RegisterName -> Offset -> SystemT m ()
 handleHalfWordDataTransferImmediate pp ud wb ls s g base dest offset = do
@@ -228,9 +228,9 @@ handleHalfWordDataTransferImmediate pp ud wb ls s g base dest offset = do
       writeAddressHalfWord destAddr valHW
     (_, _, _) -> error "handleHalfwordDataTransferImmediate: Incorrect arguments passed to HalfWordDataTransfer instruction")
   when (pp == Post) $
-        registers.rn base .= (directionToOperator ud) bVal oVal
+    registers.rn base .= (directionToOperator ud) bVal oVal
   when ((pp == Pre) && wb) $
-        registers.rn base .= bVal
+    registers.rn base .= bVal
 
 handleSingleDataSwap :: Monad m => (Granularity 'Full) -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
 handleSingleDataSwap g base dest src = case g of
