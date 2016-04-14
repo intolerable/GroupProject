@@ -1,11 +1,11 @@
-module Emulator.ThumbInterpreter where
+module Emulator.Interpreter.THUMB where
 
 import Emulator.CPU
 import Emulator.CPU.Instructions
-import Emulator.Interpreter (SystemT)
+import Emulator.Interpreter.Monad
 import Emulator.Types
 
-import Control.Lens
+import Control.Lens hiding (op)
 
 interpretThumb :: Monad m => THUMBInstruction -> SystemT m ()
 interpretThumb instr =

@@ -2,7 +2,8 @@ module Emulator.InterpreterSpec where
 
 import Emulator.CPU
 import Emulator.CPU.Instructions
-import Emulator.Interpreter
+import Emulator.Interpreter.ARM
+import Emulator.Interpreter.Monad
 
 import Control.Lens
 import Test.Hspec

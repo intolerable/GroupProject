@@ -6,7 +6,7 @@ import Emulator.Video.TileModes
 --import Emulator.Video.Util
 import Emulator.Video.VideoController
 
-import Emulator.Interpreter
+import Emulator.Interpreter.Monad
 
 import Control.Concurrent.STM
 import Control.Monad

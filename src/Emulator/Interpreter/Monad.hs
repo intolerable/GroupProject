@@ -1,0 +1,81 @@
+module Emulator.Interpreter.Monad where
+
+import Emulator.CPU
+import Emulator.Debug
+import Emulator.Memory.AddressSpace
+import Emulator.Types
+
+import Control.Lens
+import Control.Monad.IO.Class
+import Control.Monad.Trans.Class
+import Control.Monad.Trans.State
+import Data.Array.IArray
+import Data.ByteString.Lazy (ByteString)
+import Data.Default.Class
+import qualified Control.Monad.State.Class as State
+import qualified Data.ByteString.Lazy as BS
+
+data SystemState =
+  SystemState { _systemStateSysRegisters :: Registers
+              , _systemStateSysBIOS :: Memory
+              , _systemStateSysROM :: Memory
+              , _systemStateSysRAM :: Memory
+              , _systemStateSysOAM :: Memory
+              , _systemStateSysVRAM :: Memory }
+  deriving (Show, Eq)
+
+makeFields ''SystemState
+
+buildInitialState :: ByteString -> ByteString -> SystemState
+buildInitialState rom bios =
+  SystemState (def & r15 .~ 0x08000000) biosArray romArray initialRAM initialVRAM initialOAM
+    where
+      initialRAM = accumArray const 0 (0x02000000, 0x0203FFFF) []
+      initialVRAM = accumArray const 0 (0x06000000, 0x06017FFF) []
+      initialOAM = accumArray const 0 (0x07000000, 0x070003FF) []
+      -- not totally sure that this is producing the correct output
+      romArray = accumArray (flip const) 0 (0x08000000, 0x0DFFFFFF) $ zip [0x08000000..] $ BS.unpack rom
+      biosArray = accumArray (flip const) 0 (0x00000000, 0x00003FFF) $ zip [0x00000000..] $ BS.unpack bios
+
+instance HasRegisters SystemState where
+  registers = sysRegisters
+
+instance HasFlags SystemState where
+  flags = sysRegisters.flags
+
+newtype SystemT m a =
+  SystemT { unSystem :: StateT SystemState m a }
+  deriving (Functor, Applicative, Monad, MonadTrans, MonadIO)
+
+runSystemT :: SystemT m a -> SystemState -> m (a, SystemState)
+runSystemT (SystemT a) x = runStateT a x
+
+instance MonadIO m => Debug (SystemT m) where
+  debug lvl str = liftIO $ debug lvl str
+
+instance Monad m => CanWrite WRAM (SystemT m) where
+  writeByte _ a b = SystemT $ zoom sysRAM $ modify (// [(a, b)])
+
+instance Monad m => CanRead WRAM (SystemT m) where
+  readByte _ a = SystemT $ zoom sysRAM $ gets (! a)
+
+instance Monad m => CanRead ROM (SystemT m) where
+  readByte _ a = SystemT $ zoom sysROM $ gets (! a)
+
+instance Monad m => CanRead BIOS (SystemT m) where
+  readByte _ a = SystemT $ zoom sysBIOS $ gets (! a)
+
+instance Monad m => CanWrite VRAM (SystemT m) where
+  writeByte _ a b = SystemT $ zoom sysVRAM $ modify (// [(a, b)])
+
+instance Monad m => CanRead VRAM (SystemT m) where
+  readByte _ a = SystemT $ zoom sysVRAM $ gets (! a)
+
+instance Monad m => CanWrite OAM (SystemT m) where
+  writeByte _ a b = SystemT $ zoom sysOAM $ modify (// [(a, b)])
+
+instance Monad m => CanRead OAM (SystemT m) where
+  readByte _ a = SystemT $ zoom sysOAM $ gets (! a)
+
+instance Monad m => State.MonadState SystemState (SystemT m) where
+  state = SystemT . State.state
