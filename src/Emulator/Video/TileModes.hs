@@ -71,26 +71,34 @@ baseTileMapAddr mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))
 -- if False then Colour is 4bpp aka S-tiles
 drawTextBG :: AddressIO m => Int -> PixFormat -> TileMapBaseAddress -> TileSetBaseAddress -> TextBGOffset -> Palette -> m ()
 drawTextBG 0 pixFormat tileMapAddr tileSetAddr offSet palette = do
-  map0 <- readTileMap tileMapAddr
+  tileMap0 <- readTileMap tileMapAddr
   tileSet <- readCharBlocks tileSetAddr False
-  drawTileMap 32 pixFormat map0 tileSet offSet palette tileMapAddr tileSetAddr
+  drawTileMap 32 pixFormat tileMap0 tileSet offSet palette tileMapAddr tileSetAddr
   return ()
-drawTextBG 1 _pixFormat tileMapAddr tileSetAddr (_xOff, _yOff) _palette = do
-  _map0 <- readTileMap tileMapAddr
-  _map1 <- readTileMap (tileMapAddr + 0x00000800)
-  _tileSet <- readCharBlocks tileSetAddr False
+drawTextBG 1 pixFormat tileMapAddr tileSetAddr offSet@(xOff, yOff) palette = do
+  tileMap0 <- readTileMap tileMapAddr
+  tileMap1 <- readTileMap (tileMapAddr + 0x00000800)
+  tileSet <- readCharBlocks tileSetAddr False
+  drawTileMap 32 pixFormat tileMap0 tileSet offSet palette tileMapAddr tileSetAddr
+  drawTileMap 32 pixFormat tileMap1 tileSet (xOff + 32, yOff) palette tileMapAddr tileSetAddr
   return ()
-drawTextBG 2 _pixFormat tileMapAddr tileSetAddr (_xOff, _yOff) _palette = do
-  _map0 <- readTileMap tileMapAddr
-  _map1 <- readTileMap (tileMapAddr + 0x00000800)
-  _tileSet <- readCharBlocks tileSetAddr False
+drawTextBG 2 pixFormat tileMapAddr tileSetAddr offSet@(xOff, yOff) palette = do
+  tileMap0 <- readTileMap tileMapAddr
+  tileMap1 <- readTileMap (tileMapAddr + 0x00000800)
+  tileSet <- readCharBlocks tileSetAddr False
+  drawTileMap 32 pixFormat tileMap0 tileSet offSet palette tileMapAddr tileSetAddr
+  drawTileMap 32 pixFormat tileMap1 tileSet (xOff, yOff + 32) palette tileMapAddr tileSetAddr
   return ()
-drawTextBG _ _pixFormat tileMapAddr tileSetAddr (_xOff, _yOff) _palette = do
-  _map0 <- readTileMap tileMapAddr
-  _map1 <- readTileMap (tileMapAddr + 0x00000800)
-  _map2 <- readTileMap (tileMapAddr + 0x00001000)
-  _map3 <- readTileMap (tileMapAddr + 0x00001800)
-  _tileSet <- readCharBlocks tileSetAddr False
+drawTextBG _ pixFormat tileMapAddr tileSetAddr offSet@(xOff, yOff) palette = do
+  tileMap0 <- readTileMap tileMapAddr
+  tileMap1 <- readTileMap (tileMapAddr + 0x00000800)
+  tileMap2 <- readTileMap (tileMapAddr + 0x00001000)
+  tileMap3 <- readTileMap (tileMapAddr + 0x00001800)
+  tileSet <- readCharBlocks tileSetAddr False
+  drawTileMap 32 pixFormat tileMap0 tileSet offSet palette tileMapAddr tileSetAddr
+  drawTileMap 32 pixFormat tileMap1 tileSet (xOff + 32, yOff) palette tileMapAddr tileSetAddr
+  drawTileMap 32 pixFormat tileMap2 tileSet (xOff, yOff + 32) palette tileMapAddr tileSetAddr
+  drawTileMap 32 pixFormat tileMap3 tileSet (xOff + 32, yOff + 32) palette tileMapAddr tileSetAddr
   return ()
 
 readTileMap :: AddressIO m => Address -> m (TileMap)
