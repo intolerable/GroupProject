@@ -132,7 +132,12 @@ drawHLine mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr
 
 pixelData :: AddressIO m => PixFormat -> Palette -> Tile -> Address -> m (StorableArray Address HalfWord)
 -- 256/1 palette format
-pixelData True _palette _tile _ = undefined
+pixelData True palette tile _ = do
+  let tilePixelDataList = palette256 palette tile (fst tileBounds) 0
+  tilePixelData <- liftIO $ newListArray tileBounds tilePixelDataList
+  return tilePixelData
+  where
+    tileBounds = bounds tile
 -- 16/16 palette format
 pixelData _ palette tile palBank = do
   let bank = ixmap (palBankAddr, (palBankAddr + 0x0000001F)) (id) palette :: Palette
@@ -156,6 +161,15 @@ palette16 bank tile palBankBaseAddr tileAddr n = col1:col2:palette16 bank tile p
     col2Byt1 = bank!(nib2 + palBankBaseAddr)
     col2Byt2 = bank!(nib2 + palBankBaseAddr + 0x00000001)
     col2 = ((fromIntegral col2Byt2 :: HalfWord) `shiftL` 8) .|. ((fromIntegral col2Byt1 :: HalfWord) .&. 0xFF) :: HalfWord
+
+palette256 :: Palette -> Tile -> Address -> Int -> [HalfWord]
+palette256 _ _ _ 64 = []
+palette256 palette tile tileAddr n = col:palette256 palette tile tileAddr (n+1)
+  where
+    addr = 0x05000000 + (fromIntegral $ tile!(tileAddr + (0x00000001 * fromIntegral n)) :: Address)
+    colByt1 = palette!addr
+    colByt2 = palette!(addr + 0x00000001)
+    col = ((fromIntegral colByt2 :: HalfWord) `shiftL` 8) .|. ((fromIntegral colByt1 :: HalfWord) .&. 0xFF) :: HalfWord
 
 -- a is the upper byte, b is the lower
 parseScreenEntry :: Byte -> Byte -> PixFormat -> TileSetBaseAddress -> ScreenEntry
