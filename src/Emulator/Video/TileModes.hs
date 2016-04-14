@@ -120,13 +120,15 @@ drawTileMap rows pixFormat tileMap tileSet bgOffset palette baseAddr setBaseAddr
 drawHLine :: AddressIO m => Address -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> TileSetBaseAddress -> m ()
 drawHLine 0x00000040 _ _ _ _ _ _ = return ()
 drawHLine mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr = do
-  let (tileIdx, _, _, _) = parseScreenEntry upperByte lowerByte pixFormat setBaseAddr
   let _tile = getTile pixFormat tileIdx tileSet
+  -- pixelData
   drawHLine (mapIndex + 0x00000002) pixFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
   return ()
   where
     upperByte = (tileMapRow!(mapIndex + 0x00000001))
     lowerByte = (tileMapRow!mapIndex)
+    (tileIdx, _, _, _) = parseScreenEntry upperByte lowerByte pixFormat setBaseAddr
+
 pixelData :: AddressIO m => PixFormat -> Palette -> Tile -> Address -> m (StorableArray Address HalfWord)
 -- 256/1 palette format
 pixelData True _palette _tile _ = undefined
@@ -149,8 +151,10 @@ parseScreenEntry a b pixFormat setBaseAddr = (tileIdx, hFlip, vFlip, palBank)
 -- If not then TileSet is read in chunks of 20h
 getTile :: PixFormat -> Address -> TileSet -> Tile
 getTile True tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000003F) (id) tileSet :: Tile)
-getTile False tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000001F) (id) tileSet :: Tile)
+getTile _ tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000001F) (id) tileSet :: Tile)
 
+-- If pixel format is 8bpp then the tileIndex read from the map is in steps of 40h
+-- If pixel format is 4bpp then the tileIndex read from the map is in steps of 20h
 convIntToAddr :: Int -> PixFormat -> Address
 convIntToAddr 0 _ = 0x00000000
 convIntToAddr n True = (0x00000040 * fromIntegral n)
