@@ -61,14 +61,14 @@ textBG bgCNTAddr xOffAddr yOffAddr palette = do
   return ()
 
 -- Gets the base memory addres for the tile
-baseTileSetAddr :: Byte -> SetBaseAddress
+baseTileSetAddr :: Byte -> TileSetBaseAddress
 baseTileSetAddr tileBase = 0x06000000 + (0x00004000 * (fromIntegral tileBase))
 
-baseTileMapAddr :: Byte -> MapBaseAddress
+baseTileMapAddr :: Byte -> TileMapBaseAddress
 baseTileMapAddr mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))
 
 -- if False then Colour is 4bpp aka S-tiles
-drawTextBG :: AddressIO m => Int -> PixFormat -> MapBaseAddress -> SetBaseAddress -> TextBGOffset -> Palette -> m ()
+drawTextBG :: AddressIO m => Int -> PixFormat -> TileMapBaseAddress -> TileSetBaseAddress -> TextBGOffset -> Palette -> m ()
 drawTextBG 0 pixFormat tileMapAddr tileSetAddr offSet palette = do
   map0 <- readTileMap tileMapAddr
   tileSet <- readCharBlocks tileSetAddr False
@@ -109,7 +109,7 @@ readCharBlocks addr True = do
   return memBlock
 
 -- Draw 32x32 tiles at a time
-drawTileMap :: AddressIO m => Int -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> MapBaseAddress -> SetBaseAddress -> m ()
+drawTileMap :: AddressIO m => Int -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> TileMapBaseAddress -> TileSetBaseAddress -> m ()
 drawTileMap 0 _ _ _ _ _ _ _ = return ()
 drawTileMap rows pixFormat tileMap tileSet bgOffset palette baseAddr setBaseAddr = do
   let tileMapRow = ixmap (baseAddr, baseAddr + 0x0000003F) (id) tileMap :: TileMap
@@ -117,7 +117,7 @@ drawTileMap rows pixFormat tileMap tileSet bgOffset palette baseAddr setBaseAddr
   drawTileMap (rows-1) pixFormat tileMap tileSet bgOffset palette (baseAddr + 0x00000040) setBaseAddr
   return ()
 
-drawHLine :: AddressIO m => Address -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> SetBaseAddress -> m ()
+drawHLine :: AddressIO m => Address -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> TileSetBaseAddress -> m ()
 drawHLine 0x00000040 _ _ _ _ _ _ = return ()
 drawHLine mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr = do
   let (tileIdx, _, _, _) = parseScreenEntry upperByte lowerByte pixFormat setBaseAddr
@@ -136,7 +136,7 @@ pixelData _ palette _tile palBank = do
   undefined
 
 -- a is the upper byte, b is the lower
-parseScreenEntry :: Byte -> Byte -> PixFormat -> SetBaseAddress -> (Address, Bool, Bool, Int)
+parseScreenEntry :: Byte -> Byte -> PixFormat -> TileSetBaseAddress -> ScreenEntry
 parseScreenEntry a b pixFormat setBaseAddr = (tileIdx, hFlip, vFlip, palBank)
   where
     hword = ((fromIntegral a :: HalfWord) `shiftL` 8) .|. ((fromIntegral b :: HalfWord) .&. 0xFF) :: HalfWord
