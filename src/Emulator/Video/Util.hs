@@ -2,14 +2,13 @@ module Emulator.Video.Util where
 
 import Emulator.Types
 
+import Control.Monad.IO.Class
 import Data.Array.Storable
 import Graphics.Rendering.OpenGL
 
-type FileName = String
-
-drawTile :: StorableArray Address HalfWord -> (GLdouble, GLdouble) -> (GLdouble, GLdouble) -> IO TextureObject
+drawTile :: StorableArray Address HalfWord -> (GLdouble, GLdouble) -> (GLdouble, GLdouble) -> IO ()
 drawTile arr (x1, x2) (y1, y2) = do
-  tile <- loadTexture arr
+  _ <- liftIO $ loadTexture arr
   textureFilter Texture2D $= ((Nearest, Nothing), Nearest)
   renderPrimitive Quads $ do
     texCoord $ TexCoord2 0 (0 :: GLdouble)
@@ -20,7 +19,7 @@ drawTile arr (x1, x2) (y1, y2) = do
     vertex $ Vertex2 x2 (y2 :: GLdouble)
     texCoord $ TexCoord2 0 (1 :: GLdouble)
     vertex $ Vertex2 x1 (y2 :: GLdouble)
-  return tile
+  return ()
 
 loadTexture :: StorableArray Address HalfWord -> IO TextureObject
 loadTexture arr = withStorableArray arr $ \ptr -> do
