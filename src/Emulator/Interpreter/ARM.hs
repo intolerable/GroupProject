@@ -4,7 +4,6 @@ import Emulator.CPU hiding (CPUMode(..), Interrupt(..))
 import Emulator.CPU.Instructions.ARM
 import Emulator.CPU.Instructions.ARM.Opcodes
 import Emulator.CPU.Instructions.Types
-import Emulator.Interpreter.Monad
 import Emulator.Memory
 import Emulator.Types
 import Utilities.Bits
@@ -12,16 +11,19 @@ import Utilities.Parser.TemplateHaskell
 
 import Control.Lens
 import Control.Monad
+import Control.Monad.State.Class
 import Data.Bits
 import Data.Word
 
-interpretARM :: Monad m => ARMInstruction -> SystemT m ()
+type IsSystem s m = (AddressSpace m, MonadState s m, HasRegisters s, HasFlags s)
+
+interpretARM :: IsSystem s m => ARMInstruction -> m ()
 interpretARM instr =
   case instr of
     Branch (Link l) offset -> do
       -- if the link bit is set, we put the current pc into r14
-      when l $ sysRegisters.r14 <~ use (sysRegisters.r15)
-      sysRegisters.r15 %= \x -> fromIntegral (fromIntegral x + offset)
+      when l $ registers.r14 <~ use (registers.r15)
+      registers.r15 %= \x -> fromIntegral (fromIntegral x + offset)
     DataProcessing opcode (SetCondition setCond) dest op1 op2 -> do
       (functionFromOpcode opcode) (registerLens dest) (registerLens op1) (operand2Lens op2) setCond
     HalfwordDataTransferRegister pp ud wb ls s g base dest offset ->
@@ -47,8 +49,8 @@ interpretARM instr =
     SoftwareInterrupt -> error "Uninmplemented instruction: Software interrupt"
     --_ -> error "interpretARM: unknown instruction"
 
-handleSingleDataTransfer :: Monad m
-                         => PrePost -> OffsetDirection -> (Granularity 'Full) -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> SystemT m ()
+handleSingleDataTransfer :: IsSystem s m
+                         => PrePost -> OffsetDirection -> (Granularity 'Full) -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> m ()
 handleSingleDataTransfer pp ud gran _wb ls base target op2 = do
   baseVal <- use $ registers.rn base
   offsetVal <- use $ registers.offsetLens
@@ -66,7 +68,7 @@ handleSingleDataTransfer pp ud gran _wb ls base target op2 = do
   where
     offsetLens = case op2 of { Left x -> shiftedRegisterLens x; Right x -> to (const x) }
 
-handleBlockDataTranfer :: Monad m => PrePost -> OffsetDirection -> ForceUserMode -> WriteBack -> LoadStore -> RegisterName -> RegisterList -> SystemT m ()
+handleBlockDataTranfer :: IsSystem s m => PrePost -> OffsetDirection -> ForceUserMode -> WriteBack -> LoadStore -> RegisterName -> RegisterList -> m ()
 handleBlockDataTranfer pp ud user wb ls base rlist = do
   baseVal <- use (registers.rn base)
   let start = (directionToOperator ud) baseVal (if pp == Pre then 4 else 0)
@@ -79,7 +81,7 @@ handleBlockDataTranfer pp ud user wb ls base rlist = do
       endVal <- writeBlocks ud start rlist
       when wb $ registers.rn base .= endVal
 
-readBlocks :: Monad m => OffsetDirection -> MWord -> RegisterList -> SystemT m MWord
+readBlocks :: IsSystem s m => OffsetDirection -> MWord -> RegisterList -> m MWord
 readBlocks _ w [] = return w
 readBlocks d w (r:rs) = do
   (registers.rn r) <~ readAddressWord w
@@ -87,7 +89,7 @@ readBlocks d w (r:rs) = do
   where
     o = directionToOperator d
 
-writeBlocks :: Monad m => OffsetDirection -> MWord -> RegisterList -> SystemT m MWord
+writeBlocks :: IsSystem s m => OffsetDirection -> MWord -> RegisterList -> m MWord
 writeBlocks _ w [] = return w
 writeBlocks d w (r:rs) = do
   val <- use (registers.rn r)
@@ -96,7 +98,7 @@ writeBlocks d w (r:rs) = do
   where
     o = directionToOperator d
 
-handleHalfwordDataTransferRegister :: Monad m => PrePost -> OffsetDirection -> WriteBack -> LoadStore -> Signed -> (Granularity 'Lower) -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
+handleHalfwordDataTransferRegister :: IsSystem s m => PrePost -> OffsetDirection -> WriteBack -> LoadStore -> Signed -> (Granularity 'Lower) -> RegisterName -> RegisterName -> RegisterName -> m ()
 handleHalfwordDataTransferRegister pp ud wb ls s g base dest offset = do
   bVal <- use (registers.rn base)
   oVal <- use (registers.rn offset)
@@ -119,7 +121,7 @@ handleHalfwordDataTransferRegister pp ud wb ls s g base dest offset = do
   when ((pp == Pre) && wb) $
     registers.rn base .= bVal
 
-handleHalfWordDataTransferImmediate :: Monad m => PrePost -> OffsetDirection -> WriteBack -> LoadStore -> Signed -> (Granularity 'Lower) -> RegisterName -> RegisterName -> Offset -> SystemT m ()
+handleHalfWordDataTransferImmediate :: IsSystem s m => PrePost -> OffsetDirection -> WriteBack -> LoadStore -> Signed -> (Granularity 'Lower) -> RegisterName -> RegisterName -> Offset -> m ()
 handleHalfWordDataTransferImmediate pp ud wb ls s g base dest offset = do
   bVal <- use (registers.rn base)
   let oVal = offset
@@ -142,7 +144,7 @@ handleHalfWordDataTransferImmediate pp ud wb ls s g base dest offset = do
   when ((pp == Pre) && wb) $
     registers.rn base .= bVal
 
-handleSingleDataSwap :: Monad m => (Granularity 'Full) -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
+handleSingleDataSwap :: IsSystem s m => (Granularity 'Full) -> RegisterName -> RegisterName -> RegisterName -> m ()
 handleSingleDataSwap g base dest src = case g of
   Byte -> do
     swapAddr <- use (registers.rn base)
@@ -158,7 +160,7 @@ handleSingleDataSwap g base dest src = case g of
     srcVal <- use (registers.rn src)
     writeAddressWord swapAddr srcVal
 
-handleMultiply :: Monad m => Accumulate -> SetCondition -> RegisterName -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
+handleMultiply :: IsSystem s m => Accumulate -> SetCondition -> RegisterName -> RegisterName -> RegisterName -> RegisterName -> m ()
 handleMultiply acc (SetCondition cond) dest opReg0 opReg1 opReg2 = do
   val <- (*) <$> use (registers.rn opReg1) <*> use (registers.rn opReg2)
   case acc of
@@ -172,7 +174,7 @@ handleMultiply acc (SetCondition cond) dest opReg0 opReg1 opReg2 = do
     flags.zero .= (endVal == 0)
     flags.carry .= False
 
-handleMultiplyLong :: Monad m => Signed -> Accumulate -> SetCondition -> RegisterName -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
+handleMultiplyLong :: IsSystem s m => Signed -> Accumulate -> SetCondition -> RegisterName -> RegisterName -> RegisterName -> RegisterName -> m ()
 handleMultiplyLong s acc (SetCondition cond) destHi destLo or0 or1 = do
   or0Val <- use (registers.rn or0)
   or1Val <- use (registers.rn or1)
@@ -215,7 +217,7 @@ handleMultiplyLong s acc (SetCondition cond) destHi destLo or0 or1 = do
     flags.carry .= False
     flags.overflow .= False
 
-handleBranchExchange :: Monad m => RegisterName -> SystemT m ()
+handleBranchExchange :: IsSystem s m => RegisterName -> m ()
 handleBranchExchange opReg = do
   op' <- use (registers.rn opReg)
   let thumb = op' `testBit` 0
