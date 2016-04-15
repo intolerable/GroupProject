@@ -3,6 +3,7 @@ module Emulator.Video.Sprite where
 import Emulator.Memory
 import Emulator.Types
 import Emulator.Video.Util
+import Utilities.Parser.TemplateHaskell
 
 import Data.Array.IArray
 
@@ -28,8 +29,12 @@ recurseOAM oam mapMode n = do
 -- Access attributes of object
 parseObjectAttr :: AddressIO m => OAM -> MappingMode -> Address -> m ()
 parseObjectAttr obj _mapMode objAddr = do
-  let (_attr0, _attr1, _attr2) = attributes obj objAddr
+  let (attr0, attr1, _attr2) = attributes obj objAddr
+  let (_xOffset, _yOffset) = (fromIntegral $ $(bitmask 7 0) attr1, fromIntegral $ $(bitmask 7 0) attr0) :: (Double, Double)
+  let _size = spriteSize (shapeSize attr0) (shapeSize attr1)
   return ()
+  where
+    shapeSize attr = (fromIntegral $ $(bitmask 15 14) attr)
 
 attributes :: OAM -> Address -> (HalfWord, HalfWord, HalfWord)
 attributes obj objAddr = (attr0, attr1, attr2)
