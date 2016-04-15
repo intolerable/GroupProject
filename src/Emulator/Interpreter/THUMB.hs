@@ -63,8 +63,11 @@ handleAddSubtractImmediate  as immed dest source = do
   let result = (addSubToOperator as) sVal immed
   registers.rn dest .= result
 
-handleAddSubtractRegister :: Monad m => AddSub -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
-handleAddSubtractRegister = undefined
+handleAddSubtractRegister :: IsSystem s m => AddSub -> RegisterName -> RegisterName -> RegisterName -> m ()
+handleAddSubtractRegister as offset src dest = do
+  sVal <- use (registers.rn src)
+  oVal <- use (registers.rn offset)
+  registers.rn dest .= (addSubToOperator as) sVal oVal
 
 handleMovCmpAddSubImmediate :: Monad m => Opcode -> RegisterName -> Offset -> SystemT m ()
 handleMovCmpAddSubImmediate = undefined
