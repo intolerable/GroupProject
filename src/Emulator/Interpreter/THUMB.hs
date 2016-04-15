@@ -80,8 +80,24 @@ handleAddSubtractRegister as offset src dest = do
   flags.carry .= not (isUnsignedOverflow (addSubToOperator as) [fromIntegral sVal, fromIntegral oVal] $ fromIntegral result)
   flags.overflow .= (isSignedOverflow (addSubToOperator as) [fromIntegral sVal, fromIntegral oVal] $ fromIntegral result)
 
-handleMovCmpAddSubImmediate :: Monad m => Opcode -> RegisterName -> Offset -> SystemT m ()
-handleMovCmpAddSubImmediate = undefined
+handleMovCmpAddSubImmediate :: IsSystem s m => Opcode -> RegisterName -> Offset -> m ()
+handleMovCmpAddSubImmediate op src immed = case op of
+  MOV -> do
+    registers.rn src .= (immed .&. 0xFF)
+    flags.zero .= (immed == 0)
+    flags.negative .= testBit (immed .&. 0xFF) 15
+    -- This instruction shouldn't actually touch the carry and overflow flags... I think
+  CMP -> do
+    let val = immed .&. 0xFF
+    sVal <- use (registers.rn src)
+    let result = sVal - val
+    flags.zero .= (result == 0)
+    flags.negative .= testBit result 15
+    flags.carry .= not (isUnsignedOverflow (-) [fromIntegral sVal, fromIntegral oVal] $ fromIntegral result)
+    flags.overflow .= (isSignedOverflow (-) [fromIntegral sVal, fromIntegral oVal] $ fromIntegral result)
+  ADD -> undefined
+  SUB -> undefined
+  _ -> error "Incorrect arguments passed to THUMB MovCmpAddSubImmediate function."
 
 handleALUOperation :: Monad m => ThumbOpcode -> RegisterName -> RegisterName -> SystemT m ()
 handleALUOperation = undefined
