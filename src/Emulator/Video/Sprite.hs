@@ -6,6 +6,7 @@ import Emulator.Video.Util
 import Utilities.Parser.TemplateHaskell
 
 import Data.Array.IArray
+import Data.Bits
 
 type MappingMode = Bool
 type OAM = Array Address Byte
@@ -32,6 +33,7 @@ parseObjectAttr obj _mapMode objAddr = do
   let (attr0, attr1, _attr2) = attributes obj objAddr
   let (_xOffset, _yOffset) = (fromIntegral $ $(bitmask 7 0) attr1, fromIntegral $ $(bitmask 7 0) attr0) :: (Double, Double)
   let _size = spriteSize (shapeSize attr0) (shapeSize attr1)
+  let _pixFormat = (testBit attr0 13)
   return ()
   where
     shapeSize attr = (fromIntegral $ $(bitmask 15 14) attr)
