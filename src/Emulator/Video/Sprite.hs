@@ -49,6 +49,11 @@ attributes obj objAddr = (attr0, attr1, attr2)
     attr1 = bytesToHalfWord (obj!objAddr + 0x00000002) (obj!objAddr + 0x00000003)
     attr2 = bytesToHalfWord (obj!objAddr + 0x00000004) (obj!objAddr + 0x00000005)
 
+mode :: Byte -> ObjectMode
+mode 0 = Normal
+mode 2 = Hide
+mode _ = Affine
+
 spriteSize :: Byte -> Byte -> (Int, Int)
 spriteSize 0 0 = (1, 1)
 spriteSize 0 1 = (2, 2)
