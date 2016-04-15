@@ -8,6 +8,10 @@ import Utilities.Parser.TemplateHaskell
 import Data.Array.IArray
 import Data.Bits
 
+data ObjectMode = Normal | Affine | Hide
+  deriving (Show, Read, Eq)
+
+type Attribute = HalfWord
 type MappingMode = Bool
 type OAM = Array Address Byte
 
