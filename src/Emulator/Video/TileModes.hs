@@ -13,7 +13,6 @@ import Data.Bits
 import Graphics.Rendering.OpenGL
 import Utilities.Parser.TemplateHaskell
 
-type AddressIO m = (AddressSpace m, MonadIO m)
 type Palette = Array Address Byte
 type PixFormat = Bool
 type ScreenEntry = (Address, Bool, Bool, Address)
