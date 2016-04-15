@@ -14,6 +14,7 @@ data ObjectMode = Normal | Affine | Hide
 type Attribute = HalfWord
 type MappingMode = Bool
 type OAM = Array Address Byte
+type Size = (Double, Double)
 
 readOAM :: AddressIO m => MappingMode -> m ()
 readOAM mapMode = do
@@ -35,12 +36,22 @@ recurseOAM oam mapMode n = do
 parseObjectAttr :: AddressIO m => OAM -> MappingMode -> Address -> m ()
 parseObjectAttr obj _mapMode objAddr = do
   let (attr0, attr1, _attr2) = attributes obj objAddr
+  let _objMode = mode (fromIntegral $ $(bitmask 9 8) attr0)
   let (_xOffset, _yOffset) = (fromIntegral $ $(bitmask 7 0) attr1, fromIntegral $ $(bitmask 7 0) attr0) :: (Double, Double)
   let _size = spriteSize (shapeSize attr0) (shapeSize attr1)
   let _pixFormat = (testBit attr0 13)
   return ()
   where
     shapeSize attr = (fromIntegral $ $(bitmask 15 14) attr)
+
+drawSprite :: AddressIO m => ObjectMode -> Size -> PixFormat -> TileOffset -> Attribute -> m ()
+drawSprite Normal _size _pixFormat _offset attr = do
+  let (_hFlip, _vFlip) = (testBit attr 12, testBit attr 13) :: (Bool, Bool)
+  return ()
+drawSprite Affine _size _pixFormat _offset _attr = do
+  -- read affine values from attr1
+  return ()
+drawSprite _ _ _ _ _ = return ()
 
 attributes :: OAM -> Address -> (HalfWord, HalfWord, HalfWord)
 attributes obj objAddr = (attr0, attr1, attr2)
