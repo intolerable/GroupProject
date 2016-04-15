@@ -47,14 +47,14 @@ parseObjectAttr obj _tileSet mapMode objAddr = do
   where
     shapeSize attr = (fromIntegral $ $(bitmask 15 14) attr)
 
-drawSprite :: AddressIO m => ObjectMode -> Size -> PixFormat -> TileOffset -> Attribute -> MappingMode -> m ()
-drawSprite Normal _size _pixFormat _offset attr _mapMode = do
-  let (_hFlip, _vFlip) = (testBit attr 12, testBit attr 13) :: (Bool, Bool)
+drawSprite :: AddressIO m => ObjectMode -> Size -> PixFormat -> TileOffset -> Attribute -> Attribute -> MappingMode -> m ()
+drawSprite Normal _size _pixFormat _offset attr1 _attr2 _mapMode = do
+  let (_hFlip, _vFlip) = (testBit attr1 12, testBit attr1 13) :: (Bool, Bool)
   return ()
-drawSprite Affine _size _pixFormat _offset _attr _mapMode = do
+drawSprite Affine _size _pixFormat _offset _attr1 _attr2 _mapMode = do
   -- read affine values from attr1
   return ()
-drawSprite _ _ _ _ _ _ = return ()
+drawSprite _ _ _ _ _ _ _ = return ()
 
 attributes :: OAM -> Address -> (Attribute, Attribute, Attribute)
 attributes obj objAddr = (attr0, attr1, attr2)
