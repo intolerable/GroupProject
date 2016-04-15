@@ -56,7 +56,7 @@ drawSprite Affine _size _pixFormat _offset _attr _mapMode = do
   return ()
 drawSprite _ _ _ _ _ _ = return ()
 
-attributes :: OAM -> Address -> (HalfWord, HalfWord, HalfWord)
+attributes :: OAM -> Address -> (Attribute, Attribute, Attribute)
 attributes obj objAddr = (attr0, attr1, attr2)
   where
     attr0 = bytesToHalfWord (obj!objAddr) (obj!objAddr + 0x00000001)
