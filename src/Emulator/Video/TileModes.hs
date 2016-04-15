@@ -28,7 +28,8 @@ tileModes cnt = do
   palette <- readRange (0x05000000, 0x050001FF)
   case bgMode cnt of
     0 -> mode0 palette cnt
-    _ -> undefined
+    1 -> mode1 palette cnt
+    _ -> mode2 palette cnt
 
 mode0 :: AddressIO m => Palette -> LCDControl -> m ()
 mode0 palette _ = do
@@ -43,8 +44,8 @@ mode1 palette _ = do
   textBG 0x0400000A 0x04000014 0x04000016 palette
   affineBG
 
-mode2 :: AddressIO m => LCDControl -> m ()
-mode2 _ = do
+mode2 :: AddressIO m => Palette -> LCDControl -> m ()
+mode2 _ _ = do
   affineBG
   affineBG
 
@@ -134,7 +135,8 @@ drawHLine mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr
   where
     upperByte = (tileMapRow!(mapIndex + 0x00000001))
     lowerByte = (tileMapRow!mapIndex)
-    (tileIdx, _, _, palBank) = parseScreenEntry upperByte lowerByte pixFormat setBaseAddr
+    (tileIdx, _hFlip, _vFlip, palBank) = parseScreenEntry upperByte lowerByte pixFormat setBaseAddr
+-- NEED TO SORT HFLIP AND VFLIP WHEN GRAPHICS RUN
 
 pixelData :: AddressIO m => PixFormat -> Palette -> Tile -> Address -> m (StorableArray Address HalfWord)
 -- 256/1 palette format
