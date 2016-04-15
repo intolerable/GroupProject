@@ -20,20 +20,20 @@ recurseOAM :: AddressIO m => OAM -> MappingMode -> Int -> m ()
 recurseOAM _ _ 128 = return ()
 recurseOAM oam mapMode n = do
   let obj = ixmap (objAddr, objAddr + 0x00000005) (id) oam
-  parseObjectAttr obj mapMode
+  parseObjectAttr obj mapMode objAddr
   recurseOAM oam mapMode (n+1)
   where
     objAddr = 0x07000000 + 0x00000008 * (fromIntegral n)
 
 -- Access attributes of object
-parseObjectAttr :: AddressIO m => Array Address Byte -> Bool -> m ()
-parseObjectAttr _obj _mapMode = undefined
+parseObjectAttr :: AddressIO m => OAM -> MappingMode -> Address -> m ()
+parseObjectAttr obj _mapMode objAddr = do
+  let (_attr0, _attr1, _attr2) = attributes obj objAddr
+  return ()
 
-attribute0 :: Byte -> Byte -> HalfWord
-attribute0 _ _ = undefined
-
-attribute1 :: Byte -> Byte -> HalfWord
-attribute1 _ _ = undefined
-
-attribute2 :: Byte -> Byte -> HalfWord
-attribute2 _ _ = undefined
+attributes :: OAM -> Address -> (HalfWord, HalfWord, HalfWord)
+attributes obj objAddr = (attr0, attr1, attr2)
+  where
+    attr0 = bytesToHalfWord (obj!objAddr) (obj!objAddr + 0x00000001)
+    attr1 = bytesToHalfWord (obj!objAddr + 0x00000002) (obj!objAddr + 0x00000003)
+    attr2 = bytesToHalfWord (obj!objAddr + 0x00000004) (obj!objAddr + 0x00000005)
