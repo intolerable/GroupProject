@@ -165,10 +165,10 @@ palette16 bank tile palBankBaseAddr tileAddr n = col1:col2:palette16 bank tile p
     nib2 = fromIntegral $ $(bitmask 7 4) byt :: Address
     col1Byt1 = bank!(nib1 + palBankBaseAddr)
     col1Byt2 = bank!(nib1 + palBankBaseAddr + 0x00000001)
-    col1 = ((fromIntegral col1Byt2 :: HalfWord) `shiftL` 8) .|. ((fromIntegral col1Byt1 :: HalfWord) .&. 0xFF) :: HalfWord
+    col1 = bytesToHalfWord col1Byt1 col1Byt2
     col2Byt1 = bank!(nib2 + palBankBaseAddr)
     col2Byt2 = bank!(nib2 + palBankBaseAddr + 0x00000001)
-    col2 = ((fromIntegral col2Byt2 :: HalfWord) `shiftL` 8) .|. ((fromIntegral col2Byt1 :: HalfWord) .&. 0xFF) :: HalfWord
+    col2 = bytesToHalfWord col2Byt1 col2Byt2
 
 palette256 :: Palette -> Tile -> Address -> Int -> [HalfWord]
 palette256 _ _ _ 64 = []
@@ -177,13 +177,13 @@ palette256 palette tile tileAddr n = col:palette256 palette tile tileAddr (n+1)
     addr = 0x05000000 + (fromIntegral $ tile!(tileAddr + (0x00000001 * fromIntegral n)) :: Address)
     colByt1 = palette!addr
     colByt2 = palette!(addr + 0x00000001)
-    col = ((fromIntegral colByt2 :: HalfWord) `shiftL` 8) .|. ((fromIntegral colByt1 :: HalfWord) .&. 0xFF) :: HalfWord
+    col = bytesToHalfWord colByt1 colByt2
 
 -- a is the upper byte, b is the lower
 parseScreenEntry :: Byte -> Byte -> PixFormat -> TileSetBaseAddress -> ScreenEntry
 parseScreenEntry a b pixFormat setBaseAddr = (tileIdx, hFlip, vFlip, palBank)
   where
-    hword = ((fromIntegral a :: HalfWord) `shiftL` 8) .|. ((fromIntegral b :: HalfWord) .&. 0xFF) :: HalfWord
+    hword = bytesToHalfWord b a
     tileIdx = setBaseAddr + convIntToAddr (fromIntegral $ $(bitmask 9 0) hword :: Int) pixFormat
     hFlip = (testBit hword 10)
     vFlip = (testBit hword 11)

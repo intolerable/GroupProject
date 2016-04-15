@@ -5,6 +5,7 @@ import Emulator.Types
 
 import Control.Monad.IO.Class
 import Data.Array.Storable
+import Data.Bits
 import Graphics.Rendering.OpenGL
 
 type AddressIO m = (AddressSpace m, MonadIO m)
@@ -30,3 +31,6 @@ loadTexture arr = withStorableArray arr $ \ptr -> do
     textureBinding Texture2D $= Just tile
     texImage2D Texture2D NoProxy 0 RGBA' (TextureSize2D 8 8) 0 (PixelData RGB UnsignedByte ptr)
     return tile
+
+bytesToHalfWord :: Byte -> Byte -> HalfWord
+bytesToHalfWord lower upper = ((fromIntegral upper :: HalfWord) `shiftL` 8) .|. ((fromIntegral lower :: HalfWord) .&. 0xFF) :: HalfWord
