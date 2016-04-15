@@ -2,6 +2,7 @@ module Emulator.Interpreter.Monad where
 
 import Emulator.CPU
 import Emulator.Debug
+import Emulator.Memory
 import Emulator.Memory.AddressSpace
 import Emulator.Types
 
@@ -79,3 +80,5 @@ instance Monad m => CanRead OAM (SystemT m) where
 
 instance Monad m => State.MonadState SystemState (SystemT m) where
   state = SystemT . State.state
+
+type IsSystem s m = (AddressSpace m, State.MonadState s m, HasRegisters s, HasFlags s)

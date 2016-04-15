@@ -1,7 +1,8 @@
 module Emulator.Interpreter.THUMB where
 
-import Emulator.CPU
-import Emulator.CPU.Instructions
+import Emulator.CPU hiding (CPUMode(..), Interrupt(..))
+import Emulator.CPU.Instructions.THUMB
+import Emulator.CPU.Instructions.Types
 import Emulator.Interpreter.Monad
 import Emulator.Types
 
@@ -53,7 +54,7 @@ interpretThumb instr =
     LongBranchWLink lh offset ->
       handleLongBranchWLink lh offset
 
-handleMoveShiftedRegister :: Monad m => Shifted RegisterName -> RegisterName -> SystemT m ()
+handleMoveShiftedRegister :: IsSystem s m => Shifted RegisterName -> RegisterName -> m ()
 handleMoveShiftedRegister sr r = (registers.rn r) <~ use (registers.shiftedRegisterLens sr)
 
 handleAddSubtractImmediate :: Monad m => AddSub -> Offset -> RegisterName -> RegisterName -> SystemT m ()

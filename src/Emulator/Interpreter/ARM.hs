@@ -4,18 +4,16 @@ import Emulator.CPU hiding (CPUMode(..), Interrupt(..))
 import Emulator.CPU.Instructions.ARM
 import Emulator.CPU.Instructions.ARM.Opcodes
 import Emulator.CPU.Instructions.Types
-import Emulator.Memory
+import Emulator.Interpreter.Monad
 import Emulator.Types
+import Emulator.Memory
 import Utilities.Bits
 import Utilities.Parser.TemplateHaskell
 
 import Control.Lens
 import Control.Monad
-import Control.Monad.State.Class
 import Data.Bits
 import Data.Word
-
-type IsSystem s m = (AddressSpace m, MonadState s m, HasRegisters s, HasFlags s)
 
 interpretARM :: IsSystem s m => ARMInstruction -> m ()
 interpretARM instr =
