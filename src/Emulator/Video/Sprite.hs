@@ -41,7 +41,8 @@ parseObjectAttr obj _tileSet mapMode objAddr = do
   let offset = (fromIntegral $ $(bitmask 7 0) attr1, fromIntegral $ $(bitmask 7 0) attr0)
   let size = spriteSize (shapeSize attr0) (shapeSize attr1)
   let pixFormat = (testBit attr0 13)
-  drawSprite objMode size pixFormat offset attr1 mapMode
+  let _gfx = (fromIntegral $ $(bitmask 11 10) attr0) :: Integer
+  drawSprite objMode size pixFormat offset attr1 attr2 mapMode
   return ()
   where
     shapeSize attr = (fromIntegral $ $(bitmask 15 14) attr)
