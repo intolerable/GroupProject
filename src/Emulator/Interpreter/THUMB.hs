@@ -93,8 +93,8 @@ handleMovCmpAddSubImmediate op src immed = case op of
     let result = sVal - val
     flags.zero .= (result == 0)
     flags.negative .= testBit result 15
-    flags.carry .= not (isUnsignedOverflow (-) [fromIntegral sVal, fromIntegral oVal] $ fromIntegral result)
-    flags.overflow .= (isSignedOverflow (-) [fromIntegral sVal, fromIntegral oVal] $ fromIntegral result)
+    flags.carry .= not (isUnsignedOverflow (-) [fromIntegral sVal, fromIntegral val] $ fromIntegral result)
+    flags.overflow .= (isSignedOverflow (-) [fromIntegral sVal, fromIntegral val] $ fromIntegral result)
   ADD -> undefined
   SUB -> undefined
   _ -> error "Incorrect arguments passed to THUMB MovCmpAddSubImmediate function."
