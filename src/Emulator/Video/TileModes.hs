@@ -19,7 +19,6 @@ type TileMapBaseAddress = Address
 type TileSetBaseAddress = Address
 type Tile = Array Address Byte
 type TileMap = Array Address Byte
-type TileSet = Array Address Byte
 
 tileModes :: AddressIO m => LCDControl -> m ()
 tileModes cnt = do

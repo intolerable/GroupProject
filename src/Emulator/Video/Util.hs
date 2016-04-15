@@ -4,6 +4,7 @@ import Emulator.Memory
 import Emulator.Types
 
 import Control.Monad.IO.Class
+import Data.Array.IArray
 import Data.Array.Storable
 import Data.Bits
 import Graphics.Rendering.OpenGL
@@ -11,6 +12,7 @@ import Graphics.Rendering.OpenGL
 type AddressIO m = (AddressSpace m, MonadIO m)
 type PixFormat = Bool
 type TileOffset = (GLdouble, GLdouble)
+type TileSet = Array Address Byte
 
 drawTile :: StorableArray Address HalfWord -> (GLdouble, GLdouble) -> (GLdouble, GLdouble) -> IO ()
 drawTile arr (x1, x2) (y1, y2) = do
