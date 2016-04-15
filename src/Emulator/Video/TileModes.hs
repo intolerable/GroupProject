@@ -17,7 +17,6 @@ type Palette = Array Address Byte
 type ScreenEntry = (Address, Bool, Bool, Address)
 type TileMapBaseAddress = Address
 type TileSetBaseAddress = Address
-type TextBGOffset = (GLdouble, GLdouble)
 type Tile = Array Address Byte
 type TileMap = Array Address Byte
 type TileSet = Array Address Byte
@@ -69,7 +68,7 @@ baseTileMapAddr :: Byte -> TileMapBaseAddress
 baseTileMapAddr mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))
 
 -- if False then Colour is 4bpp aka S-tiles
-drawTextBG :: AddressIO m => Int -> PixFormat -> TileMapBaseAddress -> TileSetBaseAddress -> TextBGOffset -> Palette -> m ()
+drawTextBG :: AddressIO m => Int -> PixFormat -> TileMapBaseAddress -> TileSetBaseAddress -> TileOffset -> Palette -> m ()
 drawTextBG 0 pixFormat tileMapAddr tileSetAddr offSet palette = do
   tileMap0 <- readTileMap tileMapAddr
   tileSet <- readCharBlocks tileSetAddr False
@@ -115,7 +114,7 @@ readCharBlocks addr True = do
   return memBlock
 
 -- Draw 32x32 tiles at a time
-drawTileMap :: AddressIO m => Int -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> TileMapBaseAddress -> TileSetBaseAddress -> m ()
+drawTileMap :: AddressIO m => Int -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileMapBaseAddress -> TileSetBaseAddress -> m ()
 drawTileMap 0 _ _ _ _ _ _ _ = return ()
 drawTileMap rows pixFormat tileMap tileSet bgOffset@(xOff, yOff) palette baseAddr setBaseAddr = do
   let tileMapRow = ixmap (baseAddr, baseAddr + 0x0000003F) (id) tileMap :: TileMap
@@ -123,7 +122,7 @@ drawTileMap rows pixFormat tileMap tileSet bgOffset@(xOff, yOff) palette baseAdd
   drawTileMap (rows-1) pixFormat tileMap tileSet (xOff, yOff + 8) palette (baseAddr + 0x00000040) setBaseAddr
   return ()
 
-drawHLine :: AddressIO m => Address -> PixFormat -> TileMap -> TileSet -> TextBGOffset -> Palette -> TileSetBaseAddress -> m ()
+drawHLine :: AddressIO m => Address -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileSetBaseAddress -> m ()
 drawHLine 0x00000040 _ _ _ _ _ _ = return ()
 drawHLine mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr = do
   let tile = getTile pixFormat tileIdx tileSet

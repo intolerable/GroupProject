@@ -10,6 +10,7 @@ import Graphics.Rendering.OpenGL
 
 type AddressIO m = (AddressSpace m, MonadIO m)
 type PixFormat = Bool
+type TileOffset = (GLdouble, GLdouble)
 
 drawTile :: StorableArray Address HalfWord -> (GLdouble, GLdouble) -> (GLdouble, GLdouble) -> IO ()
 drawTile arr (x1, x2) (y1, y2) = do
