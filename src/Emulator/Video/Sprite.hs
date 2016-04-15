@@ -14,7 +14,7 @@ data ObjectMode = Normal | Affine | Hide
 type Attribute = HalfWord
 type MappingMode = Bool
 type OAM = Array Address Byte
-type Size = (Double, Double)
+type Size = (Int, Int)
 
 readOAM :: AddressIO m => MappingMode -> m ()
 readOAM mapMode = do
