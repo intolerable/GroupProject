@@ -19,23 +19,24 @@ type Size = (Int, Int)
 readOAM :: AddressIO m => MappingMode -> m ()
 readOAM mapMode = do
   oam <- readRange (0x07000000, 0x070003FF)
-  recurseOAM oam mapMode 0
+  tileSet <- readRange (0x06010000, 0x06013FFF)
+  recurseOAM oam tileSet mapMode 0
   return ()
 
 -- Access each object
-recurseOAM :: AddressIO m => OAM -> MappingMode -> Int -> m ()
-recurseOAM _ _ 128 = return ()
-recurseOAM oam mapMode n = do
+recurseOAM :: AddressIO m => OAM -> TileSet -> MappingMode -> Int -> m ()
+recurseOAM _ _ _ 128 = return ()
+recurseOAM oam tileSet mapMode n = do
   let obj = ixmap (objAddr, objAddr + 0x00000005) (id) oam
-  parseObjectAttr obj mapMode objAddr
-  recurseOAM oam mapMode (n+1)
+  parseObjectAttr obj tileSet mapMode objAddr
+  recurseOAM oam tileSet mapMode (n+1)
   where
     objAddr = 0x07000000 + 0x00000008 * (fromIntegral n)
 
 -- Access attributes of object
-parseObjectAttr :: AddressIO m => OAM -> MappingMode -> Address -> m ()
-parseObjectAttr obj mapMode objAddr = do
-  let (attr0, attr1, _attr2) = attributes obj objAddr
+parseObjectAttr :: AddressIO m => OAM -> TileSet -> MappingMode -> Address -> m ()
+parseObjectAttr obj _tileSet mapMode objAddr = do
+  let (attr0, attr1, attr2) = attributes obj objAddr
   let objMode = mode (fromIntegral $ $(bitmask 9 8) attr0)
   let offset = (fromIntegral $ $(bitmask 7 0) attr1, fromIntegral $ $(bitmask 7 0) attr0)
   let size = spriteSize (shapeSize attr0) (shapeSize attr1)
