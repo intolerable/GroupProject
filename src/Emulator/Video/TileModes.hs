@@ -14,7 +14,6 @@ import Graphics.Rendering.OpenGL
 import Utilities.Parser.TemplateHaskell
 
 type Palette = Array Address Byte
-type PixFormat = Bool
 type ScreenEntry = (Address, Bool, Bool, Address)
 type TileMapBaseAddress = Address
 type TileSetBaseAddress = Address
