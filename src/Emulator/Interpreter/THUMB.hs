@@ -7,6 +7,8 @@ import Emulator.Interpreter.Monad
 import Emulator.Types
 
 import Control.Lens hiding (op)
+import Data.Bits
+import Data.Int
 
 interpretThumb :: Monad m => THUMBInstruction -> SystemT m ()
 interpretThumb instr =
@@ -62,12 +64,21 @@ handleAddSubtractImmediate  as immed dest source = do
   sVal <- use (registers.rn source)
   let result = (addSubToOperator as) sVal immed
   registers.rn dest .= result
+  flags.zero .= (result == 0)
+  flags.negative .= testBit result 15
+  flags.carry .= not (isUnsignedOverflow (addSubToOperator as) [fromIntegral sVal, fromIntegral immed] $ fromIntegral result)
+  flags.overflow .= (isSignedOverflow (addSubToOperator as) [fromIntegral sVal, fromIntegral immed] $ fromIntegral result)
 
 handleAddSubtractRegister :: IsSystem s m => AddSub -> RegisterName -> RegisterName -> RegisterName -> m ()
 handleAddSubtractRegister as offset src dest = do
   sVal <- use (registers.rn src)
   oVal <- use (registers.rn offset)
-  registers.rn dest .= (addSubToOperator as) sVal oVal
+  let result = (addSubToOperator as) sVal oVal
+  registers.rn dest .= result
+  flags.zero .= (result == 0)
+  flags.negative .= testBit result 15
+  flags.carry .= not (isUnsignedOverflow (addSubToOperator as) [fromIntegral sVal, fromIntegral oVal] $ fromIntegral result)
+  flags.overflow .= (isSignedOverflow (addSubToOperator as) [fromIntegral sVal, fromIntegral oVal] $ fromIntegral result)
 
 handleMovCmpAddSubImmediate :: Monad m => Opcode -> RegisterName -> Offset -> SystemT m ()
 handleMovCmpAddSubImmediate = undefined
@@ -126,3 +137,13 @@ handleLongBranchWLink = undefined
 addSubToOperator :: Num a => AddSub -> (a -> a -> a)
 addSubToOperator Add = (+)
 addSubToOperator Subtract = (-)
+
+isUnsignedOverflow :: a ~ Integer => (a -> a -> a) -> [HalfWord] -> HalfWord -> Bool
+isUnsignedOverflow f args result = (fromIntegral result) /= preciseResult
+  where
+    preciseResult = foldl1 f $ map fromIntegral args :: Integer
+
+isSignedOverflow :: (a ~ Int16) => (a -> a -> a) -> [HalfWord] -> HalfWord -> Bool
+isSignedOverflow f args result = (fromIntegral signedResult :: Integer) /= (fromIntegral result :: Integer)
+  where
+    signedResult = foldl1 f $ map fromIntegral args :: Int16
