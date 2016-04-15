@@ -57,8 +57,11 @@ interpretThumb instr =
 handleMoveShiftedRegister :: IsSystem s m => Shifted RegisterName -> RegisterName -> m ()
 handleMoveShiftedRegister sr r = (registers.rn r) <~ use (registers.shiftedRegisterLens sr)
 
-handleAddSubtractImmediate :: Monad m => AddSub -> Offset -> RegisterName -> RegisterName -> SystemT m ()
-handleAddSubtractImmediate = undefined
+handleAddSubtractImmediate :: IsSystem s m => AddSub -> Offset -> RegisterName -> RegisterName -> m ()
+handleAddSubtractImmediate  as immed dest source = do
+  sVal <- use (registers.rn source)
+  let result = (addSubToOperator as) sVal immed
+  registers.rn dest .= result
 
 handleAddSubtractRegister :: Monad m => AddSub -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
 handleAddSubtractRegister = undefined
@@ -116,3 +119,7 @@ handleThumbBranch = undefined
 
 handleLongBranchWLink :: Monad m => LowHigh -> Offset -> SystemT m ()
 handleLongBranchWLink = undefined
+
+addSubToOperator :: Num a => AddSub -> (a -> a -> a)
+addSubToOperator Add = (+)
+addSubToOperator Subtract = (-)
