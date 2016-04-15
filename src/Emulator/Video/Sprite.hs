@@ -34,12 +34,13 @@ recurseOAM oam mapMode n = do
 
 -- Access attributes of object
 parseObjectAttr :: AddressIO m => OAM -> MappingMode -> Address -> m ()
-parseObjectAttr obj _mapMode objAddr = do
+parseObjectAttr obj mapMode objAddr = do
   let (attr0, attr1, _attr2) = attributes obj objAddr
-  let _objMode = mode (fromIntegral $ $(bitmask 9 8) attr0)
-  let (_xOffset, _yOffset) = (fromIntegral $ $(bitmask 7 0) attr1, fromIntegral $ $(bitmask 7 0) attr0) :: (Double, Double)
-  let _size = spriteSize (shapeSize attr0) (shapeSize attr1)
-  let _pixFormat = (testBit attr0 13)
+  let objMode = mode (fromIntegral $ $(bitmask 9 8) attr0)
+  let offset = (fromIntegral $ $(bitmask 7 0) attr1, fromIntegral $ $(bitmask 7 0) attr0)
+  let size = spriteSize (shapeSize attr0) (shapeSize attr1)
+  let pixFormat = (testBit attr0 13)
+  drawSprite objMode size pixFormat offset attr1 mapMode
   return ()
   where
     shapeSize attr = (fromIntegral $ $(bitmask 15 14) attr)
