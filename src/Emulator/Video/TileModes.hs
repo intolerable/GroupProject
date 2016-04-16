@@ -99,18 +99,12 @@ drawTextBG _ pixFormat tileMapAddr tileSetAddr offSet@(xOff, yOff) palette = do
   drawTileMap 32 pixFormat tileMap3 tileSet (xOff + 32, yOff + 32) palette tileMapAddr tileSetAddr
   return ()
 
-readTileMap :: AddressIO m => Address -> m (TileMap)
-readTileMap addr = do
-  memBlock <- readRange (addr, addr + 0x000007FF)
-  return memBlock
+readTileMap :: AddressSpace m => Address -> m (TileMap)
+readTileMap addr = readRange (addr, addr + 0x000007FF)
 
-readCharBlocks :: AddressIO m => Address -> PixFormat -> m (TileSet)
-readCharBlocks addr False = do
-  memBlock <- readRange (addr, addr + 0x00007FFF)
-  return memBlock
-readCharBlocks addr True = do
-  memBlock <- readRange (addr, addr + 0x0000FFFF)
-  return memBlock
+readCharBlocks :: AddressSpace m => Address -> PixFormat -> m (TileSet)
+readCharBlocks addr False = readRange (addr, addr + 0x00007FFF)
+readCharBlocks addr True = readRange (addr, addr + 0x0000FFFF)
 
 -- Draw 32x32 tiles at a time
 drawTileMap :: AddressIO m => Int -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileMapBaseAddress -> TileSetBaseAddress -> m ()
