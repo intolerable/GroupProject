@@ -111,17 +111,18 @@ drawTileMap :: AddressIO m => Int -> PixFormat -> TileMap -> TileSet -> TileOffs
 drawTileMap 0 _ _ _ _ _ _ _ = return ()
 drawTileMap rows pixFormat tileMap tileSet bgOffset@(xOff, yOff) palette baseAddr setBaseAddr = do
   let tileMapRow = ixmap (baseAddr, baseAddr + 0x0000003F) (id) tileMap :: TileMap
-  drawHLine 0x00000000 pixFormat tileMapRow tileSet bgOffset palette setBaseAddr
+  drawHLine 32 baseAddr pixFormat tileMapRow tileSet bgOffset palette setBaseAddr
   drawTileMap (rows-1) pixFormat tileMap tileSet (xOff, yOff + 8) palette (baseAddr + 0x00000040) setBaseAddr
   return ()
 
-drawHLine :: AddressIO m => Address -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileSetBaseAddress -> m ()
-drawHLine 0x00000040 _ _ _ _ _ _ = return ()
-drawHLine mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr = do
+-- Need to recurse using int instead
+drawHLine :: AddressIO m => Int -> Address -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileSetBaseAddress -> m ()
+drawHLine 0 _ _ _ _ _ _ _ = return ()
+drawHLine column mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr = do
   let tile = getTile pixFormat tileIdx tileSet
   pixData <- pixelData pixFormat palette tile palBank
   liftIO $ drawTile pixData (xOff, xOff + 8) (yOff, yOff + 8)
-  drawHLine (mapIndex + 0x00000002) pixFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
+  drawHLine (column-1) (mapIndex + 0x00000002) pixFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
   return ()
   where
     upperByte = (tileMapRow!(mapIndex + 0x00000001))
