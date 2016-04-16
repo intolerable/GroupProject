@@ -19,7 +19,7 @@ type Size = (Int, Int)
 readOAM :: AddressIO m => MappingMode -> m ()
 readOAM mapMode = do
   oam <- readRange (0x07000000, 0x070003FF)
-  tileSet <- readRange (0x06010000, 0x06013FFF)
+  tileSet <- readRange (0x06010000, 0x06017FFF)
   recurseOAM oam tileSet mapMode 0
   return ()
 
