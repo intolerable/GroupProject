@@ -17,7 +17,6 @@ type Palette = Array Address Byte
 type ScreenEntry = (Address, Bool, Bool, Address)
 type TileMapBaseAddress = Address
 type TileSetBaseAddress = Address
-type Tile = Array Address Byte
 type TileMap = Array Address Byte
 
 tileModes :: AddressIO m => LCDControl -> m ()
@@ -180,19 +179,6 @@ parseScreenEntry a b pixFormat setBaseAddr = (tileIdx, hFlip, vFlip, palBank)
     hFlip = (testBit hword 10)
     vFlip = (testBit hword 11)
     palBank = convIntToAddr (fromIntegral $ $(bitmask 15 12) hword :: Int) False
-
--- If pixel format is 8bpp then TileSet is read in chunks of 40h
--- If not then TileSet is read in chunks of 20h
-getTile :: PixFormat -> Address -> TileSet -> Tile
-getTile True tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000003F) (id) tileSet :: Tile)
-getTile _ tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000001F) (id) tileSet :: Tile)
-
--- If pixel format is 8bpp then the tileIndex read from the map is in steps of 40h
--- If pixel format is 4bpp then the tileIndex read from the map is in steps of 20h
-convIntToAddr :: Int -> PixFormat -> Address
-convIntToAddr 0 _ = 0x00000000
-convIntToAddr n True = (0x00000040 * fromIntegral n)
-convIntToAddr n _ = (0x00000020 * fromIntegral n)
 
 affineBG :: AddressIO m => m ()
 affineBG = undefined

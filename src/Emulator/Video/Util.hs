@@ -11,6 +11,7 @@ import Graphics.Rendering.OpenGL
 
 type AddressIO m = (AddressSpace m, MonadIO m)
 type PixFormat = Bool
+type Tile = Array Address Byte
 type TileOffset = (GLdouble, GLdouble)
 type TileSet = Array Address Byte
 
@@ -38,3 +39,16 @@ loadTexture arr = withStorableArray arr $ \ptr -> do
 
 bytesToHalfWord :: Byte -> Byte -> HalfWord
 bytesToHalfWord lower upper = ((fromIntegral upper :: HalfWord) `shiftL` 8) .|. ((fromIntegral lower :: HalfWord) .&. 0xFF) :: HalfWord
+
+-- If pixel format is 8bpp then the tileIndex read from the map is in steps of 40h
+-- If pixel format is 4bpp then the tileIndex read from the map is in steps of 20h
+convIntToAddr :: Int -> PixFormat -> Address
+convIntToAddr 0 _ = 0x00000000
+convIntToAddr n True = (0x00000040 * fromIntegral n)
+convIntToAddr n _ = (0x00000020 * fromIntegral n)
+
+-- If pixel format is 8bpp then TileSet is read in chunks of 40h
+-- If not then TileSet is read in chunks of 20h
+getTile :: PixFormat -> Address -> TileSet -> Tile
+getTile True tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000003F) (id) tileSet :: Tile)
+getTile _ tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000001F) (id) tileSet :: Tile)
