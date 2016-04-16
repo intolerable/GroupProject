@@ -51,8 +51,8 @@ handleSingleDataTransfer :: IsSystem s m
                          => PrePost -> OffsetDirection -> (Granularity 'Full) -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> m ()
 handleSingleDataTransfer pp ud gran wb ls base target op2 = do
   baseVal <- use $ registers.rn base
-  offsetVal <- use $ registers.offsetLens
-  let addr = case pp of { Pre -> directionToOperator ud baseVal offsetVal; Post -> baseVal }
+  offsetVal <- use $ registers.either shiftedRegisterLens (to . const) op2
+  let (addr, final) = mkPrePost pp ud baseVal offsetVal
   case (ls, gran) of
     (Load, Byte) -> do
       byte <- readAddressByte addr
@@ -64,11 +64,7 @@ handleSingleDataTransfer pp ud gran wb ls base target op2 = do
       use (registers.rn target) >>= writeAddressByte addr . fromIntegral
     (Store, Word) -> use (registers.rn target) >>= writeAddressWord ($(bitmask 31 2) addr)
   when wb $
-    registers.rn base .= case pp of
-      Pre -> baseVal
-      Post -> directionToOperator ud baseVal offsetVal
-  where
-    offsetLens = case op2 of { Left x -> shiftedRegisterLens x; Right x -> to (const x) }
+    registers.rn base .= final
 
 handleBlockDataTranfer :: IsSystem s m => PrePost -> OffsetDirection -> ForceUserMode -> WriteBack -> LoadStore -> RegisterName -> RegisterList -> m ()
 handleBlockDataTranfer pp ud user wb ls base rlist = do
@@ -104,9 +100,9 @@ handleHalfwordDataTransferRegister :: IsSystem s m => PrePost -> OffsetDirection
 handleHalfwordDataTransferRegister pp ud wb ls s g base dest offset = do
   bVal <- use (registers.rn base)
   oVal <- use (registers.rn offset)
-  let readAddr = (directionToOperator ud) bVal (if pp == Pre then oVal else 0)
-  valHW <- readAddressHalfWord readAddr
-  (case (g, ls, s) of
+  let (addr, final) = mkPrePost pp ud bVal oVal
+  valHW <- readAddressHalfWord addr
+  case (g, ls, s) of
     (Byte, Load, True) -> do
       let val = byteExtend $ fromIntegral $ $(bitmask 7 0) valHW
       registers.rn dest .= val
@@ -117,11 +113,8 @@ handleHalfwordDataTransferRegister pp ud wb ls s g base dest offset = do
     (HalfWord, Store, False) -> do
       destAddr <- use (registers.rn dest)
       writeAddressHalfWord destAddr valHW
-    (_, _, _) -> error "handleHalfwordDataTransferRegister: Incorrect arguments passed to HalfWordDataTransfer instruction")
-  when (pp == Post) $
-    registers.rn base .= (directionToOperator ud) bVal oVal
-  when ((pp == Pre) && wb) $
-    registers.rn base .= bVal
+    (_, _, _) -> error "handleHalfwordDataTransferRegister: Incorrect arguments passed to HalfWordDataTransfer instruction"
+  when wb $ registers.rn base .= final
 
 handleHalfWordDataTransferImmediate :: IsSystem s m => PrePost -> OffsetDirection -> WriteBack -> LoadStore -> Signed -> (Granularity 'Lower) -> RegisterName -> RegisterName -> Offset -> m ()
 handleHalfWordDataTransferImmediate pp ud wb ls s g base dest offset = do
@@ -231,3 +224,9 @@ directionToOperator :: Num a => OffsetDirection -> (a -> a -> a)
 directionToOperator d = case d of
   Up -> (+)
   Down -> (-)
+
+mkPrePost :: Num t => PrePost -> OffsetDirection -> t -> t -> (t, t)
+mkPrePost Pre ud base offset =
+  (directionToOperator ud base offset, directionToOperator ud base offset)
+mkPrePost Post ud base offset =
+  (base, directionToOperator ud base offset)
