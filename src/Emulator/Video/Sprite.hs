@@ -42,8 +42,9 @@ parseObjectAttr obj tileSet mapMode objAddr = do
   let size = spriteSize (shapeSize attr0) (shapeSize attr1)
   let pixFormat = (testBit attr0 13)
   let _gfx = (fromIntegral $ $(bitmask 11 10) attr0) :: Integer
-  drawSprite objMode size pixFormat tileSet offset attr1 attr2 mapMode
-  return ()
+  if objMode == Hide
+    then return ()
+    else drawSprite objMode size pixFormat tileSet offset attr1 attr2 mapMode
   where
     shapeSize attr = (fromIntegral $ $(bitmask 15 14) attr)
 
@@ -53,10 +54,10 @@ drawSprite Normal _size pixFormat tileSet _offset attr1 attr2 _mapMode = do
   let tileIdx = 0x06010000 + convIntToAddr (fromIntegral $ $(bitmask 9 0) attr2 :: Int) pixFormat
   let _tile = getTile pixFormat tileIdx tileSet
   return ()
-drawSprite Affine _size _pixFormat _tileSet _offset _attr1 _attr2 _mapMode = do
+-- Affine
+drawSprite _ _size _pixFormat _tileSet _offset _attr1 _attr2 _mapMode = do
   -- read affine values from attr1
   return ()
-drawSprite _ _ _ _ _ _ _ _ = return ()
 
 --getSprite2D ::
 
