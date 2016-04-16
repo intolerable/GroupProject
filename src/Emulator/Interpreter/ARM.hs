@@ -49,20 +49,24 @@ interpretARM instr =
 
 handleSingleDataTransfer :: IsSystem s m
                          => PrePost -> OffsetDirection -> (Granularity 'Full) -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> m ()
-handleSingleDataTransfer pp ud gran _wb ls base target op2 = do
+handleSingleDataTransfer pp ud gran wb ls base target op2 = do
   baseVal <- use $ registers.rn base
   offsetVal <- use $ registers.offsetLens
   let addr = case pp of { Pre -> directionToOperator ud baseVal offsetVal; Post -> baseVal }
   case (ls, gran) of
-    (Load, Byte) -> error "sdt load byte"
+    (Load, Byte) -> do
+      byte <- readAddressByte addr
+      registers.rn target .= fromIntegral byte
     (Load, Word) -> do
       word <- readAddressWord ($(bitmask 31 2) addr)
       registers.rn target .= word `rotateR` (fromIntegral $ $(bitmask 1 0) addr * 8)
-    (Store, Byte) -> error "sdt store byte"
+    (Store, Byte) -> do
+      use (registers.rn target) >>= writeAddressByte addr . fromIntegral
     (Store, Word) -> use (registers.rn target) >>= writeAddressWord ($(bitmask 31 2) addr)
-  registers.rn base .= case pp of
-    Pre -> baseVal
-    Post -> directionToOperator ud baseVal offsetVal
+  when wb $
+    registers.rn base .= case pp of
+      Pre -> baseVal
+      Post -> directionToOperator ud baseVal offsetVal
   where
     offsetLens = case op2 of { Left x -> shiftedRegisterLens x; Right x -> to (const x) }
 
