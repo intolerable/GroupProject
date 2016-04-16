@@ -35,26 +35,30 @@ recurseOAM oam tileSet mapMode n = do
 
 -- Access attributes of object
 parseObjectAttr :: AddressIO m => OAM -> TileSet -> MappingMode -> Address -> m ()
-parseObjectAttr obj _tileSet mapMode objAddr = do
+parseObjectAttr obj tileSet mapMode objAddr = do
   let (attr0, attr1, attr2) = attributes obj objAddr
   let objMode = mode (fromIntegral $ $(bitmask 9 8) attr0)
   let offset = (fromIntegral $ $(bitmask 7 0) attr1, fromIntegral $ $(bitmask 7 0) attr0)
   let size = spriteSize (shapeSize attr0) (shapeSize attr1)
   let pixFormat = (testBit attr0 13)
   let _gfx = (fromIntegral $ $(bitmask 11 10) attr0) :: Integer
-  drawSprite objMode size pixFormat offset attr1 attr2 mapMode
+  drawSprite objMode size pixFormat tileSet offset attr1 attr2 mapMode
   return ()
   where
     shapeSize attr = (fromIntegral $ $(bitmask 15 14) attr)
 
-drawSprite :: AddressIO m => ObjectMode -> Size -> PixFormat -> TileOffset -> Attribute -> Attribute -> MappingMode -> m ()
-drawSprite Normal _size _pixFormat _offset attr1 _attr2 _mapMode = do
+drawSprite :: AddressIO m => ObjectMode -> Size -> PixFormat -> TileSet -> TileOffset -> Attribute -> Attribute -> MappingMode -> m ()
+drawSprite Normal _size pixFormat tileSet _offset attr1 attr2 _mapMode = do
   let (_hFlip, _vFlip) = (testBit attr1 12, testBit attr1 13) :: (Bool, Bool)
+  let tileIdx = 0x06010000 + convIntToAddr (fromIntegral $ $(bitmask 9 0) attr2 :: Int) pixFormat
+  let _tile = getTile pixFormat tileIdx tileSet
   return ()
-drawSprite Affine _size _pixFormat _offset _attr1 _attr2 _mapMode = do
+drawSprite Affine _size _pixFormat _tileSet _offset _attr1 _attr2 _mapMode = do
   -- read affine values from attr1
   return ()
-drawSprite _ _ _ _ _ _ _ = return ()
+drawSprite _ _ _ _ _ _ _ _ = return ()
+
+--getSprite2D ::
 
 attributes :: OAM -> Address -> (Attribute, Attribute, Attribute)
 attributes obj objAddr = (attr0, attr1, attr2)
