@@ -49,7 +49,8 @@ parseObjectAttr obj tileSet mapMode objAddr = do
     shapeSize attr = (fromIntegral $ $(bitmask 15 14) attr)
 
 drawSprite :: AddressIO m => ObjectMode -> Size -> PixFormat -> TileSet -> TileOffset -> Attribute -> Attribute -> MappingMode -> m ()
-drawSprite Normal _size pixFormat tileSet _offset attr1 attr2 _mapMode = do
+drawSprite Normal (0, _) _ _ _ _ _ _ = return ()
+drawSprite Normal (_rows, _cols) pixFormat tileSet _offset attr1 attr2 _mapMode = do
   let (_hFlip, _vFlip) = (testBit attr1 12, testBit attr1 13) :: (Bool, Bool)
   let tileIdx = 0x06010000 + convIntToAddr (fromIntegral $ $(bitmask 9 0) attr2 :: Int) pixFormat
   let _tile = getTile pixFormat tileIdx tileSet
