@@ -125,9 +125,33 @@ spec = do
       it "should not set negative" $
         res ^. flags.negative `shouldBe` False
 
-  describe "add" $
-    it "should be able to run a add instruction correctly" $
-      pending
+  describe "add" $ do
+
+    context "ADD r0 (r1 = 0) 0" $ do
+      let res = exec def $ add r0 r1 (operand2Lens $ Right $ Rotated 0 0) True
+      it "should not set result" $
+        res ^. r0 `shouldBe` 0x0
+      it "should not affect carry" $
+        res ^. flags.carry `shouldBe` False
+      it "should not affect overflow" $
+        res ^. flags.overflow `shouldBe` False
+      it "should set zero" $
+        res ^. flags.zero `shouldBe` True
+      it "should not set negative" $
+        res ^. flags.negative `shouldBe` False
+
+    context "ADD r0 (r1 = 0xFFFFFFFF) (r2 = 0xFFFFFFFF)" $ do
+      let res = exec (def & r1 .~ 0xFFFFFFFF & r2 .~ 0xFFFFFFFF) $ add r0 r1 (operand2Lens $ Left $ AmountShift 0 LogicalLeft $ RegisterName 2) True
+      it "should not set result" $
+        res ^. r0 `shouldBe` 0xFFFFFFFE
+      it "should not affect carry" $
+        res ^. flags.carry `shouldBe` False
+      it "should set overflow" $
+        res ^. flags.overflow `shouldBe` True
+      it "should not set zero" $
+        res ^. flags.zero `shouldBe` False
+      it "should set negative" $
+        res ^. flags.negative `shouldBe` True
 
   describe "cmn" $
     it "should be able to run a cmn instruction correctly" $

@@ -69,14 +69,14 @@ add :: (HasFlags s, HasRegisters s, MonadState s m)
     => DestRegister -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
 add dest src1 src2 cCode = do
   res1 <- use $ registers.src1
-  (_, res2) <- use $ registers.src2
+  (isCarried, res2) <- use $ registers.src2
   let val = res1 + res2
   registers.dest .= val
   -- Update flags if the condition is true
   when cCode $ do
     flags.negative .= isNegative val
     flags.zero .= (val == 0)
-    flags.carry .= isUnsignedOverflow (+) [res1, res2] val
+    flags.carry .= isCarried
     flags.overflow .= isSignedOverflow (+) [res1, res2] val
 
 -- Arithmetic add with carry
