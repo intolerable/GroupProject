@@ -62,6 +62,42 @@ spec = do
       prop "runCondition CC /= runCondition CS" $ \(x :: Flags) ->
         eval x (runCondition CC) /= eval x (runCondition CS)
 
+    context "when condition is MI" $ do
+      it "should run when negative is set" $ do
+        eval (def & negative .~ True) (runCondition MI) `shouldBe` True
+      it "should not run when negative is not set" $ do
+        eval (def & negative .~ False) (runCondition MI) `shouldBe` False
+      prop "runCondition MI ~= use negative" $ \(x :: Flags) ->
+        eval x (runCondition MI) == eval x (use negative)
+
+    context "when condition is PL" $ do
+      it "should run when negative is clear" $ do
+        eval (def & negative .~ False) (runCondition PL) `shouldBe` True
+      it "should not run when negative is not clear" $ do
+        eval (def & negative .~ True) (runCondition PL) `shouldBe` False
+      prop "runCondition PL ~= not (use negative)" $ \(x :: Flags) ->
+        eval x (runCondition PL) == eval x (not <$> use negative)
+      prop "runCondition PL /= runCondition MI" $ \(x :: Flags) ->
+        eval x (runCondition PL) /= eval x (runCondition MI)
+
+    context "when condition is VS" $ do
+      it "should run when overflow is set" $ do
+        eval (def & overflow .~ True) (runCondition VS) `shouldBe` True
+      it "should not run when overflow is not set" $ do
+        eval (def & overflow .~ False) (runCondition VS) `shouldBe` False
+      prop "runCondition VS ~= use overflow" $ \(x :: Flags) ->
+        eval x (runCondition VS) == eval x (use overflow)
+
+    context "when condition is VC" $ do
+      it "should run when overflow is clear" $ do
+        eval (def & overflow .~ False) (runCondition VC) `shouldBe` True
+      it "should not run when overflow is not clear" $ do
+        eval (def & overflow .~ True) (runCondition VC) `shouldBe` False
+      prop "runCondition VC ~= not (use overflow)" $ \(x :: Flags) ->
+        eval x (runCondition VC) == eval x (not <$> use overflow)
+      prop "runCondition VC /= runCondition VS" $ \(x :: Flags) ->
+        eval x (runCondition VC) /= eval x (runCondition VS)
+
 instance Arbitrary Flags where
   arbitrary = mkFlags <$> arbitrary
                       <*> arbitrary
