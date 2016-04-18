@@ -1,5 +1,9 @@
 module Emulator.CPU.Instructions.ARM.Opcodes
   ( functionFromOpcode
+  , SrcRegister
+  , DestRegister
+  , ShiftRegister
+  , ConditionCode
   , and
   , eor
   , sub
@@ -207,12 +211,12 @@ tst :: (HasFlags s, HasRegisters s, MonadState s m)
     => a -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
 tst _ src1 src2 _ = do
   res1 <- use $ registers.src1
-  (cy, res2) <- use $ registers.src2
+  (isCarried, res2) <- use $ registers.src2
   let val = res1 .&. res2
   -- Always update flags (for TST, TEQ, CMP, CMN)
   flags.negative .= isNegative val
   flags.zero .= (val == 0)
-  flags.carry .= cy
+  flags.carry .= isCarried
 
 -- Test exclusive (XOR)
 teq :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -231,12 +235,12 @@ cmp :: (HasFlags s, HasRegisters s, MonadState s m)
     => a -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
 cmp _ src1 src2 _ = do
   res1 <- use $ registers.src1
-  (_, res2) <- use $ registers.src2
+  (isCarried, res2) <- use $ registers.src2
   let val = res1 - res2
   -- Always update flags (for TST, TEQ, CMP, CMN)
   flags.zero .= (val == 0)
   flags.negative .= isNegative val
-  flags.carry .= not (isUnsignedOverflow (-) [res1, res2] val)
+  flags.carry .= isCarried
   flags.overflow .= isSignedOverflow (-) [res1, res2] val
 
 -- Compare negative
@@ -244,12 +248,12 @@ cmn :: (HasFlags s, HasRegisters s, MonadState s m)
     => a -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
 cmn _ src1 src2 _ = do
   res1 <- use $ registers.src1
-  (_, res2) <- use $ registers.src2
+  (isCarried, res2) <- use $ registers.src2
   let val = res1 + res2
   -- Always update flags (for TST, TEQ, CMP, CMN)
   flags.zero .= (val == 0)
   flags.negative .= isNegative val
-  flags.carry .= not (isUnsignedOverflow (-) [res1, res2] val)
+  flags.carry .= isCarried
   flags.overflow .= isSignedOverflow (-) [res1, res2] val
 
 -- Logical Exclusive Or
@@ -267,7 +271,7 @@ eor dest src1 src2 cCode = do
 
 -- Move instruction
 mov :: (HasFlags s, HasRegisters s, MonadState s m)
-    => DestRegister -> SrcRegister -> ShiftRegister -> ConditionCode -> m ()
+    => DestRegister -> a -> ShiftRegister -> ConditionCode -> m ()
 mov dest _ src2 cCode = do
   (cy, val) <- use $ registers.src2
   registers.dest .= val

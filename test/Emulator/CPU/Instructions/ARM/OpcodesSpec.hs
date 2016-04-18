@@ -1,9 +1,14 @@
 module Emulator.CPU.Instructions.ARM.OpcodesSpec where
 
+import Emulator.CPU
 import Emulator.CPU.Instructions.ARM.Opcodes
 import Emulator.Types
 
+import Control.Lens
+import Control.Monad.State.Class (MonadState(..))
+import Control.Monad.Trans.State
 import Data.Bits
+import Data.Default.Class
 import Test.Hspec
 import Test.Hspec.QuickCheck
 
@@ -37,3 +42,115 @@ spec = do
       isNegative (-1) `shouldBe` True
       isNegative (-100) `shouldBe` True
       isNegative maxBound `shouldBe` True
+
+  describe "cmp" $ do
+
+    context "CMP _ (r1 = 5) 0" $ do
+      let res = exec (def & r1 .~ 0x5) $ cmp () r1 (operand2Lens $ Right $ Rotated 0 0) True
+      it "should not set result" $
+        res ^. r0 `shouldBe` 0x0
+      it "should not affect carry" $
+        res ^. flags.carry `shouldBe` False
+      it "should not set overflow" $
+        res ^. flags.overflow `shouldBe` False
+      it "should not set zero" $
+        res ^. flags.zero `shouldBe` False
+      it "should not set negative" $
+        res ^. flags.negative `shouldBe` False
+
+    context "CMP _ (r1 = 0) 0" $ do
+      let res = exec (def & r1 .~ 0x0) $ cmp () r1 (operand2Lens $ Right $ Rotated 0 0) True
+      it "should not set result" $
+        res ^. r0 `shouldBe` 0x0
+      it "should not affect carry" $
+        res ^. flags.carry `shouldBe` False
+      it "should not set overflow" $
+        res ^. flags.overflow `shouldBe` False
+      it "should not set zero" $
+        res ^. flags.zero `shouldBe` True
+      it "should not set negative" $
+        res ^. flags.negative `shouldBe` False
+
+  describe "mov" $ do
+
+    context "MOV r0 _ 5" $ do
+      let res = exec def $ mov r0 () (operand2Lens $ Right $ Rotated 0 5) True
+      it "should not set result" $
+        res ^. r0 `shouldBe` 0x5
+      it "should not affect carry" $
+        res ^. flags.carry `shouldBe` False
+      it "should not affect overflow" $
+        res ^. flags.overflow `shouldBe` False
+      it "should not set zero" $
+        res ^. flags.zero `shouldBe` False
+      it "should not set negative" $
+        res ^. flags.negative `shouldBe` False
+
+    context "MOV r0 _ 0" $ do
+      let res = exec def $ mov r0 () (operand2Lens $ Right $ Rotated 0 0) True
+      it "should not set result" $
+        res ^. r0 `shouldBe` 0x0
+      it "should not affect carry" $
+        res ^. flags.carry `shouldBe` False
+      it "should not affect overflow" $
+        res ^. flags.overflow `shouldBe` False
+      it "should not set zero" $
+        res ^. flags.zero `shouldBe` True
+      it "should not set negative" $
+        res ^. flags.negative `shouldBe` False
+
+    context "MOV r0 _ (r2 = 1 << 2)" $ do
+      let res = exec (def & r2 .~ 0x1) $ mov r0 () (operand2Lens $ Left $ AmountShift 2 LogicalLeft $ RegisterName 2) True
+      it "should not set result" $
+        res ^. r0 `shouldBe` 0x4
+      it "should not affect carry" $
+        res ^. flags.carry `shouldBe` False
+      it "should not affect overflow" $
+        res ^. flags.overflow `shouldBe` False
+      it "should not set zero" $
+        res ^. flags.zero `shouldBe` False
+      it "should not set negative" $
+        res ^. flags.negative `shouldBe` False
+
+    context "MOV r0 _ (r2 = 15 << r3 = 2)" $ do
+      let res = exec (def & r2 .~ 0xF & r3 .~ 0x2) $ mov r0 () (operand2Lens $ Left $ RegisterShift (RegisterName 3) LogicalLeft (RegisterName 2)) True
+      it "should not set result" $
+        res ^. r0 `shouldBe` 0x3C
+      it "should not affect carry" $
+        res ^. flags.carry `shouldBe` False
+      it "should not affect overflow" $
+        res ^. flags.overflow `shouldBe` False
+      it "should not set zero" $
+        res ^. flags.zero `shouldBe` False
+      it "should not set negative" $
+        res ^. flags.negative `shouldBe` False
+
+  describe "add" $
+    it "should be able to run a add instruction correctly" $
+      pending
+
+  describe "cmn" $
+    it "should be able to run a cmn instruction correctly" $
+      pending
+
+  describe "teq" $
+    it "should be able to run a teq instruction correctly" $
+      pending
+
+  describe "orr" $
+    it "should be able to run a orr instruction correctly" $
+      pending
+
+  describe "tst" $
+    it "should be able to run a tst instruction correctly" $
+      pending
+
+
+newtype OpcodeState a = OpcodeState (State Registers a)
+  deriving (Functor, Applicative, Monad, MonadState Registers)
+
+exec :: Registers -> OpcodeState () -> Registers
+exec r (OpcodeState x) = execState x r
+
+execDef :: OpcodeState () -> Registers
+execDef = exec def
