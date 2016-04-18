@@ -20,12 +20,6 @@ spec = do
 
   describe "runCondition" $ do
 
-    prop "runCondition AL ~= True" $ \(x :: Flags) ->
-      eval x (runCondition AL) == True
-
-    it "should always run with an AL condition" $
-      eval def (runCondition AL) `shouldBe` True
-
     context "when condition is EQ" $ do
       it "should run when zero is set" $ do
         eval (def & zero .~ True) (runCondition EQ) `shouldBe` True
@@ -112,6 +106,75 @@ spec = do
         eval (def & carry .~ False & zero .~ False) (runCondition LS) `shouldBe` True
       prop "runCondition LS ~= not (use carry) || use zero" $ \(x :: Flags) ->
         eval x (runCondition LS) == eval x ((||) <$> (not <$> use carry) <*> use zero)
+
+    context "when condition is GE" $ do
+      it "should run when negative and overflow are the same" $ do
+        eval (def & negative .~ True & overflow .~ True) (runCondition GE) `shouldBe` True
+        eval (def & negative .~ True & overflow .~ False) (runCondition GE) `shouldBe` False
+        eval (def & negative .~ False & overflow .~ True) (runCondition GE) `shouldBe` False
+        eval (def & negative .~ False & overflow .~ False) (runCondition GE) `shouldBe` True
+      prop "runCondition GE ~= use negative == use overflow" $ \(x :: Flags) ->
+        eval x (runCondition GE) == eval x ((==) <$> use negative <*> use overflow)
+
+    context "when condition is LT" $ do
+      it "should run when negative and overflow are not the same" $ do
+        eval (def & negative .~ True & overflow .~ True) (runCondition LT) `shouldBe` False
+        eval (def & negative .~ True & overflow .~ False) (runCondition LT) `shouldBe` True
+        eval (def & negative .~ False & overflow .~ True) (runCondition LT) `shouldBe` True
+        eval (def & negative .~ False & overflow .~ False) (runCondition LT) `shouldBe` False
+      prop "runCondition LT ~= not (use carry) || use zero" $ \(x :: Flags) ->
+        eval x (runCondition LT) == eval x (fmap not $ (==) <$> use negative <*> use overflow)
+
+    context "when condition is GT" $ do
+      it "should run when zero is clear and negative and overflow are the same" $ do
+        eval (def & zero .~ True & negative .~ True & overflow .~ True)
+          (runCondition GT) `shouldBe` False
+        eval (def & zero .~ True & negative .~ True & overflow .~ False)
+          (runCondition GT) `shouldBe` False
+        eval (def & zero .~ True & negative .~ False & overflow .~ True)
+          (runCondition GT) `shouldBe` False
+        eval (def & zero .~ True & negative .~ False & overflow .~ False)
+          (runCondition GT) `shouldBe` False
+        eval (def & zero .~ False & negative .~ True & overflow .~ True)
+          (runCondition GT) `shouldBe` True
+        eval (def & zero .~ False & negative .~ True & overflow .~ False)
+          (runCondition GT) `shouldBe` False
+        eval (def & zero .~ False & negative .~ False & overflow .~ True)
+          (runCondition GT) `shouldBe` False
+        eval (def & zero .~ False & negative .~ False & overflow .~ False)
+          (runCondition GT) `shouldBe` True
+      prop "runCondition GT ~= not (use zero) && (use negative == use overflow)" $ \(x :: Flags) ->
+        eval x (runCondition GT) == eval x
+          ((&&) <$> (not <$> use zero) <*> ((==) <$> use negative <*> use overflow))
+
+    context "when condition is LE" $ do
+      it "should run when zero is set or negative and overflow are not the same" $ do
+        eval (def & zero .~ True & negative .~ True & overflow .~ True)
+          (runCondition LE) `shouldBe` True
+        eval (def & zero .~ True & negative .~ True & overflow .~ False)
+          (runCondition LE) `shouldBe` True
+        eval (def & zero .~ True & negative .~ False & overflow .~ True)
+          (runCondition LE) `shouldBe` True
+        eval (def & zero .~ True & negative .~ False & overflow .~ False)
+          (runCondition LE) `shouldBe` True
+        eval (def & zero .~ False & negative .~ True & overflow .~ True)
+          (runCondition LE) `shouldBe` False
+        eval (def & zero .~ False & negative .~ True & overflow .~ False)
+          (runCondition LE) `shouldBe` True
+        eval (def & zero .~ False & negative .~ False & overflow .~ True)
+          (runCondition LE) `shouldBe` True
+        eval (def & zero .~ False & negative .~ False & overflow .~ False)
+          (runCondition LE) `shouldBe` False
+      prop "runCondition LE ~= use zero || (use negative /= use overflow" $ \(x :: Flags) ->
+        eval x (runCondition LE) == eval x
+          ((||) <$> use zero <*> ((/=) <$> use negative <*> use overflow))
+
+    context "when condition is AL" $ do
+      it "should always run" $
+        eval def (runCondition AL) `shouldBe` True
+
+      prop "runCondition AL ~= True" $ \(x :: Flags) ->
+        eval x (runCondition AL) == True
 
 instance Arbitrary Flags where
   arbitrary = mkFlags <$> arbitrary

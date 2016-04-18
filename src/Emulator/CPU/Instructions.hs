@@ -44,6 +44,6 @@ runCondition cond =
       (&&) <$> (not <$> use (flags.zero))
            <*> ((==) <$> use (flags.negative) <*> use (flags.overflow))
     LE ->
-      (||) <$> (not <$> use (flags.zero))
+      (||) <$> use (flags.zero)
            <*> ((/=) <$> use (flags.negative) <*> use (flags.overflow))
     AL -> return True
