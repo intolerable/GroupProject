@@ -175,6 +175,3 @@ newtype OpcodeState a = OpcodeState (State Registers a)
 
 exec :: Registers -> OpcodeState () -> Registers
 exec r (OpcodeState x) = execState x r
-
-execDef :: OpcodeState () -> Registers
-execDef = exec def
