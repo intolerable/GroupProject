@@ -29,7 +29,7 @@ makeFields ''SystemState
 
 buildInitialState :: ByteString -> ByteString -> SystemState
 buildInitialState rom bios =
-  SystemState (def & r15 .~ 0x08000000) biosArray romArray initialRAM initialVRAM initialOAM
+  SystemState (def & r15 .~ 0x08000004) biosArray romArray initialRAM initialVRAM initialOAM
     where
       initialRAM = accumArray const 0 (0x02000000, 0x0203FFFF) []
       initialVRAM = accumArray const 0 (0x06000000, 0x06017FFF) []
