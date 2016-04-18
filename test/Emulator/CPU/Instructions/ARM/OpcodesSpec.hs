@@ -169,7 +169,6 @@ spec = do
     it "should be able to run a tst instruction correctly" $
       pending
 
-
 newtype OpcodeState a = OpcodeState (State Registers a)
   deriving (Functor, Applicative, Monad, MonadState Registers)
 
