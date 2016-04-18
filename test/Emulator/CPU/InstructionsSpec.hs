@@ -98,6 +98,21 @@ spec = do
       prop "runCondition VC /= runCondition VS" $ \(x :: Flags) ->
         eval x (runCondition VC) /= eval x (runCondition VS)
 
+    context "when condition is HI" $ do
+      it "should run when carry is set and zero is clear" $ do
+        eval (def & carry .~ True & zero .~ False) (runCondition HI) `shouldBe` True
+      prop "runCondition HI ~= use carry && not (use zero)" $ \(x :: Flags) ->
+        eval x (runCondition HI) == eval x ((&&) <$> use carry <*> (not <$> use zero))
+
+    context "when condition is LS" $ do
+      it "should run when carry is clear or zero is set" $ do
+        eval (def & carry .~ True & zero .~ True) (runCondition LS) `shouldBe` True
+        eval (def & carry .~ True & zero .~ False) (runCondition LS) `shouldBe` False
+        eval (def & carry .~ False & zero .~ True) (runCondition LS) `shouldBe` True
+        eval (def & carry .~ False & zero .~ False) (runCondition LS) `shouldBe` True
+      prop "runCondition LS ~= not (use carry) || use zero" $ \(x :: Flags) ->
+        eval x (runCondition LS) == eval x ((||) <$> (not <$> use carry) <*> use zero)
+
 instance Arbitrary Flags where
   arbitrary = mkFlags <$> arbitrary
                       <*> arbitrary
