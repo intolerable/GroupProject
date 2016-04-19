@@ -254,7 +254,7 @@ cmn _ src1 src2 _ = do
   flags.zero .= (val == 0)
   flags.negative .= isNegative val
   flags.carry .= isCarried
-  flags.overflow .= isSignedOverflow (-) [res1, res2] val
+  flags.overflow .= isSignedOverflow (+) [res1, res2] val
 
 -- Logical Exclusive Or
 eor :: (HasFlags s, HasRegisters s, MonadState s m)
