@@ -194,9 +194,33 @@ spec = do
       it "should set negative" $
         res ^. flags.negative `shouldBe` True
 
-  describe "teq" $
-    it "should be able to run a teq instruction correctly" $
-      pending
+  describe "teq" $ do
+
+    context "TEQ _ (r1 = 0) 0" $ do
+      let res = exec (def & r0 .~ 0x1) $ teq () r1 (operand2Lens $ Right $ Rotated 0 0) True
+      it "should not set result" $
+        res ^. r0 `shouldBe` 0x1
+      it "should not affect carry" $
+        res ^. flags.carry `shouldBe` False
+      it "should not affect overflow" $
+        res ^. flags.overflow `shouldBe` False
+      it "should set zero" $
+        res ^. flags.zero `shouldBe` True
+      it "should not set negative" $
+        res ^. flags.negative `shouldBe` False
+
+    context "TEQ _ (r1 = 2) 1" $ do
+      let res = exec (def & r1 .~ 0x2 & flags.zero .~ True) $ teq () r1 (operand2Lens $ Right $ Rotated 0 1) True
+      it "should not set result" $
+        res ^. r0 `shouldBe` 0x0
+      it "should not affect carry" $
+        res ^. flags.carry `shouldBe` False
+      it "should not affect overflow" $
+        res ^. flags.overflow `shouldBe` False
+      it "should not set zero" $
+        res ^. flags.zero `shouldBe` False
+      it "should not set negative" $
+        res ^. flags.negative `shouldBe` False
 
   describe "orr" $
     it "should be able to run a orr instruction correctly" $
