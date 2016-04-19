@@ -155,7 +155,7 @@ spec = do
 
   describe "cmn" $ do
 
-    context "CMN r0 (r1 = 0) 0" $ do
+    context "CMN _ (r1 = 0) 0" $ do
       let res = exec def $ cmn () r1 (operand2Lens $ Right $ Rotated 0 0) True
       it "should not set result" $
         res ^. r0 `shouldBe` 0x0
@@ -168,7 +168,7 @@ spec = do
       it "should not set negative" $
         res ^. flags.negative `shouldBe` False
 
-    context "CMN r0 (r1 = 0) 1" $ do
+    context "CMN _ (r1 = 0) 1" $ do
       let res = exec def $ cmn () r1 (operand2Lens $ Right $ Rotated 0 1) True
       it "should not set result" $
         res ^. r0 `shouldBe` 0x0
@@ -176,12 +176,12 @@ spec = do
         res ^. flags.carry `shouldBe` False
       it "should not affect overflow" $
         res ^. flags.overflow `shouldBe` False
-      it "should set zero" $
+      it "should not set zero" $
         res ^. flags.zero `shouldBe` False
       it "should not set negative" $
         res ^. flags.negative `shouldBe` False
 
-    context "CMN r0 (r1 = 0xFFFFFFFF) (r2 = 0xFFFFFFFF)" $ do
+    context "CMN _ (r1 = 0xFFFFFFFF) (r2 = 0xFFFFFFFF)" $ do
       let res = exec (def & r1 .~ 0xFFFFFFFF & r2 .~ 0xFFFFFFFF) $ cmn () r1 (operand2Lens $ Left $ AmountShift 0 LogicalLeft $ RegisterName 2) True
       it "should not set result" $
         res ^. r0 `shouldBe` 0x0
