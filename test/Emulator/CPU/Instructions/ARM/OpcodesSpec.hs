@@ -125,6 +125,8 @@ spec = do
       it "should not set negative" $
         res ^. flags.negative `shouldBe` False
 
+    context "MOV r0 _ (r15 = 0x00000000)" $ return ()
+
   describe "add" $ do
 
     context "ADD r0 (r1 = 0) 0" $ do
@@ -222,9 +224,33 @@ spec = do
       it "should not set negative" $
         res ^. flags.negative `shouldBe` False
 
-  describe "orr" $
-    it "should be able to run a orr instruction correctly" $
-      pending
+  describe "orr" $ do
+
+    context "ORR r0 (r1 = 0) 0" $ do
+      let res = exec def $ orr r0 r1 (operand2Lens $ Right $ Rotated 0 0) True
+      it "should set result" $
+        res ^. r0 `shouldBe` 0x0
+      it "should not affect carry" $
+        res ^. flags.carry `shouldBe` False
+      it "should not affect overflow" $
+        res ^. flags.overflow `shouldBe` False
+      it "should set zero" $
+        res ^. flags.zero `shouldBe` True
+      it "should not set negative" $
+        res ^. flags.negative `shouldBe` False
+
+    context "ORR r0 (r1 = 1) 4" $ do
+      let res = exec (def & r1 .~ 0x1) $ orr r0 r1 (operand2Lens $ Right $ Rotated 0 4) True
+      it "should set result" $
+        res ^. r0 `shouldBe` 0x5
+      it "should not affect carry" $
+        res ^. flags.carry `shouldBe` False
+      it "should not affect overflow" $
+        res ^. flags.overflow `shouldBe` False
+      it "should not set zero" $
+        res ^. flags.zero `shouldBe` False
+      it "should not set negative" $
+        res ^. flags.negative `shouldBe` False
 
   describe "tst" $
     it "should be able to run a tst instruction correctly" $
