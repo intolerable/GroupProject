@@ -252,9 +252,33 @@ spec = do
       it "should not set negative" $
         res ^. flags.negative `shouldBe` False
 
-  describe "tst" $
-    it "should be able to run a tst instruction correctly" $
-      pending
+  describe "tst" $ do
+
+    context "TST _ (r1 = 0) 0" $ do
+      let res = exec def $ tst () r1 (operand2Lens $ Right $ Rotated 0 0) True
+      it "should not set result" $
+        res ^. r0 `shouldBe` 0x0
+      it "should not affect carry" $
+        res ^. flags.carry `shouldBe` False
+      it "should not affect overflow" $
+        res ^. flags.overflow `shouldBe` False
+      it "should set zero" $
+        res ^. flags.zero `shouldBe` True
+      it "should not set negative" $
+        res ^. flags.negative `shouldBe` False
+
+    context "TST _ (r1 = 3) 2" $ do
+      let res = exec (def & r1 .~ 0x3) $ tst () r1 (operand2Lens $ Right $ Rotated 0 2) True
+      it "should not set result" $
+        res ^. r0 `shouldBe` 0x0
+      it "should not affect carry" $
+        res ^. flags.carry `shouldBe` False
+      it "should not affect overflow" $
+        res ^. flags.overflow `shouldBe` False
+      it "should set zero" $
+        res ^. flags.zero `shouldBe` False
+      it "should not set negative" $
+        res ^. flags.negative `shouldBe` False
 
 newtype OpcodeState a = OpcodeState (State Registers a)
   deriving (Functor, Applicative, Monad, MonadState Registers)
