@@ -75,3 +75,15 @@ tLsr src dest = do
   let val = v' `shiftR` fromIntegral v
   registers.rn dest .= val
   setShiftFlags LogicalRight v' val $ fromIntegral v
+
+tAsr :: IsSystem s m => RegisterName -> RegisterName -> m ()
+tAsr src dest = do
+  v <- use (registers.rn src)
+  v' <- use (registers.rn dest)
+  let msb = testBit v' 31
+  let val = v' `shiftR` fromIntegral v
+  let x = if msb then val .|. 0x80000000
+          else val .&. 0x7FFFFFFF
+  registers.rn dest .= x
+  setShiftFlags LogicalRight v' x $ fromIntegral v
+
