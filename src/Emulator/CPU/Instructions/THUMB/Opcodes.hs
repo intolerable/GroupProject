@@ -13,7 +13,7 @@ functionFromOpcode :: IsSystem s m => ThumbOpcode -> (RegisterName -> RegisterNa
 functionFromOpcode op = case op of
   T_AND -> tAnd
   T_EOR -> tEor
-  T_LSL -> undefined
+  T_LSL -> tLsl
   T_LSR -> undefined
   T_ASR -> undefined
   T_ADC -> undefined
@@ -55,3 +55,12 @@ tEor src dest = do
   let val = srcV `xor` srcV'
   registers.rn dest .= val
   setFlagsLogic val
+
+tLsl :: IsSystem s m => RegisterName -> RegisterName -> m ()
+tLsl src dest = do
+  srcV <- use (registers.rn src)
+  srcV' <- use (registers.rn dest)
+  let val = srcV 'shiftL' srcV'
+  registers.rn dest .= val
+  setShiftFlags srV val srcV'
+
