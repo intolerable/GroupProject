@@ -20,23 +20,23 @@ readOAM :: AddressIO m => MappingMode -> m ()
 readOAM mapMode = do
   oam <- readRange (0x07000000, 0x070003FF)
   tileSet <- readRange (0x06010000, 0x06017FFF)
-  _palette <- readRange (0x05000200, 0x050003FF)
-  recurseOAM oam tileSet mapMode 0
+  palette <- readRange (0x05000200, 0x050003FF)
+  recurseOAM oam tileSet mapMode 0 palette
   return ()
 
 -- Access each object
-recurseOAM :: AddressIO m => OAM -> TileSet -> MappingMode -> Int -> m ()
-recurseOAM _ _ _ 128 = return ()
-recurseOAM oam tileSet mapMode n = do
+recurseOAM :: AddressIO m => OAM -> TileSet -> MappingMode -> Int -> Palette -> m ()
+recurseOAM _ _ _ 128 _ = return ()
+recurseOAM oam tileSet mapMode n pal = do
   let obj = ixmap (objAddr, objAddr + 0x00000005) (id) oam
-  parseObjectAttr obj tileSet mapMode objAddr
-  recurseOAM oam tileSet mapMode (n+1)
+  parseObjectAttr obj tileSet mapMode objAddr pal
+  recurseOAM oam tileSet mapMode (n+1) pal
   where
     objAddr = 0x07000000 + 0x00000008 * (fromIntegral n)
 
 -- Access attributes of object
-parseObjectAttr :: AddressIO m => OAM -> TileSet -> MappingMode -> Address -> m ()
-parseObjectAttr obj tileSet mapMode objAddr = do
+parseObjectAttr :: AddressIO m => OAM -> TileSet -> MappingMode -> Address -> Palette -> m ()
+parseObjectAttr obj tileSet mapMode objAddr pal = do
   let (attr0, attr1, attr2) = attributes obj objAddr
   let objMode = mode (fromIntegral $ $(bitmask 9 8) attr0)
   let offset = (fromIntegral $ $(bitmask 7 0) attr1, fromIntegral $ $(bitmask 7 0) attr0)
@@ -46,29 +46,23 @@ parseObjectAttr obj tileSet mapMode objAddr = do
   let tileIdx = 0x06010000 + convIntToAddr (fromIntegral $ $(bitmask 9 0) attr2 :: Int) pixFormat
   case objMode of
     Hide -> return ()
-    Normal -> drawSprite size pixFormat tileSet offset attr1 attr2 mapMode tileIdx
+    Normal -> drawSprite size pixFormat tileSet offset attr1 attr2 mapMode tileIdx pal
     Affine -> drawAffineSprite
   where
     shapeSize attr = (fromIntegral $ $(bitmask 15 14) attr)
 
-drawSprite :: AddressIO m => Size -> PixFormat -> TileSet -> TileOffset -> Attribute -> Attribute -> MappingMode -> TileSetBaseAddress -> m ()
-drawSprite (0, _) _ _ _ _ _ _ _ = return ()
-drawSprite (rows, cols) pixFormat tileSet offset@(x, y) attr1 attr2 mapMode tileIdx = do
+drawSprite :: AddressIO m => Size -> PixFormat -> TileSet -> TileOffset -> Attribute -> Attribute -> MappingMode -> TileSetBaseAddress -> Palette -> m ()
+drawSprite (0, _) _ _ _ _ _ _ _ _ = return ()
+drawSprite (rows, cols) pixFormat tileSet offset@(x, y) attr1 attr2 mapMode tileIdx pal = do
   let (_hFlip, _vFlip) = (testBit attr1 12, testBit attr1 13) :: (Bool, Bool)
-  drawSpriteRow cols pixFormat tileSet offset attr2 tileIdx
+  drawSpriteRow cols pixFormat tileSet offset attr2 tileIdx pal
   let nextTile = nextTileIdx tileIdx cols pixFormat mapMode
-  drawSprite (rows - 1, cols) pixFormat tileSet (x, y + 8) attr1 attr2 mapMode nextTile
+  drawSprite (rows - 1, cols) pixFormat tileSet (x, y + 8) attr1 attr2 mapMode nextTile pal
   return ()
 
-nextTileIdx :: TileSetBaseAddress -> Int -> PixFormat -> MappingMode -> TileSetBaseAddress
--- 1D mapping
-nextTileIdx tileIdx cols pixFormat True = tileIdx + (convIntToAddr cols pixFormat)
--- 2D mapping
-nextTileIdx tileIdx _ _ False = tileIdx + 0x00004000
-
-drawSpriteRow :: AddressSpace m => Int -> PixFormat -> TileSet -> TileOffset -> Attribute -> TileSetBaseAddress -> m ()
-drawSpriteRow 0 _ _ _ _ _ = return ()
-drawSpriteRow _cols pixFormat tileSet _offset _attr2 tileIdx = do
+drawSpriteRow :: AddressSpace m => Int -> PixFormat -> TileSet -> TileOffset -> Attribute -> TileSetBaseAddress -> Palette -> m ()
+drawSpriteRow 0 _ _ _ _ _ _ = return ()
+drawSpriteRow _cols pixFormat tileSet _offset _attr2 tileIdx _palette = do
   let _tile = getTile pixFormat tileIdx tileSet
   return ()
 
