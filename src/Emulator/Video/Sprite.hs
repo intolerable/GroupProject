@@ -55,8 +55,8 @@ drawSprite (0, _) _ _ _ _ _ _ _ = return ()
 drawSprite (rows, cols) pixFormat tileSet offset@(x, y) attr1 attr2 mapMode tileIdx = do
   let (_hFlip, _vFlip) = (testBit attr1 12, testBit attr1 13) :: (Bool, Bool)
   drawSpriteRow cols pixFormat tileSet offset attr2 tileIdx
-  let nextTileIdx = nextTileIdx tileIdx cols pixFormat mapMode
-  drawSprite (rows - 1, cols) pixFormat tileSet (x, y + 8) attr1 attr2 mapMode nextTileIdx
+  let nextTile = nextTileIdx tileIdx cols pixFormat mapMode
+  drawSprite (rows - 1, cols) pixFormat tileSet (x, y + 8) attr1 attr2 mapMode nextTile
   return ()
 
 nextTileIdx :: TileSetBaseAddress -> Int -> PixFormat -> MappingMode -> TileSetBaseAddress
