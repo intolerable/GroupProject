@@ -21,7 +21,10 @@ module Emulator.CPU.Instructions.ARM.Opcodes
   , bic
   , mvn
   , checkCarry
-  , isNegative )
+  , isNegative
+  , isSignedOverflow
+  , isUnsignedOverflow
+  )
   where
 
 import Emulator.Types

@@ -1,6 +1,7 @@
 module Emulator.CPU.Instructions.THUMB.Opcodes where
 
 import Emulator.CPU hiding (CPUMode(..), Interrupt(..))
+import Emulator.CPU.Instructions.ARM.Opcodes (isSignedOverflow, isUnsignedOverflow)
 import Emulator.CPU.Instructions.THUMB
 import Emulator.CPU.Instructions.Types
 import Emulator.Interpreter.Monad
@@ -16,7 +17,7 @@ functionFromOpcode op = case op of
   T_LSL -> tLsl
   T_LSR -> tLsr
   T_ASR -> tAsr
-  T_ADC -> undefined
+  T_ADC -> tAdc
   T_SBC -> undefined
   T_ROR -> undefined
   T_TST -> undefined
@@ -86,4 +87,16 @@ tAsr src dest = do
           else val .&. 0x7FFFFFFF
   registers.rn dest .= x
   setShiftFlags LogicalRight v' x $ fromIntegral v
+
+tAdc :: IsSystem s m => RegisterName -> RegisterName -> m ()
+tAdc src dest = do
+  v <- use (registers.rn src)
+  v' <- use (registers.rn dest)
+  fcy <- use $ flags.carry
+  let cy = if fcy then 1 else 0
+  let val = v + v' + cy
+  flags.negative .= testBit val 31
+  flags.zero .= (val == 0)
+  flags.carry .= isUnsignedOverflow (+) [v, v', cy] val
+  flags.overflow .= isSignedOverflow (+) [v, v', cy] val
 
