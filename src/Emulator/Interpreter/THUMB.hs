@@ -2,6 +2,7 @@ module Emulator.Interpreter.THUMB where
 
 import Emulator.CPU hiding (CPUMode(..), Interrupt(..))
 import Emulator.CPU.Instructions.THUMB
+import qualified Emulator.CPU.Instructions.THUMB.Opcodes as Op
 import Emulator.CPU.Instructions.Types
 import Emulator.Interpreter.Monad
 import Emulator.Types
@@ -100,7 +101,25 @@ handleMovCmpAddSubImmediate op src immed = case op of
   _ -> error "Incorrect arguments passed to THUMB MovCmpAddSubImmediate function."
 
 handleALUOperation :: Monad m => ThumbOpcode -> RegisterName -> RegisterName -> SystemT m ()
-handleALUOperation = undefined
+handleALUOperation opcode src dest = case opcode of
+  T_AND -> Op.and src dest
+  T_EOR -> undefined
+  T_LSL -> undefined
+  T_LSR -> undefined
+  T_ASR -> undefined
+  T_ADC -> undefined
+  T_SBC -> undefined
+  T_ROR -> undefined
+  T_TST -> undefined
+  T_NEG -> undefined
+  T_CMP -> undefined
+  T_CMN -> undefined
+  T_ORR -> undefined
+  T_MUL -> undefined
+  T_BIC -> undefined
+  T_MVN -> undefined
+  T_ADD -> undefined
+  T_MOV -> error "Error: Mov opcode passed ALU"
 
 handleHiRegOperation :: Monad m => ThumbOpcode -> RegisterName -> RegisterName -> SystemT m ()
 handleHiRegOperation = undefined
