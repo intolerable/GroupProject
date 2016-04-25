@@ -34,8 +34,11 @@ setFlagsLogic :: IsSystem s m => MWord -> m ()
 setFlagsLogic v = do
   flags.zero .= (v == 0)
   flags.negative .= testBit v 15
-  flags.carry .= False
-  flags.overflow .= False
+
+setShiftFlags :: IsSystem s m => MWord -> Int -> m ()
+setShiftFlags v v' n = do
+  setFlagsLogic v'
+  flags.carry = testBit v (15-(n-1))
 
 tAnd :: IsSystem s m => RegisterName -> RegisterName -> m ()
 tAnd src dest = do
