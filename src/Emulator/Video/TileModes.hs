@@ -16,7 +16,6 @@ import Utilities.Parser.TemplateHaskell
 type Palette = Array Address Byte
 type ScreenEntry = (Address, Bool, Bool, Address)
 type TileMapBaseAddress = Address
-type TileSetBaseAddress = Address
 type TileMap = Array Address Byte
 
 tileModes :: AddressIO m => LCDControl -> m ()

@@ -14,6 +14,7 @@ type PixFormat = Bool
 type Tile = Array Address Byte
 type TileOffset = (GLdouble, GLdouble)
 type TileSet = Array Address Byte
+type TileSetBaseAddress = Address
 
 drawTile :: StorableArray Address HalfWord -> (GLdouble, GLdouble) -> (GLdouble, GLdouble) -> IO ()
 drawTile arr (x1, x2) (y1, y2) = do
