@@ -33,7 +33,7 @@ functionFromOpcode op = case op of
 setFlagsLogic :: IsSystem s m => MWord -> m ()
 setFlagsLogic v = do
   flags.zero .= (v == 0)
-  flags.negative .= testBit v 15
+  flags.negative .= testBit v 31
 
 setShiftFlags :: IsSystem s m => ShiftType -> MWord -> MWord -> Int -> m ()
 setShiftFlags t v v' n = do
