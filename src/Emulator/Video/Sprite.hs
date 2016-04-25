@@ -55,6 +55,12 @@ drawSprite Normal (_rows, _cols) pixFormat tileSet _offset attr1 attr2 _mapMode 
   let tileIdx = 0x06010000 + convIntToAddr (fromIntegral $ $(bitmask 9 0) attr2 :: Int) pixFormat
   let _tile = getTile pixFormat tileIdx tileSet
   return ()
+
+nextTileIdx :: TileSetBaseAddress -> Int -> PixFormat -> MappingMode -> TileSetBaseAddress
+-- 1D mapping
+nextTileIdx tileIdx cols pixFormat True = tileIdx + (convIntToAddr cols pixFormat)
+-- 2D mapping
+nextTileIdx tileIdx _ _ False = tileIdx + 0x00004000
   return ()
 
 drawAffineSprite :: AddressSpace m => m ()
