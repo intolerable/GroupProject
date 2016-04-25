@@ -12,7 +12,7 @@ import Data.Bits
 functionFromOpcode :: IsSystem s m => ThumbOpcode -> (RegisterName -> RegisterName -> m ())
 functionFromOpcode op = case op of
   T_AND -> tAnd
-  T_EOR -> undefined
+  T_EOR -> tEor
   T_LSL -> undefined
   T_LSR -> undefined
   T_ASR -> undefined
