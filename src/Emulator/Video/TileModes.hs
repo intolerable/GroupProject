@@ -13,7 +13,6 @@ import Data.Bits
 import Graphics.Rendering.OpenGL
 import Utilities.Parser.TemplateHaskell
 
-type Palette = Array Address Byte
 type ScreenEntry = (Address, Bool, Bool, Address)
 type TileMapBaseAddress = Address
 type TileMap = Array Address Byte
