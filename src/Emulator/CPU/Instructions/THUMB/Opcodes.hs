@@ -15,7 +15,7 @@ functionFromOpcode op = case op of
   T_EOR -> tEor
   T_LSL -> tLsl
   T_LSR -> tLsr
-  T_ASR -> undefined
+  T_ASR -> tAsr
   T_ADC -> undefined
   T_SBC -> undefined
   T_ROR -> undefined
