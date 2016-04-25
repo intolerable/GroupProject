@@ -9,6 +9,7 @@ import Emulator.Types
 import Control.Lens hiding (op)
 import Data.Bits
 
+functionFromOpcode :: IsSystem s m => ThumbOpcode -> (RegisterName -> RegisterName -> m ())
 functionFromOpcode op = case op of
   T_AND -> tAnd
   T_EOR -> undefined
@@ -29,7 +30,7 @@ functionFromOpcode op = case op of
   T_ADD -> undefined
   T_MOV -> error "Mov passed to ALU operation"
 
-tAnd :: Monad m => RegisterName -> RegisterName -> SystemT m ()
+setFlagsLogic :: IsSystem s m => MWord -> m ()
 setFlagsLogic v = do
   flags.zero .= (v == 0)
   flags.negative .= testBit v 15
@@ -41,5 +42,13 @@ tAnd src dest = do
   srcV <- use (registers.rn src)
   srcV' <- use (registers.rn dest)
   let val = srcV .&. srcV'
+  registers.rn dest .= val
+  setFlagsLogic val
+
+tEor :: IsSystem s m => RegisterName -> RegisterName -> m ()
+tEor src dest = do
+  srcV <- use (registers.rn src)
+  srcV' <- use (registers.rn dest)
+  let val = srcV `xor` srcV'
   registers.rn dest .= val
   setFlagsLogic val
