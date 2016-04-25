@@ -31,7 +31,12 @@ functionFromOpcode op = case op of
 
 tAnd :: Monad m => RegisterName -> RegisterName -> SystemT m ()
 tAnd src dest = do
-  src <- use (registers.rn src)
-  src' <- use (registers.rn dest)
-  let val = src .&. src'
+  srcV <- use (registers.rn src)
+  srcV' <- use (registers.rn dest)
+  let val = srcV .&. srcV'
   registers.rn dest .= val
+  -- Flags
+  flags.zero .= (val == 0)
+  flags.negative .= testBit val 15
+  flags.carry .= False
+  flags.overflow .= False
