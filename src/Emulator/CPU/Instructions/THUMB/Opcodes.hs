@@ -35,10 +35,14 @@ setFlagsLogic v = do
   flags.zero .= (v == 0)
   flags.negative .= testBit v 15
 
-setShiftFlags :: IsSystem s m => MWord -> Int -> m ()
-setShiftFlags v v' n = do
+setShiftFlags :: IsSystem s m => ShiftType -> MWord -> MWord -> Int -> m ()
+setShiftFlags t v v' n = do
   setFlagsLogic v'
-  flags.carry = testBit v (15-(n-1))
+  case t of
+    LogicalLeft -> flags.carry .= testBit v (15-(n-1))
+    LogicalRight -> flags.carry .= testBit v (n-1)
+    _ -> error "Uninimplemented shift type for setShiftFlags:Thumb.Opcodes"
+
 
 tAnd :: IsSystem s m => RegisterName -> RegisterName -> m ()
 tAnd src dest = do
@@ -60,7 +64,7 @@ tLsl :: IsSystem s m => RegisterName -> RegisterName -> m ()
 tLsl src dest = do
   srcV <- use (registers.rn src)
   srcV' <- use (registers.rn dest)
-  let val = srcV 'shiftL' srcV'
+  let val = srcV `shiftL` (fromIntegral srcV')
   registers.rn dest .= val
-  setShiftFlags srV val srcV'
+  setShiftFlags LogicalLeft srcV val $ fromIntegral srcV'
 
