@@ -20,6 +20,7 @@ readOAM :: AddressIO m => MappingMode -> m ()
 readOAM mapMode = do
   oam <- readRange (0x07000000, 0x070003FF)
   tileSet <- readRange (0x06010000, 0x06017FFF)
+  _palette <- readRange (0x05000200, 0x050003FF)
   recurseOAM oam tileSet mapMode 0
   return ()
 
