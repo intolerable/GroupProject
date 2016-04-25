@@ -55,12 +55,10 @@ drawSprite Normal (_rows, _cols) pixFormat tileSet _offset attr1 attr2 _mapMode 
   let tileIdx = 0x06010000 + convIntToAddr (fromIntegral $ $(bitmask 9 0) attr2 :: Int) pixFormat
   let _tile = getTile pixFormat tileIdx tileSet
   return ()
-  -- Affine
-drawSprite _ _size _pixFormat _tileSet _offset _attr1 _attr2 _mapMode = do
-  -- read affine values from attr1
   return ()
 
---getSprite2D ::
+drawAffineSprite :: AddressSpace m => m ()
+drawAffineSprite = undefined
 
 attributes :: OAM -> Address -> (Attribute, Attribute, Attribute)
 attributes obj objAddr = (attr0, attr1, attr2)
