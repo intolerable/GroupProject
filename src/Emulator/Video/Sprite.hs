@@ -61,6 +61,11 @@ nextTileIdx :: TileSetBaseAddress -> Int -> PixFormat -> MappingMode -> TileSetB
 nextTileIdx tileIdx cols pixFormat True = tileIdx + (convIntToAddr cols pixFormat)
 -- 2D mapping
 nextTileIdx tileIdx _ _ False = tileIdx + 0x00004000
+
+drawSpriteRow :: AddressSpace m => Int -> PixFormat -> TileSet -> TileOffset -> Attribute -> TileSetBaseAddress -> m ()
+drawSpriteRow 0 _ _ _ _ _ = return ()
+drawSpriteRow _cols pixFormat tileSet _offset _attr2 tileIdx = do
+  let _tile = getTile pixFormat tileIdx tileSet
   return ()
 
 drawAffineSprite :: AddressSpace m => m ()
