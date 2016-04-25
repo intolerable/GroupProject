@@ -100,7 +100,7 @@ handleMovCmpAddSubImmediate op src immed = case op of
   SUB -> undefined
   _ -> error "Incorrect arguments passed to THUMB MovCmpAddSubImmediate function."
 
-handleALUOperation :: Monad m => ThumbOpcode -> RegisterName -> RegisterName -> SystemT m ()
+handleALUOperation :: IsSystem s m => ThumbOpcode -> RegisterName -> RegisterName -> m ()
 handleALUOperation opcode src dest =
   (Op.functionFromOpcode opcode) src dest
 
