@@ -69,6 +69,12 @@ drawSpriteRow _cols pixFormat tileSet _offset _attr2 tileIdx _palette = do
 drawAffineSprite :: AddressSpace m => m ()
 drawAffineSprite = undefined
 
+nextTileIdx :: TileSetBaseAddress -> Int -> PixFormat -> MappingMode -> TileSetBaseAddress
+-- 1D mapping
+nextTileIdx tileIdx cols pixFormat True = tileIdx + (convIntToAddr cols pixFormat)
+-- 2D mapping
+nextTileIdx tileIdx _ _ False = tileIdx + 0x00004000
+
 attributes :: OAM -> Address -> (Attribute, Attribute, Attribute)
 attributes obj objAddr = (attr0, attr1, attr2)
   where
