@@ -14,7 +14,7 @@ functionFromOpcode op = case op of
   T_AND -> tAnd
   T_EOR -> tEor
   T_LSL -> tLsl
-  T_LSR -> undefined
+  T_LSR -> tLsr
   T_ASR -> undefined
   T_ADC -> undefined
   T_SBC -> undefined
@@ -68,3 +68,10 @@ tLsl src dest = do
   registers.rn dest .= val
   setShiftFlags LogicalLeft srcV' val $ fromIntegral srcV
 
+tLsr :: IsSystem s m => RegisterName -> RegisterName -> m ()
+tLsr src dest = do
+  v <- use (registers.rn src)
+  v' <- use (registers.rn dest)
+  let val = v' `shiftR` fromIntegral v
+  registers.rn dest .= val
+  setShiftFlags LogicalRight v' val $ fromIntegral v
