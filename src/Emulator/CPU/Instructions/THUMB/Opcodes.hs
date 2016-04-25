@@ -30,13 +30,16 @@ functionFromOpcode op = case op of
   T_MOV -> error "Mov passed to ALU operation"
 
 tAnd :: Monad m => RegisterName -> RegisterName -> SystemT m ()
+setFlagsLogic v = do
+  flags.zero .= (v == 0)
+  flags.negative .= testBit v 15
+  flags.carry .= False
+  flags.overflow .= False
+
+tAnd :: IsSystem s m => RegisterName -> RegisterName -> m ()
 tAnd src dest = do
   srcV <- use (registers.rn src)
   srcV' <- use (registers.rn dest)
   let val = srcV .&. srcV'
   registers.rn dest .= val
-  -- Flags
-  flags.zero .= (val == 0)
-  flags.negative .= testBit val 15
-  flags.carry .= False
-  flags.overflow .= False
+  setFlagsLogic val
