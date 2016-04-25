@@ -64,7 +64,7 @@ tLsl :: IsSystem s m => RegisterName -> RegisterName -> m ()
 tLsl src dest = do
   srcV <- use (registers.rn src)
   srcV' <- use (registers.rn dest)
-  let val = srcV `shiftL` (fromIntegral srcV')
+  let val = srcV' `shiftL` (fromIntegral srcV)
   registers.rn dest .= val
-  setShiftFlags LogicalLeft srcV val $ fromIntegral srcV'
+  setShiftFlags LogicalLeft srcV' val $ fromIntegral srcV
 
