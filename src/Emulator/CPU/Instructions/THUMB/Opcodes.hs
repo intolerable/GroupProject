@@ -135,7 +135,7 @@ tNeg dest src = do
   setFlagsLogic newVal
 
 
-doCmp :: (IsSystem s m, Num a) => (a -> a -> a) -> (a -> a -> a) -> RegisterName -> RegisterName -> m ()
+doCmp :: IsSystem s m => (MWord -> MWord -> MWord) -> (Word64 -> Word64 -> Word64) -> RegisterName -> RegisterName -> m ()
 doCmp op bigOp dest src = do
   v <- use $ registers.rn dest
   v' <- use $ registers.rn src
