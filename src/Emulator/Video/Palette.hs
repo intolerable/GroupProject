@@ -27,7 +27,8 @@ pixelData _ palette tile palBank = do
   return tilePixelData
   where
     tileBounds = bounds tile
-    palBankAddr = 0x05000000 + palBank
+    palLowBound = fst $ bounds palette
+    palBankAddr = palLowBound + palBank
 
 palette16 :: Palette -> Tile -> Address -> Address -> Int -> [HalfWord]
 palette16 _ _ _ _ 32 = []
@@ -47,7 +48,8 @@ palette256 :: Palette -> Tile -> Address -> Int -> [HalfWord]
 palette256 _ _ _ 64 = []
 palette256 palette tile tileAddr n = col:palette256 palette tile tileAddr (n+1)
   where
-    addr = 0x05000000 + (fromIntegral $ tile!(tileAddr + (0x00000001 * fromIntegral n)) :: Address)
+    palLowBound = fst $ bounds palette
+    addr = palLowBound + (fromIntegral $ tile!(tileAddr + (0x00000001 * fromIntegral n)) :: Address)
     colByt1 = palette!addr
     colByt2 = palette!(addr + 0x00000001)
     col = bytesToHalfWord colByt1 colByt2
