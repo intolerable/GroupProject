@@ -116,7 +116,6 @@ handleHiRegOperation op src dest = do
     T_CMP -> (Op.functionFromOpcode T_CMP) src dest
     T_MOV -> undefined
     _ -> error "Unsupported operation in THUMB hiRegOperaton"
-    setFlagsLogic
 
 handleThumbBranchExchange :: Monad m => RegisterName -> SystemT m ()
 handleThumbBranchExchange = undefined
