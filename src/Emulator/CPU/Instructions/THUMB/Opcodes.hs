@@ -157,3 +157,13 @@ tOrr src dest = do
   let val = v .|. v'
   registers.rn dest .= val
   setFlagsLogic val
+
+tMul :: IsSystem s m => RegisterName -> RegisterName -> m ()
+tMul src dest = do
+  v <- use $ registers.rn src
+  v' <- use $ registers.rn dest
+  let val = v * v'
+  registers.rn dest .= val
+  setFlagsLogic val
+  flags.carry .= wouldCarry (*) (fromIntegral v) (fromIntegral v')
+  flags.overflow .= isOverflow val
