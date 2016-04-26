@@ -48,6 +48,9 @@ setShiftFlags t v v' n = do
 wouldCarry :: (Word64 -> Word64 -> Word64) -> Word64 -> Word64 -> Bool
 wouldCarry op a b = ((op a b) .&. 0xFFFFFFFF00000000) > 0
 
+isOverflow :: MWord -> Bool
+isOverflow v = v > 0x7FFFFFFF
+
 tAnd :: IsSystem s m => RegisterName -> RegisterName -> m ()
 tAnd src dest = do
   srcV <- use (registers.rn src)
