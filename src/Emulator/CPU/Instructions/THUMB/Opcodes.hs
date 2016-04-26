@@ -26,7 +26,7 @@ functionFromOpcode op = case op of
   T_CMP -> tCmp
   T_CMN -> tCmn
   T_ORR -> tOrr
-  T_MUL -> undefined
+  T_MUL -> tMul
   T_BIC -> undefined
   T_MVN -> undefined
   T_ADD -> undefined
