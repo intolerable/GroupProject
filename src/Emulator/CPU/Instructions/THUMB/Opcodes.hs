@@ -95,6 +95,7 @@ tAdc src dest = do
   fcy <- use $ flags.carry
   let cy = if fcy then 1 else 0
   let val = v + v' + cy
+  registers.rn dest .= val
   flags.negative .= testBit val 31
   flags.zero .= (val == 0)
   flags.carry .= isUnsignedOverflow (+) [v, v', cy] val
