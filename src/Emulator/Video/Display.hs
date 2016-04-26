@@ -2,6 +2,7 @@ module Emulator.Video.Display where
 
 import Emulator.Memory
 import Emulator.Video.BitmapModes
+import Emulator.Video.Sprite
 import Emulator.Video.TileMode
 import Emulator.Video.VideoController
 
@@ -25,7 +26,9 @@ animate' chan = do
   void $ flip runSystemT mem $ do
     --readAddressWord 0x08000000 >>= liftIO . print
     liftIO $ clear [GLUT.ColorBuffer]
-    backgroundMode
+    record <- recordLCDControl
+    backgroundMode record
+    readOAM $ objCharacterVRAMMapping record
     liftIO $ GLUT.swapBuffers
 
 animate :: TMVar SystemState -> GLUT.IdleCallback
@@ -33,9 +36,8 @@ animate _ = do
   clear [GLUT.ColorBuffer]
   GLUT.swapBuffers
 
-backgroundMode :: (AddressSpace m, MonadIO m) => m ()
-backgroundMode = do
-  record <- recordLCDControl
+backgroundMode :: (AddressSpace m, MonadIO m) => LCDControl -> m ()
+backgroundMode record = do
   if bgMode record <= 2 then
     tileModes record
   else
