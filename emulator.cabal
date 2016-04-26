@@ -42,7 +42,7 @@ library
     Emulator.Video.Display
     Emulator.Video.Palette
     Emulator.Video.Sprite
-    Emulator.Video.TileModes
+    Emulator.Video.TileMode
     Emulator.Video.Util
     Emulator.Video.VideoController
     Utilities.Bits

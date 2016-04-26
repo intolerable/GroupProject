@@ -1,4 +1,4 @@
-module Emulator.Video.TileModes where
+module Emulator.Video.TileMode where
 
 import Emulator.Memory
 import Emulator.Types

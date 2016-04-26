@@ -2,8 +2,7 @@ module Emulator.Video.Display where
 
 import Emulator.Memory
 import Emulator.Video.BitmapModes
-import Emulator.Video.TileModes
---import Emulator.Video.Util
+import Emulator.Video.TileMode
 import Emulator.Video.VideoController
 
 import Emulator.Interpreter.Monad
