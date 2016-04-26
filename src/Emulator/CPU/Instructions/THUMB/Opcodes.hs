@@ -21,7 +21,7 @@ functionFromOpcode op = case op of
   T_ADC -> tAdc
   T_SBC -> tSbc
   T_ROR -> undefined
-  T_TST -> undefined
+  T_TST -> tTst
   T_NEG -> undefined
   T_CMP -> undefined
   T_CMN -> undefined
@@ -119,3 +119,10 @@ tSbc src dest = do
   flags.zero .= (val == 0)
   flags.carry .= wouldCarry (-) (fromIntegral v') (fromIntegral (v-cy))
   flags.overflow .= isOverflow val
+
+tTst :: IsSystem s m => RegisterName -> RegisterName -> m ()
+tTst src src' = do
+  v1 <- use $ registers.rn src
+  v2 <- use $ registers.rn src'
+  let val = v1 .&. v2
+  setFlagsLogic val
