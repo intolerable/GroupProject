@@ -35,6 +35,7 @@ module Emulator.CPU
   , ShiftType(..)
   , shiftTypeFromByte
   , applyShiftType
+  , applyShiftTypeWithCarry
   , registerLens
   , rn
   , shiftedRegisterLens
