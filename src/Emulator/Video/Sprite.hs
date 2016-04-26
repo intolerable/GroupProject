@@ -2,6 +2,7 @@ module Emulator.Video.Sprite where
 
 import Emulator.Memory
 import Emulator.Types
+import Emulator.Video.Palette
 import Emulator.Video.Util
 import Utilities.Parser.TemplateHaskell
 
