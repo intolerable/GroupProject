@@ -109,9 +109,7 @@ handleHiRegOperation op src dest = do
   v <- use $ registers.rn src
   v' <- use $ registers.rn dest
   case op of
-    T_ADD -> do
-      let val = v + v'
-      registers.rn dest .= val
+    T_ADD -> registers.rn dest .= v + v'
     T_CMP -> (Op.functionFromOpcode T_CMP) src dest
     T_MOV -> registers.rn dest .= v
     _ -> error "Unsupported operation in THUMB hiRegOperaton"
