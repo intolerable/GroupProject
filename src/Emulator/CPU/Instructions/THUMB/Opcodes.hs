@@ -20,7 +20,7 @@ functionFromOpcode op = case op of
   T_ASR -> tAsr
   T_ADC -> tAdc
   T_SBC -> tSbc
-  T_ROR -> undefined
+  T_ROR -> tRor
   T_TST -> tTst
   T_NEG -> tNeg
   T_CMP -> tCmp
@@ -181,3 +181,14 @@ tMvn src dest = do
   v <- use $ registers.rn src
   registers.rn dest .= (negate v)
   setFlagsLogic v
+
+tRor :: IsSystem s m => RegisterName -> RegisterName -> m ()
+tRor src dest = do
+  v <- use $ registers.rn src
+  v' <- use $ registers.rn dest
+  cy <- use $ flags.carry
+  let (newCy, val) = applyShiftTypeWithCarry RotateRight v' (fromIntegral v) cy
+  registers.rn dest .= val
+  setFlagsLogic val
+  flags.carry .= newCy
+  flags.overflow .= isOverflow val
