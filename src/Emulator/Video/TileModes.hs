@@ -9,8 +9,6 @@ import Utilities.Parser.TemplateHaskell
 
 import Control.Monad.IO.Class
 import Data.Array.IArray
-import Data.Array.MArray
-import Data.Array.Storable
 import Data.Bits
 import Graphics.Rendering.OpenGL
 

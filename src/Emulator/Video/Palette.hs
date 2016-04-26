@@ -8,8 +8,6 @@ import Control.Monad.IO.Class
 import Data.Array.IArray
 import Data.Array.MArray
 import Data.Array.Storable
-import Data.Bits
-import Graphics.Rendering.OpenGL
 
 pixelData :: AddressIO m => PixFormat -> Palette -> Tile -> Address -> m (StorableArray Address HalfWord)
 -- 256/1 palette format
