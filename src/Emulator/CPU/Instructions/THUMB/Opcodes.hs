@@ -25,7 +25,7 @@ functionFromOpcode op = case op of
   T_NEG -> tNeg
   T_CMP -> tCmp
   T_CMN -> tCmn
-  T_ORR -> undefined
+  T_ORR -> tOrr
   T_MUL -> undefined
   T_BIC -> undefined
   T_MVN -> undefined
@@ -149,3 +149,11 @@ tCmp = doCmp (-) (-)
 
 tCmn :: IsSystem s m => RegisterName -> RegisterName -> m ()
 tCmn = doCmp (+) (+)
+
+tOrr :: IsSystem s m => RegisterName -> RegisterName -> m ()
+tOrr src dest = do
+  v <- use $ registers.rn src
+  v' <- use $ registers.rn dest
+  let val = v .|. v'
+  registers.rn dest .= val
+  setFlagsLogic val
