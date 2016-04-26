@@ -27,7 +27,7 @@ functionFromOpcode op = case op of
   T_CMN -> tCmn
   T_ORR -> tOrr
   T_MUL -> tMul
-  T_BIC -> undefined
+  T_BIC -> tBic
   T_MVN -> undefined
   T_ADD -> undefined
   T_MOV -> error "Mov passed to ALU operation"
@@ -167,3 +167,11 @@ tMul src dest = do
   setFlagsLogic val
   flags.carry .= wouldCarry (*) (fromIntegral v) (fromIntegral v')
   flags.overflow .= isOverflow val
+
+tBic :: IsSystem s m => RegisterName -> RegisterName -> m ()
+tBic src dest = do
+  v <- use $ registers.rn src
+  v' <- use $ registers.rn dest
+  let val = v' .&. (negate v)
+  registers.rn dest .= val
+  setFlagsLogic val
