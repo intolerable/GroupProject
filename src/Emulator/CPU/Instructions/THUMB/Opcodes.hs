@@ -9,6 +9,7 @@ import Emulator.Types
 
 import Control.Lens hiding (op)
 import Data.Bits
+import Data.Word
 
 functionFromOpcode :: IsSystem s m => ThumbOpcode -> (RegisterName -> RegisterName -> m ())
 functionFromOpcode op = case op of
@@ -44,6 +45,8 @@ setShiftFlags t v v' n = do
     LogicalRight -> flags.carry .= testBit v (n-1)
     _ -> error "Uninimplemented shift type for setShiftFlags:Thumb.Opcodes"
 
+wouldCarry :: (Word64 -> Word64 -> Word64) -> Word64 -> Word64 -> Bool
+wouldCarry op a b = ((op a b) .&. 0xFFFFFFFF00000000) > 0
 
 tAnd :: IsSystem s m => RegisterName -> RegisterName -> m ()
 tAnd src dest = do
