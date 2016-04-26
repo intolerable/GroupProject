@@ -104,8 +104,19 @@ handleALUOperation :: IsSystem s m => ThumbOpcode -> RegisterName -> RegisterNam
 handleALUOperation opcode src dest =
   (Op.functionFromOpcode opcode) src dest
 
-handleHiRegOperation :: Monad m => ThumbOpcode -> RegisterName -> RegisterName -> SystemT m ()
-handleHiRegOperation = undefined
+handleHiRegOperation :: IsSystem s m => ThumbOpcode -> RegisterName -> RegisterName -> m ()
+handleHiRegOperation op src dest = do
+  v <- use $ registers.rn src
+  v' <- use $ registers.rn dest
+  let val = case op of
+    T_ADD -> do
+      let val = v + v'
+      registers.rn dest .= v + v'
+      val
+    T_CMP -> undefined
+    T_MOV -> undefined
+    _ -> error "Unsupported operation in THUMB hiRegOperaton"
+    setFlagsLogic
 
 handleThumbBranchExchange :: Monad m => RegisterName -> SystemT m ()
 handleThumbBranchExchange = undefined
