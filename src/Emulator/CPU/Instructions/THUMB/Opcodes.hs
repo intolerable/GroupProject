@@ -23,7 +23,7 @@ functionFromOpcode op = case op of
   T_ROR -> undefined
   T_TST -> tTst
   T_NEG -> tNeg
-  T_CMP -> undefined
+  T_CMP -> tCmp
   T_CMN -> undefined
   T_ORR -> undefined
   T_MUL -> undefined
@@ -133,3 +133,12 @@ tNeg dest src = do
   let newVal = negate val
   registers.rn dest .= newVal
   setFlagsLogic newVal
+
+tCmp :: IsSystem s m => RegisterName -> RegisterName -> m ()
+tCmp dest src = do
+  v <- use $ registers.rn dest
+  v' <- use $ registers.rn src
+  let val = v - v'
+  setFlagsLogic val
+  flags.carry .= wouldCarry (-) (fromIntegral v) (fromIntegral v')
+  flags.overflow .= isOverflow val
