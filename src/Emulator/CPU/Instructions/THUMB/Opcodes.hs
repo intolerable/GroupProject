@@ -24,7 +24,7 @@ functionFromOpcode op = case op of
   T_TST -> tTst
   T_NEG -> tNeg
   T_CMP -> tCmp
-  T_CMN -> undefined
+  T_CMN -> tCmn
   T_ORR -> undefined
   T_MUL -> undefined
   T_BIC -> undefined
@@ -134,11 +134,18 @@ tNeg dest src = do
   registers.rn dest .= newVal
   setFlagsLogic newVal
 
-tCmp :: IsSystem s m => RegisterName -> RegisterName -> m ()
-tCmp dest src = do
+
+doCmp :: (IsSystem s m, Num a) => (a -> a -> a) -> (a -> a -> a) -> RegisterName -> RegisterName -> m ()
+doCmp op bigOp dest src = do
   v <- use $ registers.rn dest
   v' <- use $ registers.rn src
-  let val = v - v'
+  let val = op v v'
   setFlagsLogic val
-  flags.carry .= wouldCarry (-) (fromIntegral v) (fromIntegral v')
+  flags.carry .= wouldCarry bigOp (fromIntegral v) (fromIntegral v')
   flags.overflow .= isOverflow val
+
+tCmp :: IsSystem s m => RegisterName -> RegisterName -> m ()
+tCmp = doCmp (-) (-)
+
+tCmn :: IsSystem s m => RegisterName -> RegisterName -> m ()
+tCmn = doCmp (+) (+)
