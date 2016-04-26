@@ -10,9 +10,6 @@ import Control.Monad.IO.Class
 import Data.Array.IArray
 import Data.Bits
 
-data ObjectMode = Normal | Affine | Hide
-  deriving (Show, Read, Eq)
-
 type Attribute = HalfWord
 type MappingMode = Bool
 type OAM = Array Address Byte
@@ -40,18 +37,18 @@ recurseOAM oam tileSet mapMode n pal = do
 parseObjectAttr :: AddressIO m => OAM -> TileSet -> MappingMode -> Address -> Palette -> m ()
 parseObjectAttr obj tileSet mapMode objAddr pal = do
   let (attr0, attr1, attr2) = attributes obj objAddr
-  let objMode = mode (fromIntegral $ $(bitmask 9 8) attr0)
   let offset = (fromIntegral $ $(bitmask 7 0) attr1, fromIntegral $ $(bitmask 7 0) attr0)
   let size = spriteSize (shapeSize attr0) (shapeSize attr1)
   let pixFormat = (testBit attr0 13)
   let _gfx = (fromIntegral $ $(bitmask 11 10) attr0) :: Integer
   let tileIdx = 0x06010000 + convIntToAddr (fromIntegral $ $(bitmask 9 0) attr2 :: Int) pixFormat
-  case objMode of
-    Hide -> return ()
-    Normal -> drawSprite size pixFormat tileSet offset attr1 attr2 mapMode tileIdx pal
-    Affine -> drawAffineSprite
+  case mode attr0 of
+    0 -> drawSprite size pixFormat tileSet offset attr1 attr2 mapMode tileIdx pal
+    1 -> drawAffineSprite
+    _ -> return ()
   where
     shapeSize attr = (fromIntegral $ $(bitmask 15 14) attr)
+    mode attr = (fromIntegral $ $(bitmask 9 8) attr) :: Int
 
 drawSprite :: AddressIO m => Size -> PixFormat -> TileSet -> TileOffset -> Attribute -> Attribute -> MappingMode -> TileSetBaseAddress -> Palette -> m ()
 drawSprite (0, _) _ _ _ _ _ _ _ _ = return ()
@@ -88,11 +85,6 @@ attributes obj objAddr = (attr0, attr1, attr2)
     attr0 = bytesToHalfWord (obj!objAddr) (obj!objAddr + 0x00000001)
     attr1 = bytesToHalfWord (obj!objAddr + 0x00000002) (obj!objAddr + 0x00000003)
     attr2 = bytesToHalfWord (obj!objAddr + 0x00000004) (obj!objAddr + 0x00000005)
-
-mode :: Byte -> ObjectMode
-mode 0 = Normal
-mode 2 = Hide
-mode _ = Affine
 
 spriteSize :: Byte -> Byte -> (Int, Int)
 spriteSize 0 0 = (1, 1)
