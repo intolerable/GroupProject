@@ -22,7 +22,7 @@ functionFromOpcode op = case op of
   T_SBC -> tSbc
   T_ROR -> undefined
   T_TST -> tTst
-  T_NEG -> undefined
+  T_NEG -> tNeg
   T_CMP -> undefined
   T_CMN -> undefined
   T_ORR -> undefined
@@ -126,3 +126,10 @@ tTst src src' = do
   v2 <- use $ registers.rn src'
   let val = v1 .&. v2
   setFlagsLogic val
+
+tNeg :: IsSystem s m => RegisterName -> RegisterName -> m ()
+tNeg dest src = do
+  val <- use $ registers.rn src
+  let newVal = negate val
+  registers.rn dest .= newVal
+  setFlagsLogic newVal
