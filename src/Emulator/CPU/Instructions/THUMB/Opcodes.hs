@@ -29,8 +29,8 @@ functionFromOpcode op = case op of
   T_MUL -> tMul
   T_BIC -> tBic
   T_MVN -> tMvn
-  T_ADD -> undefined
-  T_MOV -> error "Mov passed to ALU operation"
+  T_MOV -> error "Mov passed to THUMB ALU operation"
+  T_ADD -> error "Add passed to THUMB ALU operation"
 
 setFlagsLogic :: IsSystem s m => MWord -> m ()
 setFlagsLogic v = do
