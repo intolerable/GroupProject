@@ -28,7 +28,7 @@ functionFromOpcode op = case op of
   T_ORR -> tOrr
   T_MUL -> tMul
   T_BIC -> tBic
-  T_MVN -> undefined
+  T_MVN -> tMvn
   T_ADD -> undefined
   T_MOV -> error "Mov passed to ALU operation"
 
@@ -128,7 +128,7 @@ tTst src src' = do
   setFlagsLogic val
 
 tNeg :: IsSystem s m => RegisterName -> RegisterName -> m ()
-tNeg dest src = do
+tNeg src dest = do
   val <- use $ registers.rn src
   let newVal = negate val
   registers.rn dest .= newVal
@@ -175,3 +175,9 @@ tBic src dest = do
   let val = v' .&. (negate v)
   registers.rn dest .= val
   setFlagsLogic val
+
+tMvn :: IsSystem s m => RegisterName -> RegisterName -> m ()
+tMvn src dest = do
+  v <- use $ registers.rn src
+  registers.rn dest .= (negate v)
+  setFlagsLogic v
