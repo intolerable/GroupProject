@@ -6,6 +6,7 @@ import Emulator.Video.Palette
 import Emulator.Video.Util
 import Utilities.Parser.TemplateHaskell
 
+import Control.Monad.IO.Class
 import Data.Array.IArray
 import Data.Bits
 
@@ -61,16 +62,15 @@ drawSprite (rows, cols) pixFormat tileSet offset@(x, y) attr1 attr2 mapMode tile
   drawSprite (rows - 1, cols) pixFormat tileSet (x, y + 8) attr1 attr2 mapMode nextTile pal
   return ()
 
-drawSpriteRow :: AddressSpace m => Int -> PixFormat -> TileSet -> TileOffset -> Attribute -> TileSetBaseAddress -> Palette -> m ()
+drawSpriteRow :: AddressIO m => Int -> PixFormat -> TileSet -> TileOffset -> Attribute -> TileSetBaseAddress -> Palette -> m ()
 drawSpriteRow 0 _ _ _ _ _ _ = return ()
-drawSpriteRow _cols pixFormat tileSet (_xOff, _yOff) attr2 tileIdx _palette = do
-  let _tile = getTile pixFormat tileIdx tileSet
-  let _palBank = convIntToAddr (fromIntegral $ $(bitmask 15 12) attr2 :: Int) False
-  -- NEED TO GET PALETTE INDEX. ATTR2 IF NEEDING PALBANK
-  -- pixData <- pixelData pixFormat palette tile
-  -- liftIO $ drawTile pixData (xOff, xOff + 8) (yOff, yOff + 8)
-  -- -- tileIdx needs to increase by either 40h or 20h
-  -- drawSpriteRow (cols - 1) pixFormat tileSet (xOff + 8, yOff) attr2 tileIdx palette
+drawSpriteRow cols pixFormat tileSet (xOff, yOff) attr2 tileIdx palette = do
+  let tile = getTile pixFormat tileIdx tileSet
+  let palBank = convIntToAddr (fromIntegral $ $(bitmask 15 12) attr2 :: Int) False
+  pixData <- pixelData pixFormat palette tile palBank
+  liftIO $ drawTile pixData (xOff, xOff + 8) (yOff, yOff + 8)
+  let nextTile = if pixFormat then tileIdx + 0x00000040 else tileIdx + 0x00000020
+  drawSpriteRow (cols - 1) pixFormat tileSet (xOff + 8, yOff) attr2 nextTile palette
   return ()
 
 drawAffineSprite :: AddressSpace m => m ()
