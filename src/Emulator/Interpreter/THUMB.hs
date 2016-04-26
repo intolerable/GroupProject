@@ -108,14 +108,14 @@ handleHiRegOperation :: IsSystem s m => ThumbOpcode -> RegisterName -> RegisterN
 handleHiRegOperation op src dest = do
   v <- use $ registers.rn src
   v' <- use $ registers.rn dest
-  let val = case op of
+  case op of
     T_ADD -> do
       let val = v + v'
       registers.rn dest .= val
-      val
     T_CMP -> (Op.functionFromOpcode T_CMP) src dest
-    T_MOV -> undefined
+    T_MOV -> registers.rn dest .= v
     _ -> error "Unsupported operation in THUMB hiRegOperaton"
+
 
 handleThumbBranchExchange :: Monad m => RegisterName -> SystemT m ()
 handleThumbBranchExchange = undefined
