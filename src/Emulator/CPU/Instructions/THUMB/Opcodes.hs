@@ -19,7 +19,7 @@ functionFromOpcode op = case op of
   T_LSR -> tLsr
   T_ASR -> tAsr
   T_ADC -> tAdc
-  T_SBC -> undefined
+  T_SBC -> tSbc
   T_ROR -> undefined
   T_TST -> undefined
   T_NEG -> undefined
@@ -107,3 +107,15 @@ tAdc src dest = do
   flags.carry .= wouldCarry (+) (fromIntegral v) (fromIntegral (v'+cy))
   flags.overflow .= isOverflow val
 
+tSbc :: IsSystem s m => RegisterName -> RegisterName -> m ()
+tSbc src dest = do
+  v <- use (registers.rn src)
+  v' <- use (registers.rn dest)
+  fcy <- use $ flags.carry
+  let cy = if fcy then 0 else 1
+  let val = v' - v - cy
+  registers.rn dest .= val
+  flags.negative .= testBit val 31
+  flags.zero .= (val == 0)
+  flags.carry .= wouldCarry (-) (fromIntegral v') (fromIntegral (v-cy))
+  flags.overflow .= isOverflow val
