@@ -106,21 +106,22 @@ readCharBlocks addr True = readRange (addr, addr + 0x0000FFFF)
 drawTileMap :: AddressIO m => Int -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileMapBaseAddress -> TileSetBaseAddress -> m ()
 drawTileMap 0 _ _ _ _ _ _ _ = return ()
 drawTileMap rows pixFormat tileMap tileSet bgOffset@(xOff, yOff) palette baseAddr setBaseAddr = do
-  let tileMapRow = ixmap (baseAddr, baseAddr + 0x0000003F) (id) tileMap :: TileMap
   drawHLine 32 baseAddr pixFormat tileMapRow tileSet bgOffset palette setBaseAddr
   drawTileMap (rows-1) pixFormat tileMap tileSet (xOff, yOff + 8) palette (baseAddr + 0x00000040) setBaseAddr
   return ()
+  where
+    tileMapRow = ixmap (baseAddr, baseAddr + 0x0000003F) (id) tileMap :: TileMap
 
 -- Need to recurse using int instead
 drawHLine :: AddressIO m => Int -> Address -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileSetBaseAddress -> m ()
 drawHLine 0 _ _ _ _ _ _ _ = return ()
 drawHLine column mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr = do
-  let tile = getTile pixFormat tileIdx tileSet
   pixData <- pixelData pixFormat palette tile palBank
   liftIO $ drawTile pixData (xOff, xOff + 8) (yOff, yOff + 8)
   drawHLine (column-1) (mapIndex + 0x00000002) pixFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
   return ()
   where
+    tile = getTile pixFormat tileIdx tileSet
     upperByte = (tileMapRow!(mapIndex + 0x00000001))
     lowerByte = (tileMapRow!mapIndex)
     (tileIdx, _hFlip, _vFlip, palBank) = parseScreenEntry upperByte lowerByte pixFormat setBaseAddr

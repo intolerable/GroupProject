@@ -14,18 +14,19 @@ type Palette = Array Address Byte
 pixelData :: AddressIO m => PixFormat -> Palette -> Tile -> Address -> m (StorableArray Address HalfWord)
 -- 256/1 palette format
 pixelData True palette tile _ = do
-  let tilePixelDataList = palette256 palette tile (fst tileBounds) 0
   tilePixelData <- liftIO $ newListArray tileBounds tilePixelDataList
   return tilePixelData
   where
+    tilePixelDataList = palette256 palette tile (fst tileBounds) 0
     tileBounds = bounds tile
+
 -- 16/16 palette format
 pixelData _ palette tile palBank = do
-  let bank = ixmap (palBankAddr, (palBankAddr + 0x0000001F)) (id) palette :: Palette
-  let tilePixelDataList = palette16 bank tile palBankAddr (fst tileBounds) 0
   tilePixelData <- liftIO $ newListArray tileBounds tilePixelDataList
   return tilePixelData
   where
+    bank = ixmap (palBankAddr, (palBankAddr + 0x0000001F)) (id) palette :: Palette
+    tilePixelDataList = palette16 bank tile palBankAddr (fst tileBounds) 0
     tileBounds = bounds tile
     palLowBound = fst $ bounds palette
     palBankAddr = palLowBound + palBank
