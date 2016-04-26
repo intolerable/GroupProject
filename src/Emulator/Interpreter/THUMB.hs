@@ -111,9 +111,9 @@ handleHiRegOperation op src dest = do
   let val = case op of
     T_ADD -> do
       let val = v + v'
-      registers.rn dest .= v + v'
+      registers.rn dest .= val
       val
-    T_CMP -> undefined
+    T_CMP -> (Op.functionFromOpcode T_CMP) src dest
     T_MOV -> undefined
     _ -> error "Unsupported operation in THUMB hiRegOperaton"
     setFlagsLogic
