@@ -114,7 +114,6 @@ handleHiRegOperation op src dest = do
     T_MOV -> registers.rn dest .= v
     _ -> error "Unsupported operation in THUMB hiRegOperaton"
 
-
 handleThumbBranchExchange :: Monad m => RegisterName -> SystemT m ()
 handleThumbBranchExchange = undefined
 
