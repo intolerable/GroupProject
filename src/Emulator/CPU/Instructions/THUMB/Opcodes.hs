@@ -104,6 +104,6 @@ tAdc src dest = do
   registers.rn dest .= val
   flags.negative .= testBit val 31
   flags.zero .= (val == 0)
-  flags.carry .= isUnsignedOverflow (+) [v, v', cy] val
-  flags.overflow .= isSignedOverflow (+) [v, v', cy] val
+  flags.carry .= wouldCarry (+) (fromIntegral v) (fromIntegral (v'+cy))
+  flags.overflow .= isOverflow val
 
