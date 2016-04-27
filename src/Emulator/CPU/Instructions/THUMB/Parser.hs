@@ -148,7 +148,7 @@ readPCRelativeLoad :: HalfWord -> THUMBInstruction
 readPCRelativeLoad w = PCRelativeLoad dest offset
   where
     dest = RegisterName $ fromIntegral $ $(bitmask 10 8) w
-    offset = fromIntegral $ w .&. 0xFF
+    offset = fromIntegral $ (w .&. 0xFF) `shiftL` 2
 
 readLoadStoreImmedOffset :: HalfWord -> THUMBInstruction
 readLoadStoreImmedOffset w =
