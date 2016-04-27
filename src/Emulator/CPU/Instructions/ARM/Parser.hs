@@ -17,8 +17,8 @@ parseARM w
     Right (getCondition w,
       DataProcessing (getOpcode w)
                      (SetCondition $ w `testBit` 20)
-                     (RegisterName $ fromIntegral $ (w .&. 0x000F0000) `shiftR` 16)
-                     (RegisterName $ fromIntegral $ (w .&. 0x0000F000) `shiftR` 12)
+                     (RegisterName $ fromIntegral $ $(bitmask 15 12) w)
+                     (RegisterName $ fromIntegral $ $(bitmask 19 16) w)
                      (parseOperand2 (Immediate $ w `testBit` 25) w))
   | w .&. 0x0FB00FF0 == 0x01000090 = Right (getCondition w, readSingleDataSwap w) -- Single data swap
   | $(bitmask 27 24) w == 0b1111 = Right (getCondition w, SoftwareInterrupt) -- Software interrupt
