@@ -55,27 +55,36 @@ parseObjectAttr obj tileSet mapMode objAddr pal = do
 drawSprite :: AddressIO m => Size -> ObjMode -> PixFormat -> TileSet -> TileOffset -> Attribute -> Attribute -> MappingMode -> TileSetBaseAddress -> Palette -> m ()
 drawSprite (0, _) _ _ _ _ _ _ _ _ _ = return ()
 drawSprite (rows, cols) objMode pixFormat tileSet offset@(x, y) attr1 attr2 mapMode tileIdx pal = do
-  drawSpriteRow cols pixFormat tileSet offset attr2 tileIdx pal
+  case objMode of
+    Normal -> normalSpriteRow cols pixFormat tileSet offset attr1 attr2 tileIdx pal
+    Affine -> affineSpriteRow cols pixFormat tileSet offset attr1 attr2 tileIdx pal
   drawSprite (rows - 1, cols) objMode pixFormat tileSet (x, y + 8) attr1 attr2 mapMode nextTile pal
   return ()
   where
-    (_hFlip, _vFlip) = (testBit attr1 12, testBit attr1 13) :: (Bool, Bool)
     nextTile = nextTileIdx tileIdx cols pixFormat mapMode
 
-drawSpriteRow :: AddressIO m => Int -> PixFormat -> TileSet -> TileOffset -> Attribute -> TileSetBaseAddress -> Palette -> m ()
-drawSpriteRow 0 _ _ _ _ _ _ = return ()
-drawSpriteRow cols pixFormat tileSet (xOff, yOff) attr2 tileIdx palette = do
+normalSpriteRow :: AddressIO m => Int -> PixFormat -> TileSet -> TileOffset -> Attribute -> Attribute -> TileSetBaseAddress -> Palette -> m ()
+normalSpriteRow 0 _ _ _ _ _ _ _ = return ()
+normalSpriteRow cols pixFormat tileSet (xOff, yOff) attr1 attr2 tileIdx palette = do
   pixData <- pixelData pixFormat palette tile palBank
   liftIO $ drawTile pixData (xOff, xOff + 8) (yOff, yOff + 8)
-  drawSpriteRow (cols - 1) pixFormat tileSet (xOff + 8, yOff) attr2 nextTile palette
+  normalSpriteRow (cols - 1) pixFormat tileSet (xOff + 8, yOff) attr1 attr2 nextTile palette
   return ()
   where
     tile = getTile pixFormat tileIdx tileSet
     palBank = convIntToAddr (fromIntegral $ $(bitmask 15 12) attr2 :: Int) False
     nextTile = if pixFormat then tileIdx + 0x00000040 else tileIdx + 0x00000020
+    (_hFlip, _vFlip) = (testBit attr1 12, testBit attr1 13) :: (Bool, Bool)
 
-drawAffineSprite :: AddressSpace m => m ()
-drawAffineSprite = undefined
+affineSpriteRow :: AddressIO m => Int -> PixFormat -> TileSet -> TileOffset -> Attribute -> Attribute -> TileSetBaseAddress -> Palette -> m ()
+affineSpriteRow 0 _ _ _ _ _ _ _ = return ()
+affineSpriteRow _cols pixFormat tileSet (_xOff, _yOff) _attr1 attr2 tileIdx palette = do
+  _pixData <- pixelData pixFormat palette tile palBank
+  return ()
+  where
+    tile = getTile pixFormat tileIdx tileSet
+    palBank = convIntToAddr (fromIntegral $ $(bitmask 15 12) attr2 :: Int) False
+    _nextTile = if pixFormat then tileIdx + 0x00000040 else tileIdx + 0x00000020
 
 nextTileIdx :: TileSetBaseAddress -> Int -> PixFormat -> MappingMode -> TileSetBaseAddress
 -- 1D mapping. Each row of tiles in a sprite follows on from the last in the charBlock
