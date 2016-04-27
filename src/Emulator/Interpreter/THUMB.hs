@@ -117,11 +117,9 @@ handleHiRegOperation op src dest = do
 handleThumbBranchExchange :: IsSystem s m => RegisterName -> m ()
 handleThumbBranchExchange r = do
   addr <- use $ registers.rn r
-  let mode = testBit addr 0
   let realAddr = clearBit addr 0
-  if mode then registers.r15 .= (realAddr + 4)
-          else registers.r15 .= (realAddr + 2)
-  flags.thumbStateBit .= mode
+  registers.r15 .= (realAddr + 4)
+  flags.thumbStateBit .= addr `testBit` 0
 
 handlePCRelativeLoad :: Monad m => RegisterName -> Offset -> SystemT m ()
 handlePCRelativeLoad = undefined
@@ -159,7 +157,7 @@ handleConditionalBranch = undefined
 handleThumbSoftwareInterrupt :: Monad m => Value -> SystemT m ()
 handleThumbSoftwareInterrupt = error "Unimplemented instruction: Thumb software interrupt"
 
-handleThumbBranch :: Monad m => Offset -> SystemT m ()
+handleThumbBranch :: IsSystem s m => Offset -> m ()
 handleThumbBranch = undefined
 
 handleLongBranchWLink :: Monad m => LowHigh -> Offset -> SystemT m ()
