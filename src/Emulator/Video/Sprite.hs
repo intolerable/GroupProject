@@ -10,6 +10,8 @@ import Control.Monad.IO.Class
 import Data.Array.IArray
 import Data.Bits
 
+data ObjMode = Normal | Affine
+
 type Attribute = HalfWord
 type MappingMode = Bool
 type OAM = Array Address Byte
@@ -37,8 +39,8 @@ recurseOAM oam tileSet mapMode n pal = do
 parseObjectAttr :: AddressIO m => OAM -> TileSet -> MappingMode -> Address -> Palette -> m ()
 parseObjectAttr obj tileSet mapMode objAddr pal = do
   case mode of
-    0 -> drawSprite size pixFormat tileSet offset attr1 attr2 mapMode tileIdx pal
-    1 -> drawAffineSprite
+    0 -> drawSprite size Normal pixFormat tileSet offset attr1 attr2 mapMode tileIdx pal
+    1 -> drawSprite size Affine pixFormat tileSet offset attr1 attr2 mapMode tileIdx pal
     _ -> return ()
   where
     (attr0, attr1, attr2) = attributes obj objAddr
@@ -50,11 +52,11 @@ parseObjectAttr obj tileSet mapMode objAddr pal = do
     shapeSize attr = (fromIntegral $ $(bitmask 15 14) attr)
     mode = (fromIntegral $ $(bitmask 9 8) attr0) :: Int
 
-drawSprite :: AddressIO m => Size -> PixFormat -> TileSet -> TileOffset -> Attribute -> Attribute -> MappingMode -> TileSetBaseAddress -> Palette -> m ()
-drawSprite (0, _) _ _ _ _ _ _ _ _ = return ()
-drawSprite (rows, cols) pixFormat tileSet offset@(x, y) attr1 attr2 mapMode tileIdx pal = do
+drawSprite :: AddressIO m => Size -> ObjMode -> PixFormat -> TileSet -> TileOffset -> Attribute -> Attribute -> MappingMode -> TileSetBaseAddress -> Palette -> m ()
+drawSprite (0, _) _ _ _ _ _ _ _ _ _ = return ()
+drawSprite (rows, cols) objMode pixFormat tileSet offset@(x, y) attr1 attr2 mapMode tileIdx pal = do
   drawSpriteRow cols pixFormat tileSet offset attr2 tileIdx pal
-  drawSprite (rows - 1, cols) pixFormat tileSet (x, y + 8) attr1 attr2 mapMode nextTile pal
+  drawSprite (rows - 1, cols) objMode pixFormat tileSet (x, y + 8) attr1 attr2 mapMode nextTile pal
   return ()
   where
     (_hFlip, _vFlip) = (testBit attr1 12, testBit attr1 13) :: (Bool, Bool)
@@ -80,6 +82,25 @@ nextTileIdx :: TileSetBaseAddress -> Int -> PixFormat -> MappingMode -> TileSetB
 nextTileIdx tileIdx cols pixFormat True = tileIdx + (convIntToAddr cols pixFormat)
 -- 2D mapping. Each row of tiles is at a 4000h offset from eachother
 nextTileIdx tileIdx _ _ False = tileIdx + 0x00004000
+
+objAffine :: Address -> OAM -> (Double, Double, Double, Double)
+objAffine addr oam = (pa, pb, pc, pd)
+  where
+    pa = convToFixedNum (oam!(addr)) (oam!(addr + 0x00000001))
+    pb = convToFixedNum (oam!(addr + 0x00000008)) (oam!(addr + 0x00000009))
+    pc = convToFixedNum (oam!(addr + 0x00000010)) (oam!(addr + 0x00000011))
+    pd = convToFixedNum (oam!(addr + 0x00000018)) (oam!(addr + 0x00000019))
+
+convToFixedNum :: Byte -> Byte -> Double
+convToFixedNum low up
+  | sign = val
+  | otherwise = negate val
+  where
+    val =  intProp + (fracProp / 256.0)
+    hword = bytesToHalfWord low up
+    fracProp = fromIntegral $ $(bitmask 7 0) hword
+    intProp = fromIntegral $ $(bitmask 14 8) hword
+    sign = testBit hword 15
 
 attributes :: OAM -> Address -> (Attribute, Attribute, Attribute)
 attributes obj objAddr = (attr0, attr1, attr2)
