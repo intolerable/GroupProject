@@ -114,8 +114,14 @@ handleHiRegOperation op src dest = do
     T_MOV -> registers.rn dest .= v
     _ -> error "Unsupported operation in THUMB hiRegOperaton"
 
-handleThumbBranchExchange :: Monad m => RegisterName -> SystemT m ()
-handleThumbBranchExchange = undefined
+handleThumbBranchExchange :: IsSystem s m => RegisterName -> m ()
+handleThumbBranchExchange r = do
+  addr <- use $ registers.rn r
+  let mode = testBit addr 0
+  let realAddr = clearBit addr 0
+  if mode then registers.r15 .= (realAddr + 4)
+          else registers.r15 .= (realAddr + 2)
+  flags.thumbStateBit .= mode
 
 handlePCRelativeLoad :: Monad m => RegisterName -> Offset -> SystemT m ()
 handlePCRelativeLoad = undefined
