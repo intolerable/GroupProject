@@ -77,10 +77,9 @@ handleAddSubtractRegister as offset src dest = do
   oVal <- use (registers.rn offset)
   let result = (addSubToOperator as) sVal oVal
   registers.rn dest .= result
-  flags.zero .= (result == 0)
-  flags.negative .= testBit result 15
-  flags.carry .= not (isUnsignedOverflow (addSubToOperator as) [fromIntegral sVal, fromIntegral oVal] $ fromIntegral result)
-  flags.overflow .= (isSignedOverflow (addSubToOperator as) [fromIntegral sVal, fromIntegral oVal] $ fromIntegral result)
+  setFlagsLogic result
+  flags.carry .= wouldCarry (addSubToOperator as) (fromIntegral sVal) (fromIntegral oVal)
+  flags.overflow .= isOverflow result
 
 handleMovCmpAddSubImmediate :: IsSystem s m => Opcode -> RegisterName -> Offset -> m ()
 handleMovCmpAddSubImmediate op src immed = case op of
