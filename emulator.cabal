@@ -21,6 +21,7 @@ library
     Emulator.CPU.Instructions.ARM
     Emulator.CPU.Instructions.ARM.Opcodes
     Emulator.CPU.Instructions.ARM.Parser
+    Emulator.CPU.Instructions.Flags
     Emulator.CPU.Instructions.THUMB
     Emulator.CPU.Instructions.THUMB.Opcodes
     Emulator.CPU.Instructions.THUMB.Parser
