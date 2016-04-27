@@ -23,6 +23,8 @@ interpretARM instr =
       when l $ registers.r14 <~ use (registers.r15)
       -- this is maybe broken but we will never know
       registers.r15 %= \x -> fromIntegral (fromIntegral x + offset + 4)
+    DataProcessing _ _ _ (RegisterName 15) (Left (RegisterShift _ _ _)) -> error "interpretARM: invalid r15 usage!"
+    DataProcessing _ _ _ _ (Left (RegisterShift _ _ (RegisterName 15))) -> error "interpretARM: invalid r15 usage!"
     DataProcessing opcode (SetCondition setCond) dest op1 op2 -> do
       (functionFromOpcode opcode) (registerLens dest) (registerLens op1) (operand2Lens op2) setCond
     HalfwordDataTransferRegister pp ud wb ls s g base dest offset ->
