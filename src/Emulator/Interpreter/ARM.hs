@@ -21,6 +21,7 @@ interpretARM instr =
     Branch (Link l) offset -> do
       -- if the link bit is set, we put the current pc into r14
       when l $ registers.r14 <~ use (registers.r15)
+      -- this is maybe broken but we will never know
       registers.r15 %= \x -> fromIntegral (fromIntegral x + offset + 4)
     DataProcessing opcode (SetCondition setCond) dest op1 op2 -> do
       (functionFromOpcode opcode) (registerLens dest) (registerLens op1) (operand2Lens op2) setCond
