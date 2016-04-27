@@ -157,7 +157,7 @@ handleConditionalBranch = undefined
 handleThumbSoftwareInterrupt :: Monad m => Value -> SystemT m ()
 handleThumbSoftwareInterrupt = error "Unimplemented instruction: Thumb software interrupt"
 
-handleThumbBranch :: IsSystem s m => Offset -> m ()
+handleThumbBranch :: IsSystem s m => BranchOffset -> m ()
 handleThumbBranch = undefined
 
 handleLongBranchWLink :: Monad m => LowHigh -> Offset -> SystemT m ()

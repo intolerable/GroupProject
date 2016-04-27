@@ -24,6 +24,6 @@ data THUMBInstruction
   | MultipleLoadStore LoadStore RegisterName RegisterList
   | ConditionalBranch Condition Offset
   | ThumbSoftwareInterrupt Value
-  | ThumbBranch Offset
+  | ThumbBranch BranchOffset
   | LongBranchWLink LowHigh Offset
   deriving (Show, Eq)

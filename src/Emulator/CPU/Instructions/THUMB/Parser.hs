@@ -5,6 +5,7 @@ import Emulator.CPU.Instructions.ARM.Parser (parseRegisterList)
 import Emulator.CPU.Instructions.THUMB
 import Emulator.CPU.Instructions.Types
 import Emulator.Types
+import Utilities.Bits
 import Utilities.Parser.TemplateHaskell
 import Utilities.Show
 
@@ -222,4 +223,4 @@ readLongBranchWithLink w = LongBranchWLink lh offset
 readUnconditionalBranch :: HalfWord -> THUMBInstruction
 readUnconditionalBranch w = ThumbBranch offset
   where
-    offset = fromIntegral $ $(bitmask 10 0) w
+    offset = fromIntegral $ (arithExtend (fromIntegral $ $(bitmask 10 0) w) 10) `shiftL` 1
