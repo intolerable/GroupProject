@@ -37,24 +37,25 @@ recurseOAM oam tileSet mapMode n pal = do
     objAddr = 0x07000000 + 0x00000008 * (fromIntegral n)
 
 -- Access attributes of object
-parseObjectAttr :: AddressIO m => OAM -> OAM -> TileSet -> MappingMode -> Address -> Palette -> m ()
+parseObjectAttr :: AddressIO m => Array Address Byte -> OAM -> TileSet -> MappingMode -> Address -> Palette -> m ()
 parseObjectAttr obj oam tileSet mapMode objAddr pal = do
   case mode of
-    0 -> drawSprite size Normal pixFormat tileSet offset attr1 attr2 mapMode tileIdx pal
-    1 -> drawSprite size Affine pixFormat tileSet offset attr1 attr2 mapMode tileIdx pal
+    0 -> drawSprite size Normal offset mapMode tileIdx (pixFormat, tileSet, pal, palBank, gfx) flips affineParams
+    1 -> drawSprite size Affine offset mapMode tileIdx (pixFormat, tileSet, pal, palBank, gfx) flips affineParams
     _ -> return ()
   where
     (attr0, attr1, attr2) = attributes obj objAddr
     offset = (fromIntegral $ $(bitmask 7 0) attr1, fromIntegral $ $(bitmask 7 0) attr0)
     size = spriteSize (shapeSize attr0) (shapeSize attr1)
     pixFormat = (testBit attr0 13)
-    _gfx = (fromIntegral $ $(bitmask 11 10) attr0) :: Integer
+    gfx = (fromIntegral $ $(bitmask 11 10) attr0) :: Integer
     tileIdx = 0x06010000 + convIntToAddr (fromIntegral $ $(bitmask 9 0) attr2 :: Int) pixFormat
     shapeSize attr = (fromIntegral $ $(bitmask 15 14) attr)
     mode = (fromIntegral $ $(bitmask 9 8) attr0) :: Int
-    (_hFlip, _vFlip) = (testBit attr1 12, testBit attr1 13) :: (Bool, Bool)
+    flips = (testBit attr1 12, testBit attr1 13) :: (Bool, Bool)
     affineBaseAddr = getAffineBaseAddr $ fromIntegral $ $(bitmask 13 9) attr1
-    _affineParams = objAffine affineBaseAddr oam
+    affineParams = objAffine affineBaseAddr oam
+    palBank = convIntToAddr (fromIntegral $ $(bitmask 15 12) attr2 :: Int) False
 
 drawSprite :: AddressIO m => Size -> ObjMode -> PixFormat -> TileSet -> TileOffset -> Attribute -> Attribute -> MappingMode -> TileSetBaseAddress -> Palette -> m ()
 drawSprite (0, _) _ _ _ _ _ _ _ _ _ = return ()
