@@ -5,6 +5,7 @@ import Emulator.CPU.Instructions.THUMB
 import qualified Emulator.CPU.Instructions.THUMB.Opcodes as Op
 import Emulator.CPU.Instructions.Types
 import Emulator.Interpreter.Monad
+import Emulator.Memory
 import Emulator.Types
 
 import Control.Lens hiding (op)
@@ -121,8 +122,12 @@ handleThumbBranchExchange r = do
   registers.r15 .= (realAddr + 4)
   flags.thumbStateBit .= addr `testBit` 0
 
-handlePCRelativeLoad :: Monad m => RegisterName -> Offset -> SystemT m ()
-handlePCRelativeLoad = undefined
+handlePCRelativeLoad :: IsSystem s m => RegisterName -> Offset -> m ()
+handlePCRelativeLoad dest off = do
+  sp <- use $ registers.r15
+  let addr = sp + off
+  word <- readAddressWord addr
+  registers.rn dest .= word
 
 handleThumbLoadStoreRegisterOffset :: Monad m => LoadStore -> Granularity 'Full -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
 handleThumbLoadStoreRegisterOffset = undefined
