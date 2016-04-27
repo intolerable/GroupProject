@@ -52,7 +52,6 @@ import Emulator.Types
 
 import Control.Lens
 import Data.Bits
-import Data.Bits.Lens
 import Data.Int
 import Data.Default.Class
 
