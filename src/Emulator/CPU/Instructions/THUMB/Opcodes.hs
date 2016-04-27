@@ -130,7 +130,7 @@ tTst src src' = do
 tNeg :: IsSystem s m => RegisterName -> RegisterName -> m ()
 tNeg src dest = do
   val <- use $ registers.rn src
-  let newVal = negate val
+  let newVal = complement val
   registers.rn dest .= newVal
   setFlagsLogic newVal
 
