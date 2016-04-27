@@ -160,8 +160,8 @@ handleThumbSoftwareInterrupt = error "Unimplemented instruction: Thumb software 
 handleThumbBranch :: IsSystem s m => BranchOffset -> m ()
 handleThumbBranch off = do
   pc <- use $ registers.r15
-  let val = pc + off
-  registers.r15 .= (val + 4)
+  let val = (fromIntegral pc) + off
+  registers.r15 .= fromIntegral (val + 4)
 
 handleLongBranchWLink :: Monad m => LowHigh -> Offset -> SystemT m ()
 handleLongBranchWLink = undefined
