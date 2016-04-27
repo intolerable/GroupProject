@@ -2,6 +2,7 @@ module Utilities.Bits where
 
 import Emulator.Types
 
+import Data.Bits
 import Data.Int
 
 -- This is what the halfWordExtend function is doing but we've opted for
@@ -18,3 +19,6 @@ halfWordExtend h = fromIntegral (fromIntegral (fromIntegral h :: Int16) :: Int32
 
 byteExtend :: Byte -> MWord
 byteExtend b = fromIntegral (fromIntegral (fromIntegral b :: Int8) :: Int32)
+
+arithExtend :: MWord -> Int -> MWord
+arithExtend v n = clearBit (if (testBit v n) then setBit v 31 else v) n
