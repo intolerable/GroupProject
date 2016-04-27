@@ -4,6 +4,7 @@ import Emulator.CPU hiding (CPUMode(..), Interrupt(..))
 import Emulator.CPU.Instructions.THUMB
 import qualified Emulator.CPU.Instructions.THUMB.Opcodes as Op
 import Emulator.CPU.Instructions.Types
+import Emulator.CPU.Instructions.Flags
 import Emulator.Interpreter.Monad
 import Emulator.Memory
 import Emulator.Types
@@ -66,10 +67,9 @@ handleAddSubtractImmediate  as immed dest source = do
   sVal <- use (registers.rn source)
   let result = (addSubToOperator as) sVal immed
   registers.rn dest .= result
-  flags.zero .= (result == 0)
-  flags.negative .= testBit result 15
-  flags.carry .= not (isUnsignedOverflow (addSubToOperator as) [fromIntegral sVal, fromIntegral immed] $ fromIntegral result)
-  flags.overflow .= (isSignedOverflow (addSubToOperator as) [fromIntegral sVal, fromIntegral immed] $ fromIntegral result)
+  setFlagsLogic result
+  flags.carry .= wouldCarry (addSubToOperator as) (fromIntegral sVal) (fromIntegral immed)
+  flags.overflow .= isOverflow result
 
 handleAddSubtractRegister :: IsSystem s m => AddSub -> RegisterName -> RegisterName -> RegisterName -> m ()
 handleAddSubtractRegister as offset src dest = do
