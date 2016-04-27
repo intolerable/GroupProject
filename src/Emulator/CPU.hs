@@ -10,8 +10,6 @@ module Emulator.CPU
   , HasIrqDisable(..)
   , HasFiqDisable(..)
   , HasThumbStateBit(..)
-  -- , applyFlags
-  -- , extractFlags
   , Registers()
   , mkRegisters
   , HasRegisters(..)
@@ -101,27 +99,6 @@ mkFlags :: Bool -- ^ negative
         -> Bool -- ^ thumbStateBit
         -> Flags
 mkFlags = Flags
-
-applyFlags :: Flags -> MWord -> MWord
-applyFlags f w =
-  w & bitAt 31 .~ (f ^. negative)
-    & bitAt 30 .~ (f ^. zero)
-    & bitAt 29 .~ (f ^. carry)
-    & bitAt 28 .~ (f ^. overflow)
-    & bitAt 7 .~ (f ^. irqDisable)
-    & bitAt 6 .~ (f ^. fiqDisable)
-    & bitAt 5 .~ (f ^. thumbStateBit)
-
-extractFlags :: MWord -> Flags
-extractFlags =
-  Flags <$> tb 31
-        <*> tb 30
-        <*> tb 29
-        <*> tb 28
-        <*> tb 7
-        <*> tb 6
-        <*> tb 5
-  where tb = flip testBit
 
 -- | The 'Registers' data type keeps track of the ARM7 processor registers. Each register
 --     is a 32-bit word-sized value, and some of the registers have specific purposes: 'r13'
