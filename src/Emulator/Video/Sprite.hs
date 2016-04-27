@@ -81,7 +81,7 @@ nextTileIdx tileIdx cols pixFormat True = tileIdx + (convIntToAddr cols pixForma
 -- 2D mapping. Each row of tiles is at a 4000h offset from eachother
 nextTileIdx tileIdx _ _ False = tileIdx + 0x00004000
 
-objAffine :: Address -> OAM -> (Float, Float, Float, Float)
+objAffine :: Address -> OAM -> (Double, Double, Double, Double)
 objAffine addr oam = (pa, pb, pc, pd)
   where
     pa = convToFixedNum (oam!(addr)) (oam!(addr + 0x00000001))
@@ -89,12 +89,12 @@ objAffine addr oam = (pa, pb, pc, pd)
     pc = convToFixedNum (oam!(addr + 0x00000010)) (oam!(addr + 0x00000011))
     pd = convToFixedNum (oam!(addr + 0x00000018)) (oam!(addr + 0x00000019))
 
-convToFixedNum :: Byte -> Byte -> Float
+convToFixedNum :: Byte -> Byte -> Double
 convToFixedNum low up
   | sign = val
   | otherwise = negate val
   where
-    val =  intProp + (fracProp / 256.0) :: Float
+    val =  intProp + (fracProp / 256.0)
     hword = bytesToHalfWord low up
     fracProp = fromIntegral $ $(bitmask 7 0) hword
     intProp = fromIntegral $ $(bitmask 14 8) hword
