@@ -84,20 +84,33 @@ handleAddSubtractRegister as offset src dest = do
 handleMovCmpAddSubImmediate :: IsSystem s m => Opcode -> RegisterName -> Offset -> m ()
 handleMovCmpAddSubImmediate op src immed = case op of
   MOV -> do
-    registers.rn src .= (immed .&. 0xFF)
+    let imVal = immed .&. 0xFF
+    registers.rn src .= imVal
     flags.zero .= (immed == 0)
-    flags.negative .= testBit (immed .&. 0xFF) 15
-    -- This instruction shouldn't actually touch the carry and overflow flags... I think
+    flags.negative .= testBit imVal 15
   CMP -> do
     let val = immed .&. 0xFF
     sVal <- use (registers.rn src)
     let result = sVal - val
-    flags.zero .= (result == 0)
-    flags.negative .= testBit result 15
-    flags.carry .= not (isUnsignedOverflow (-) [fromIntegral sVal, fromIntegral val] $ fromIntegral result)
-    flags.overflow .= (isSignedOverflow (-) [fromIntegral sVal, fromIntegral val] $ fromIntegral result)
-  ADD -> undefined
-  SUB -> undefined
+    setFlagsLogic result
+    flags.carry .= wouldCarry (-) (fromIntegral sVal) (fromIntegral val)
+    flags.overflow .= isOverflow result
+  ADD -> do
+    let imVal = immed .&. 0xFF
+    sVal <- use $ registers.rn src
+    let res = sVal + imVal
+    registers.rn src .= res
+    setFlagsLogic res
+    flags.carry .= wouldCarry (+) (fromIntegral sVal) (fromIntegral imVal)
+    flags.overflow .= isOverflow res
+  SUB -> do
+    let imVal = immed .&. 0xFF
+    sVal <- use $ registers.rn src
+    let res = sVal - imVal
+    registers.rn src .= res
+    setFlagsLogic res
+    flags.carry .= wouldCarry (-) (fromIntegral sVal) (fromIntegral imVal)
+    flags.overflow .= isOverflow res
   _ -> error "Incorrect arguments passed to THUMB MovCmpAddSubImmediate function."
 
 handleALUOperation :: IsSystem s m => ThumbOpcode -> RegisterName -> RegisterName -> m ()
