@@ -12,12 +12,11 @@ import Data.Bits
 
 data ObjMode = Normal | Affine
 
-type AffineParameters = (Double, Double, Double, Double)
-type Attributes = (PixFormat, TileSet, Palette, Address, GFX)
-type GFX = Integer
+type Attribute = HalfWord
 type MappingMode = Bool
 type OAM = Array Address Byte
 type Size = (Int, Int)
+type AffineParameters = (Double, Double, Double, Double)
 
 readOAM :: AddressIO m => MappingMode -> m ()
 readOAM mapMode = do
@@ -38,18 +37,18 @@ recurseOAM oam tileSet mapMode n pal = do
     objAddr = 0x07000000 + 0x00000008 * (fromIntegral n)
 
 -- Access attributes of object
-parseObjectAttr :: AddressIO m => Array Address Byte -> OAM -> TileSet -> MappingMode -> Address -> Palette -> m ()
+parseObjectAttr :: AddressIO m => OAM -> OAM -> TileSet -> MappingMode -> Address -> Palette -> m ()
 parseObjectAttr obj oam tileSet mapMode objAddr pal = do
   case mode of
-    0 -> drawSprite size Normal offset mapMode tileIdx (pixFormat, tileSet, pal, palBank, gfx) flips affineParams
-    1 -> drawSprite size Affine offset mapMode tileIdx (pixFormat, tileSet, pal, palBank, gfx) flips affineParams
+    0 -> drawSprite size Normal pixFormat tileSet offset mapMode tileIdx pal palBank flips affineParams
+    1 -> drawSprite size Affine pixFormat tileSet offset mapMode tileIdx pal palBank flips affineParams
     _ -> return ()
   where
     (attr0, attr1, attr2) = attributes obj objAddr
     offset = (fromIntegral $ $(bitmask 7 0) attr1, fromIntegral $ $(bitmask 7 0) attr0)
     size = spriteSize (shapeSize attr0) (shapeSize attr1)
     pixFormat = (testBit attr0 13)
-    gfx = (fromIntegral $ $(bitmask 11 10) attr0) :: Integer
+    _gfx = (fromIntegral $ $(bitmask 11 10) attr0) :: Integer
     tileIdx = 0x06010000 + convIntToAddr (fromIntegral $ $(bitmask 9 0) attr2 :: Int) pixFormat
     shapeSize attr = (fromIntegral $ $(bitmask 15 14) attr)
     mode = (fromIntegral $ $(bitmask 9 8) attr0) :: Int
@@ -58,31 +57,31 @@ parseObjectAttr obj oam tileSet mapMode objAddr pal = do
     affineParams = objAffine affineBaseAddr oam
     palBank = convIntToAddr (fromIntegral $ $(bitmask 15 12) attr2 :: Int) False
 
-drawSprite :: AddressIO m => Size -> ObjMode -> TileOffset -> MappingMode -> TileSetBaseAddress -> Attributes -> (Bool, Bool) -> AffineParameters -> m ()
-drawSprite (0, _) _ _ _ _ _ _ _ = return ()
-drawSprite (rows, cols) objMode offset@(x, y) mapMode tileIdx attrs@(pixFormat, _, _, _, _) flips params = do
+drawSprite :: AddressIO m => Size -> ObjMode -> PixFormat -> TileSet -> TileOffset -> MappingMode -> TileSetBaseAddress -> Palette -> Address -> (Bool, Bool) -> AffineParameters -> m ()
+drawSprite (0, _) _ _ _ _ _ _ _ _ _ _ = return ()
+drawSprite (rows, cols) objMode pixFormat tileSet offset@(x, y) mapMode tileIdx pal palBank flips params = do
   case objMode of
-    Normal -> normalSpriteRow cols offset tileIdx attrs flips
-    Affine -> affineSpriteRow cols offset tileIdx attrs params
-  drawSprite (rows - 1, cols) objMode (x, y + 8) mapMode nextTile attrs flips params
+    Normal -> normalSpriteRow cols pixFormat tileSet offset tileIdx pal palBank flips
+    Affine -> affineSpriteRow cols pixFormat tileSet offset tileIdx pal palBank params
+  drawSprite (rows - 1, cols) objMode pixFormat tileSet (x, y + 8) mapMode nextTile pal palBank flips params
   return ()
   where
     nextTile = nextTileIdx tileIdx cols pixFormat mapMode
 
-normalSpriteRow :: AddressIO m => Int -> TileOffset -> TileSetBaseAddress -> Attributes -> (Bool, Bool) -> m ()
-normalSpriteRow 0 _ _ _ _ = return ()
-normalSpriteRow cols (xOff, yOff) tileIdx attrs@(pixFormat, tileSet, palette, palBank, _gfx) (hFlip, vFlip) = do
+normalSpriteRow :: AddressIO m => Int -> PixFormat -> TileSet -> TileOffset -> TileSetBaseAddress -> Palette -> Address -> (Bool, Bool) -> m ()
+normalSpriteRow 0 _ _ _ _ _ _ _ = return ()
+normalSpriteRow cols pixFormat tileSet (xOff, yOff) tileIdx palette palBank (_hFlip, _vFlip) = do
   pixData <- pixelData pixFormat palette tile palBank
   liftIO $ drawTile pixData (xOff, xOff + 8) (yOff, yOff + 8)
-  normalSpriteRow (cols - 1) (xOff + 8, yOff) nextTile attrs (hFlip, vFlip)
+  normalSpriteRow (cols - 1) pixFormat tileSet (xOff + 8, yOff) nextTile palette palBank (_hFlip, _vFlip)
   return ()
   where
     tile = getTile pixFormat tileIdx tileSet
     nextTile = if pixFormat then tileIdx + 0x00000040 else tileIdx + 0x00000020
 
-affineSpriteRow :: AddressIO m => Int -> TileOffset -> TileSetBaseAddress -> Attributes -> AffineParameters -> m ()
-affineSpriteRow 0 _ _ _ _ = return ()
-affineSpriteRow _cols (_xOff, _yOff) tileIdx _attrs@(pixFormat, tileSet, palette, palBank, _gfx) _params = do
+affineSpriteRow :: AddressIO m => Int -> PixFormat -> TileSet -> TileOffset -> TileSetBaseAddress -> Palette -> Address -> AffineParameters -> m ()
+affineSpriteRow 0 _ _ _ _ _ _ _ = return ()
+affineSpriteRow _cols pixFormat tileSet (_xOff, _yOff) tileIdx palette palBank _params = do
   _pixData <- pixelData pixFormat palette tile palBank
   return ()
   where
@@ -117,7 +116,7 @@ convToFixedNum low up
     intProp = fromIntegral $ $(bitmask 14 8) hword
     sign = testBit hword 15
 
-attributes :: OAM -> Address -> (HalfWord, HalfWord, HalfWord)
+attributes :: OAM -> Address -> (Attribute, Attribute, Attribute)
 attributes obj objAddr = (attr0, attr1, attr2)
   where
     attr0 = bytesToHalfWord (obj!objAddr) (obj!objAddr + 0x00000001)
