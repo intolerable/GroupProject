@@ -1,13 +1,14 @@
 module Emulator.Interpreter.THUMB where
 
 import Emulator.CPU hiding (CPUMode(..), Interrupt(..))
-import Emulator.CPU.Instructions.THUMB
-import qualified Emulator.CPU.Instructions.THUMB.Opcodes as Op
-import Emulator.CPU.Instructions.Types
+import Emulator.CPU.Instructions
 import Emulator.CPU.Instructions.Flags
+import Emulator.CPU.Instructions.THUMB
+import Emulator.CPU.Instructions.Types
 import Emulator.Interpreter.Monad
 import Emulator.Memory
 import Emulator.Types
+import qualified Emulator.CPU.Instructions.THUMB.Opcodes as Op
 
 import Control.Lens hiding (op)
 import Data.Bits
@@ -168,8 +169,10 @@ handlePushPopRegs = undefined
 handleMultipleLoadStore :: Monad m => LoadStore -> RegisterName -> RegisterList -> SystemT m ()
 handleMultipleLoadStore = undefined
 
-handleConditionalBranch :: Monad m => Condition -> Offset -> SystemT m ()
-handleConditionalBranch = undefined
+handleConditionalBranch :: IsSystem s m => Condition -> Offset -> m ()
+handleConditionalBranch cond off =
+  conditionally cond $
+    registers.r15 %= \x -> fromIntegral (fromIntegral x + off + 4)
 
 handleThumbSoftwareInterrupt :: Monad m => Value -> SystemT m ()
 handleThumbSoftwareInterrupt = error "Unimplemented instruction: Thumb software interrupt"
