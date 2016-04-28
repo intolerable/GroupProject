@@ -83,7 +83,7 @@ normalSpriteRow cols pixFormat tileSet (xOff, yOff) tileIdx palette palBank (_hF
 
 affineSpriteRow :: AddressIO m => Int -> PixFormat -> TileSet -> TileOffset -> TileSetBaseAddress -> Palette -> Address -> AffineParameters -> SpriteCentre -> m ()
 affineSpriteRow 0 _ _ _ _ _ _ _ _ = return ()
-affineSpriteRow _cols pixFormat tileSet (xOff, yOff) tileIdx palette palBank (pa, pb, _pc, _pd) (h, w) = do
+affineSpriteRow _cols pixFormat tileSet (_xOff, _yOff) tileIdx palette palBank (_pa, _pb, _pc, _pd) (_h, _w) = do
   _pixData <- pixelData pixFormat palette tile palBank
   --let x1 = (pa * (xOff - w)) + (pb * (yOff - h)) + h
   --let y1 =
