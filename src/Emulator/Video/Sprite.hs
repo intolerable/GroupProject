@@ -11,9 +11,6 @@ import Control.Monad.IO.Class
 import Data.Array.IArray
 import Data.Bits
 
-data ObjMode = Normal | Affine
-
-type Attribute = HalfWord
 type MappingMode = Bool
 type OAM = Array Address Byte
 type SpriteSize = (Int, Int)
