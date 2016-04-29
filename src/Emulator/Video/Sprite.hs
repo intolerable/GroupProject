@@ -132,7 +132,7 @@ convToFixedNum low up
     intProp = fromIntegral $ $(bitmask 14 8) hword
     sign = testBit hword 15
 
-attributes :: OAM -> Address -> (Attribute, Attribute, Attribute)
+attributes :: OAM -> Address -> (HalfWord, HalfWord, HalfWord)
 attributes obj objAddr = (attr0, attr1, attr2)
   where
     attr0 = bytesToHalfWord (obj!objAddr) (obj!objAddr + 0x00000001)
