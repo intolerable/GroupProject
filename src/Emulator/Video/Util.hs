@@ -32,6 +32,18 @@ drawTile arr ((x1, y1), (x2, y2), (x3, y3), (x4, y4)) = do
     texCoord $ TexCoord2 0 (1 :: GLdouble)
     vertex $ Vertex2 x3 (y3 :: GLdouble)
 
+-- Affine transformation
+affineCoords :: TileOffset -> (GLdouble, GLdouble) -> AffineParameters -> QuadCoords
+affineCoords (xOff, yOff) (xCentre, yCentre) (pa, pb, pc, pd) = ((x1, y1), (x2, y2), (x3, y3), (x4, y4))
+  where
+    x1 = (pa * (xOff - xCentre)) + (pb * (yOff - yCentre)) + xCentre
+    y1 = (pc * (xOff - xCentre)) + (pd * (yOff - yCentre)) + yCentre
+    x2 = (pa * ((xOff + 8) - xCentre)) + (pb * (yOff - yCentre)) + xCentre
+    y2 = (pc * ((xOff + 8) - xCentre)) + (pd * (yOff - yCentre)) + yCentre
+    x3 = (pa * (xOff - xCentre)) + pb * ((yOff + 8) - yCentre) + xCentre
+    y3 = (pc * (xOff - xCentre)) + pd * ((yOff + 8) - yCentre) + yCentre
+    x4 = (pa * ((xOff + 8) - xCentre)) + (pb * ((yOff + 8) - yCentre)) + xCentre
+    y4 = (pc * ((xOff + 8) - xCentre)) + (pd * ((yOff + 8) - yCentre)) + yCentre
 
 loadTexture :: StorableArray Address HalfWord -> IO TextureObject
 loadTexture arr = withStorableArray arr $ \ptr -> do
