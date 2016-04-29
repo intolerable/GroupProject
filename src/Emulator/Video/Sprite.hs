@@ -72,12 +72,14 @@ normalSpriteRow :: AddressIO m => Int -> PixFormat -> TileSet -> TileOffset -> T
 normalSpriteRow 0 _ _ _ _ _ _ _ = return ()
 normalSpriteRow cols pixFormat tileSet (xOff, yOff) tileIdx palette palBank (_hFlip, _vFlip) = do
   pixData <- pixelData pixFormat palette tile palBank
-  liftIO $ drawTile pixData (xOff, xOff + 8) (yOff, yOff + 8)
+  liftIO $ drawTile pixData tileCoords
   normalSpriteRow (cols - 1) pixFormat tileSet (xOff + 8, yOff) nextTile palette palBank (_hFlip, _vFlip)
   return ()
   where
     tile = getTile pixFormat tileIdx tileSet
     nextTile = if pixFormat then tileIdx + 0x00000040 else tileIdx + 0x00000020
+    tileCoords = ((xOff, yOff), (xOff+8, yOff), (xOff, yOff+8), (xOff+8, yOff+8))
+
 drawAffine :: AddressIO m => SpriteSize -> PixFormat -> TileSet -> TileOffset -> MappingMode -> TileSetBaseAddress -> Palette -> Address -> AffineParameters -> SpriteCentre -> m ()
 drawAffine (0, _) _ _ _ _ _ _ _ _ _ = return ()
 drawAffine (rows, cols) pixFormat tileSet offset@(x, y) mapMode tileIdx pal palBank params centre = do
@@ -95,7 +97,8 @@ affineSpriteRow cols pixFormat tileSet offset@(xOff, yOff) tileIdx palette palBa
   return ()
   where
     tile = getTile pixFormat tileIdx tileSet
-    _nextTile = if pixFormat then tileIdx + 0x00000040 else tileIdx + 0x00000020
+    nextTile = if pixFormat then tileIdx + 0x00000040 else tileIdx + 0x00000020
+    tileCoords = affineCoords offset centre params
 
 nextTileIdx :: TileSetBaseAddress -> Int -> PixFormat -> MappingMode -> TileSetBaseAddress
 -- 1D mapping. Each row of tiles in a sprite follows on from the last in the charBlock

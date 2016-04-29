@@ -117,7 +117,7 @@ drawHLine :: AddressIO m => Int -> Address -> PixFormat -> TileMap -> TileSet ->
 drawHLine 0 _ _ _ _ _ _ _ = return ()
 drawHLine column mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr = do
   pixData <- pixelData pixFormat palette tile palBank
-  liftIO $ drawTile pixData (xOff, xOff + 8) (yOff, yOff + 8)
+  liftIO $ drawTile pixData tileCoords
   drawHLine (column-1) (mapIndex + 0x00000002) pixFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
   return ()
   where
@@ -125,6 +125,7 @@ drawHLine column mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setB
     upperByte = (tileMapRow!(mapIndex + 0x00000001))
     lowerByte = (tileMapRow!mapIndex)
     (tileIdx, _hFlip, _vFlip, palBank) = parseScreenEntry upperByte lowerByte pixFormat setBaseAddr
+    tileCoords = ((xOff, yOff), (xOff+8, yOff), (xOff, yOff+8), (xOff+8, yOff+8))
 -- NEED TO SORT HFLIP AND VFLIP WHEN GRAPHICS RUN
 
 -- a is the upper byte, b is the lower

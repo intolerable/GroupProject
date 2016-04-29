@@ -12,25 +12,26 @@ import Graphics.Rendering.OpenGL
 type AddressIO m = (AddressSpace m, MonadIO m)
 type AffineParameters = (GLdouble, GLdouble, GLdouble, GLdouble)
 type PixFormat = Bool
+type QuadCoords = ((GLdouble, GLdouble), (GLdouble, GLdouble), (GLdouble, GLdouble), (GLdouble, GLdouble))
 type Tile = Array Address Byte
 type TileOffset = (GLdouble, GLdouble)
 type TileSet = Array Address Byte
 type TileSetBaseAddress = Address
 
-drawTile :: StorableArray Address HalfWord -> (GLdouble, GLdouble) -> (GLdouble, GLdouble) -> IO ()
-drawTile arr (x1, x2) (y1, y2) = do
+drawTile :: StorableArray Address HalfWord -> QuadCoords -> IO ()
+drawTile arr ((x1, y1), (x2, y2), (x3, y3), (x4, y4)) = do
   _ <- liftIO $ loadTexture arr
   textureFilter Texture2D $= ((Nearest, Nothing), Nearest)
   renderPrimitive Quads $ do
     texCoord $ TexCoord2 0 (0 :: GLdouble)
     vertex $ Vertex2 x1 (y1 :: GLdouble)
     texCoord $ TexCoord2 1 (0 :: GLdouble)
-    vertex $ Vertex2 x2 (y1 :: GLdouble)
-    texCoord $ TexCoord2 1 (1 :: GLdouble)
     vertex $ Vertex2 x2 (y2 :: GLdouble)
+    texCoord $ TexCoord2 1 (1 :: GLdouble)
+    vertex $ Vertex2 x4 (y4 :: GLdouble)
     texCoord $ TexCoord2 0 (1 :: GLdouble)
-    vertex $ Vertex2 x1 (y2 :: GLdouble)
-  return ()
+    vertex $ Vertex2 x3 (y3 :: GLdouble)
+
 
 loadTexture :: StorableArray Address HalfWord -> IO TextureObject
 loadTexture arr = withStorableArray arr $ \ptr -> do
