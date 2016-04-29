@@ -4,6 +4,7 @@ import Emulator.Memory
 import Emulator.Types
 import Emulator.Video.Palette
 import Emulator.Video.Util
+import Graphics.Rendering.OpenGL
 import Utilities.Parser.TemplateHaskell
 
 import Control.Monad.IO.Class
@@ -15,8 +16,8 @@ data ObjMode = Normal | Affine
 type Attribute = HalfWord
 type MappingMode = Bool
 type OAM = Array Address Byte
-type Size = (Int, Int)
-type SpriteCentre = (Double, Double)
+type SpriteSize = (Int, Int)
+type SpriteCentre = (GLdouble, GLdouble)
 
 readOAM :: AddressIO m => MappingMode -> m ()
 readOAM mapMode = do
@@ -108,7 +109,7 @@ objAffine addr oam = (pa, pb, pc, pd)
     pc = convToFixedNum (oam!(addr + 0x00000010)) (oam!(addr + 0x00000011))
     pd = convToFixedNum (oam!(addr + 0x00000018)) (oam!(addr + 0x00000019))
 
-convToFixedNum :: Byte -> Byte -> Double
+convToFixedNum :: Byte -> Byte -> GLdouble
 convToFixedNum low up
   | sign = val
   | otherwise = negate val
