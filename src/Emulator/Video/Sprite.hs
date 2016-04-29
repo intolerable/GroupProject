@@ -12,7 +12,6 @@ import Data.Bits
 
 data ObjMode = Normal | Affine
 
-type AffineParameters = (Double, Double, Double, Double)
 type Attribute = HalfWord
 type MappingMode = Bool
 type OAM = Array Address Byte

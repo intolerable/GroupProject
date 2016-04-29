@@ -10,6 +10,7 @@ import Data.Bits
 import Graphics.Rendering.OpenGL
 
 type AddressIO m = (AddressSpace m, MonadIO m)
+type AffineParameters = (GLdouble, GLdouble, GLdouble, GLdouble)
 type PixFormat = Bool
 type Tile = Array Address Byte
 type TileOffset = (GLdouble, GLdouble)
