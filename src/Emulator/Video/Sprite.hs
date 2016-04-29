@@ -46,9 +46,9 @@ parseObjectAttr obj oam tileSet mapMode objAddr pal = do
     _ -> return ()
   where
     (attr0, attr1, attr2) = attributes obj objAddr
-    offset = (fromIntegral $ $(bitmask 7 0) attr1, fromIntegral $ $(bitmask 7 0) attr0)
+    (xOff, yOff) = (fromIntegral $ $(bitmask 7 0) attr1, fromIntegral $ $(bitmask 7 0) attr0) :: (GLdouble, GLdouble)
     size@(h, w) = spriteSize (shapeSize attr0) (shapeSize attr1)
-    centre = (fromIntegral h*4, fromIntegral w*4) :: (Double, Double)
+    centre = (xOff + (fromIntegral h*4), yOff + (fromIntegral w*4)) :: (GLdouble, GLdouble)
     pixFormat = (testBit attr0 13)
     _gfx = (fromIntegral $ $(bitmask 11 10) attr0) :: Integer
     tileIdx = 0x06010000 + convIntToAddr (fromIntegral $ $(bitmask 9 0) attr2 :: Int) pixFormat
