@@ -16,6 +16,13 @@ type OAM = Array Address Byte
 type SpriteSize = (Int, Int)
 type SpriteCentre = (GLdouble, GLdouble)
 
+data SpriteAttribs =
+  SpriteAttribs { getPixFormat :: PixFormat
+                , getTileSet :: TileSet
+                , getPal :: Palette
+                , getPalBank :: Address }
+  deriving (Show, Read, Eq)
+
 readOAM :: AddressIO m => MappingMode -> m ()
 readOAM mapMode = do
   oam <- readRange (0x07000000, 0x070003FF)
