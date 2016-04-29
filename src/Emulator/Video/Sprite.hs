@@ -41,8 +41,8 @@ recurseOAM oam tileSet mapMode n pal = do
 parseObjectAttr :: AddressIO m => OAM -> OAM -> TileSet -> MappingMode -> Address -> Palette -> m ()
 parseObjectAttr obj oam tileSet mapMode objAddr pal = do
   case mode of
-    0 -> drawSprite size Normal pixFormat tileSet offset mapMode tileIdx pal palBank flips affineParams centre
-    1 -> drawSprite size Affine pixFormat tileSet offset mapMode tileIdx pal palBank flips affineParams centre
+    0 -> drawSprite size pixFormat tileSet (xOff, yOff) mapMode tileIdx pal palBank flips
+    1 -> drawAffine size pixFormat tileSet (xOff, yOff) mapMode tileIdx pal palBank affineParams centre
     _ -> return ()
   where
     (attr0, attr1, attr2) = attributes obj objAddr
@@ -59,13 +59,11 @@ parseObjectAttr obj oam tileSet mapMode objAddr pal = do
     affineParams = objAffine affineBaseAddr oam
     palBank = convIntToAddr (fromIntegral $ $(bitmask 15 12) attr2 :: Int) False
 
-drawSprite :: AddressIO m => Size -> ObjMode -> PixFormat -> TileSet -> TileOffset -> MappingMode -> TileSetBaseAddress -> Palette -> Address -> (Bool, Bool) -> AffineParameters -> SpriteCentre -> m ()
-drawSprite (0, _) _ _ _ _ _ _ _ _ _ _ _ = return ()
-drawSprite (rows, cols) objMode pixFormat tileSet offset@(x, y) mapMode tileIdx pal palBank flips params centre = do
-  case objMode of
-    Normal -> normalSpriteRow cols pixFormat tileSet offset tileIdx pal palBank flips
-    Affine -> affineSpriteRow cols pixFormat tileSet offset tileIdx pal palBank params centre
-  drawSprite (rows - 1, cols) objMode pixFormat tileSet (x, y + 8) mapMode nextTile pal palBank flips params centre
+drawSprite :: AddressIO m => SpriteSize -> PixFormat -> TileSet -> TileOffset -> MappingMode -> TileSetBaseAddress -> Palette -> Address -> (Bool, Bool) -> m ()
+drawSprite (0, _) _ _ _ _ _ _ _ _ = return ()
+drawSprite (rows, cols) pixFormat tileSet offset@(x, y) mapMode tileIdx pal palBank flips = do
+  normalSpriteRow cols pixFormat tileSet offset tileIdx pal palBank flips
+  drawSprite (rows - 1, cols) pixFormat tileSet (x, y + 8) mapMode nextTile pal palBank flips
   return ()
   where
     nextTile = nextTileIdx tileIdx cols pixFormat mapMode
@@ -80,13 +78,20 @@ normalSpriteRow cols pixFormat tileSet (xOff, yOff) tileIdx palette palBank (_hF
   where
     tile = getTile pixFormat tileIdx tileSet
     nextTile = if pixFormat then tileIdx + 0x00000040 else tileIdx + 0x00000020
+drawAffine :: AddressIO m => SpriteSize -> PixFormat -> TileSet -> TileOffset -> MappingMode -> TileSetBaseAddress -> Palette -> Address -> AffineParameters -> SpriteCentre -> m ()
+drawAffine (0, _) _ _ _ _ _ _ _ _ _ = return ()
+drawAffine (rows, cols) pixFormat tileSet offset@(x, y) mapMode tileIdx pal palBank params centre = do
+  affineSpriteRow cols pixFormat tileSet offset tileIdx pal palBank params centre
+  drawAffine (rows - 1, cols) pixFormat tileSet (x, y + 8) mapMode nextTile pal palBank params centre
+  where
+    nextTile = nextTileIdx tileIdx cols pixFormat mapMode
 
 affineSpriteRow :: AddressIO m => Int -> PixFormat -> TileSet -> TileOffset -> TileSetBaseAddress -> Palette -> Address -> AffineParameters -> SpriteCentre -> m ()
 affineSpriteRow 0 _ _ _ _ _ _ _ _ = return ()
-affineSpriteRow _cols pixFormat tileSet (_xOff, _yOff) tileIdx palette palBank (_pa, _pb, _pc, _pd) (_h, _w) = do
-  _pixData <- pixelData pixFormat palette tile palBank
-  --let x1 = (pa * (xOff - w)) + (pb * (yOff - h)) + h
-  --let y1 =
+affineSpriteRow cols pixFormat tileSet offset@(xOff, yOff) tileIdx palette palBank params centre = do
+  pixData <- pixelData pixFormat palette tile palBank
+  liftIO $ drawTile pixData tileCoords
+  affineSpriteRow (cols - 1) pixFormat tileSet (xOff + 8, yOff) nextTile palette palBank params centre
   return ()
   where
     tile = getTile pixFormat tileIdx tileSet
