@@ -142,8 +142,18 @@ handlePCRelativeLoad dest off = do
   word <- readAddressWord addr
   registers.rn dest .= word
 
-handleThumbLoadStoreRegisterOffset :: Monad m => LoadStore -> Granularity 'Full -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
-handleThumbLoadStoreRegisterOffset = undefined
+handleThumbLoadStoreRegisterOffset :: IsSystem s m => LoadStore -> Granularity 'Full -> RegisterName -> RegisterName -> RegisterName -> m ()
+handleThumbLoadStoreRegisterOffset ls g offR baseR destR = do
+  offset <- use $ registers.rn offR
+  base <- use $ registers.rn baseR
+  dest <- use $ registers.rn destR
+  let addr = base + offset
+  if g == Word  then if ls == Load then registers.rn destR <~ readAddressWord addr
+                                   else writeAddressWord addr dest
+                else if ls == Load then do
+                                      val <- readAddressWord addr
+                                      registers.rn destR .= (val .&. 0xFF)
+                                   else writeAddressWord addr (dest .&. 0xFF)
 
 handleThumbLoadStoreSignExtHalfwordByte :: Monad m => Granularity 'Lower -> LoadStore -> SignExtended -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
 handleThumbLoadStoreSignExtHalfwordByte = undefined
