@@ -50,17 +50,16 @@ parseObjectAttr obj oam tileSet mapMode objAddr pal = do
     _ -> return ()
   where
     (attr0, attr1, attr2) = attributes obj objAddr
+    mode = (fromIntegral $ $(bitmask 9 8) attr0) :: Int
     (xOff, yOff) = (fromIntegral $ $(bitmask 7 0) attr1, fromIntegral $ $(bitmask 7 0) attr0) :: (GLdouble, GLdouble)
+    shapeSize attr = (fromIntegral $ $(bitmask 15 14) attr)
     size@(h, w) = spriteSize (shapeSize attr0) (shapeSize attr1)
     centre = (xOff + (fromIntegral h*4), yOff + (fromIntegral w*4)) :: (GLdouble, GLdouble)
     pixFormat = (testBit attr0 13)
     _gfx = (fromIntegral $ $(bitmask 11 10) attr0) :: Integer
     tileIdx = 0x06010000 + convIntToAddr (fromIntegral $ $(bitmask 9 0) attr2 :: Int) pixFormat
-    shapeSize attr = (fromIntegral $ $(bitmask 15 14) attr)
-    mode = (fromIntegral $ $(bitmask 9 8) attr0) :: Int
     flips = (testBit attr1 12, testBit attr1 13) :: (Bool, Bool)
-    affineBaseAddr = getAffineBaseAddr $ fromIntegral $ $(bitmask 13 9) attr1
-    affineParams = objAffine affineBaseAddr oam
+    affineParams = objAffine attr1 oam
     palBank = convIntToAddr (fromIntegral $ $(bitmask 15 12) attr2 :: Int) False
     attribs = SpriteAttribs pixFormat tileSet pal palBank
 
@@ -116,9 +115,10 @@ nextTileIdx tileIdx _ _ False = tileIdx + 0x00004000
 getAffineBaseAddr :: Int -> Address
 getAffineBaseAddr n = 0x07000006 + (0x00000008 * fromIntegral n)
 
-objAffine :: Address -> OAM -> AffineParameters
-objAffine addr oam = (pa, pb, pc, pd)
+objAffine :: HalfWord -> OAM -> AffineParameters
+objAffine attr1 oam = (pa, pb, pc, pd)
   where
+    addr = getAffineBaseAddr $ fromIntegral $ $(bitmask 13 9) attr1
     pa = convToFixedNum (oam!(addr)) (oam!(addr + 0x00000001))
     pb = convToFixedNum (oam!(addr + 0x00000008)) (oam!(addr + 0x00000009))
     pc = convToFixedNum (oam!(addr + 0x00000010)) (oam!(addr + 0x00000011))
