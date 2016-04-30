@@ -171,7 +171,7 @@ readLoadStoreHalfword :: HalfWord -> THUMBInstruction
 readLoadStoreHalfword w = ThumbLoadStoreHalfword ls offset base dest
   where
     ls = if testBit w 11 then Load else Store
-    offset = fromIntegral $ $(bitmask 10 6) w
+    offset = fromIntegral $ ($(bitmask 10 6) w) `shiftL` 1
     base = RegisterName $ fromIntegral $ $(bitmask 5 3) w
     dest = RegisterName $ fromIntegral $ w .&. 0b111
 
