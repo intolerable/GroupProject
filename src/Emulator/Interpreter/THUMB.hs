@@ -7,6 +7,7 @@ import Emulator.Interpreter.Monad
 import Emulator.Memory
 import Emulator.Types
 import Utilities.Bits
+import Utilities.Parser.TemplateHaskell
 import qualified Emulator.CPU.Instructions.THUMB.Opcodes as Op
 
 import Control.Lens hiding (op)
@@ -220,8 +221,17 @@ handleLoadAddress b destR offset = do
   let addr = base + offset
   registers.rn destR .= addr
 
-handleSPAddOffset :: Monad m => OffsetDirection -> Offset -> SystemT m ()
-handleSPAddOffset = undefined
+handleSPAddOffset :: IsSystem s m => OffsetDirection -> Offset -> m ()
+handleSPAddOffset ud offset = do
+  sp <- use $ registers.r13
+  registers.r13 .= op sp realOffset
+  where
+    op = case ud of
+            Up -> (+)
+            Down -> (-)
+    mag = ($(bitmask 5 0) offset) `shiftL` 2
+    realOffset | offset `testBit` 6 = negate $ mag
+               | otherwise = mag
 
 handlePushPopRegs :: Monad m => LoadStore -> StoreLR -> RegisterList -> SystemT m ()
 handlePushPopRegs = undefined
