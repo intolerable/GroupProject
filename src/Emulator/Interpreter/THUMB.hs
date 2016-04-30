@@ -210,8 +210,11 @@ handleSPRelativeLoadStore ls destR offset = do
       writeAddressWord addr val
     Load -> registers.rn destR <~ readAddressWord addr
 
-handleLoadAddress :: Monad m => BaseSource -> RegisterName -> Offset -> SystemT m ()
-handleLoadAddress = undefined
+handleLoadAddress :: IsSystem s m => BaseSource -> RegisterName -> Offset -> m ()
+handleLoadAddress b destR offset = do
+  base <- if b == PC then use $ registers.r15 else use $ registers.r13
+  let addr = base + offset
+  registers.rn destR .= addr
 
 handleSPAddOffset :: Monad m => OffsetDirection -> Offset -> SystemT m ()
 handleSPAddOffset = undefined
