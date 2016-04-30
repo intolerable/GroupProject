@@ -165,7 +165,7 @@ readSPRelativeLoadStore w = SPRelativeLoadStore ls dest offset
   where
     ls = if testBit w 11 then Load else Store
     dest = RegisterName $ fromIntegral $ $(bitmask 10 8) w
-    offset = fromIntegral $ w .&. 0xFF
+    offset = fromIntegral $ (w .&. 0xFF) `shiftL` 2
 
 readLoadStoreHalfword :: HalfWord -> THUMBInstruction
 readLoadStoreHalfword w = ThumbLoadStoreHalfword ls offset base dest
