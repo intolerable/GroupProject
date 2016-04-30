@@ -8,6 +8,7 @@ import Emulator.CPU.Instructions.Types
 import Emulator.Interpreter.Monad
 import Emulator.Memory
 import Emulator.Types
+import Utilities.Bits
 import qualified Emulator.CPU.Instructions.THUMB.Opcodes as Op
 
 import Control.Lens hiding (op)
@@ -155,8 +156,24 @@ handleThumbLoadStoreRegisterOffset ls g offR baseR destR = do
                                       registers.rn destR .= (val .&. 0xFF)
                                    else writeAddressWord addr (dest .&. 0xFF)
 
-handleThumbLoadStoreSignExtHalfwordByte :: Monad m => Granularity 'Lower -> LoadStore -> SignExtended -> RegisterName -> RegisterName -> RegisterName -> SystemT m ()
-handleThumbLoadStoreSignExtHalfwordByte = undefined
+handleThumbLoadStoreSignExtHalfwordByte :: IsSystem s m => Granularity 'Lower -> LoadStore -> SignExtended -> RegisterName -> RegisterName -> RegisterName -> m ()
+handleThumbLoadStoreSignExtHalfwordByte g ls se offR baseR destR = do
+  offset <- use $ registers.rn offR
+  base <- use $ registers.rn baseR
+  dest <- use $ registers.rn destR
+  let addr = offset + base
+  case (g, ls, se) of
+    (Byte, Load, True) -> do
+      val <- readAddressHalfWord addr
+      (registers.rn destR) .= byteExtend (fromIntegral (val .&. 0xFF))
+    (HalfWord, Load, False) -> do
+      val <- readAddressHalfWord addr
+      (registers.rn destR) .= fromIntegral (val .&. 0xFFFF)
+    (HalfWord, Store, False) -> writeAddressHalfWord addr $ fromIntegral (dest .&. 0xFFFF)
+    (HalfWord, Load, True) -> do
+      val <- readAddressHalfWord addr
+      (registers.rn destR) .= halfWordExtend (fromIntegral val)
+    _ -> error $ "Incorrect parameters passed to LoadStoreSignExtHalfWordByte: " ++ show (g, ls, se)
 
 handleThumbLoadStoreImmediateOffset :: Monad m => Granularity 'Full -> LoadStore -> Offset -> RegisterName -> RegisterName -> SystemT m ()
 handleThumbLoadStoreImmediateOffset = undefined
