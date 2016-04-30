@@ -199,8 +199,16 @@ handleThumbLoadStoreHalfword ls offset baseR destR = do
       val <- use $ registers.rn destR
       writeAddressHalfWord addr $ fromIntegral (val .&. 0xFFFF)
 
-handleSPRelativeLoadStore :: Monad m => LoadStore -> RegisterName -> Offset -> SystemT m ()
-handleSPRelativeLoadStore = undefined
+handleSPRelativeLoadStore :: IsSystem s m => LoadStore -> RegisterName -> Offset -> m ()
+handleSPRelativeLoadStore ls destR offset = do
+  -- sp is register 13
+  base <- use $ registers.r13
+  let addr = base + offset
+  case ls of
+    Store -> do
+      val <- use $ registers.rn destR
+      writeAddressWord addr val
+    Load -> registers.rn destR <~ readAddressWord addr
 
 handleLoadAddress :: Monad m => BaseSource -> RegisterName -> Offset -> SystemT m ()
 handleLoadAddress = undefined
