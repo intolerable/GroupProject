@@ -175,8 +175,21 @@ handleThumbLoadStoreSignExtHalfwordByte g ls se offR baseR destR = do
       (registers.rn destR) .= halfWordExtend (fromIntegral val)
     _ -> error $ "Incorrect parameters passed to LoadStoreSignExtHalfWordByte: " ++ show (g, ls, se)
 
-handleThumbLoadStoreImmediateOffset :: Monad m => Granularity 'Full -> LoadStore -> Offset -> RegisterName -> RegisterName -> SystemT m ()
-handleThumbLoadStoreImmediateOffset = undefined
+handleThumbLoadStoreImmediateOffset :: IsSystem s m => Granularity 'Full -> LoadStore -> Offset -> RegisterName -> RegisterName -> m ()
+handleThumbLoadStoreImmediateOffset g ls offset baseR destR = do
+  base <- use $ registers.rn baseR
+  let addr = base + offset
+  case (g, ls) of
+    (Byte, Load) -> do
+      byte <- readAddressByte addr
+      registers.rn destR .= fromIntegral byte
+    (Byte, Store) -> do
+      val <- use $ registers.rn destR
+      writeAddressByte addr $ fromIntegral (val .&. 0xFF)
+    (Word, Load) -> registers.rn destR <~ readAddressWord addr
+    (Word, Store) -> do
+      val <- use $ registers.rn destR
+      writeAddressWord addr val
 
 handleThumbLoadStoreHalfword :: Monad m => LoadStore -> Offset -> RegisterName -> RegisterName -> SystemT m ()
 handleThumbLoadStoreHalfword = undefined
