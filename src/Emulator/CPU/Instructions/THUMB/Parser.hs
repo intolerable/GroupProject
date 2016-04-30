@@ -180,7 +180,7 @@ readLoadAddress w = LoadAddress source dest offset
   where
     source = if testBit w 11 then SP else PC
     dest = RegisterName $ fromIntegral $ $(bitmask 10 8) w
-    offset = fromIntegral $ w .&. 0xFF
+    offset = fromIntegral $ (w .&. 0xFF) `shiftL` 2
 
 readPushPopRegisters :: HalfWord -> THUMBInstruction
 readPushPopRegisters w = PushPopRegs ls store rlist
