@@ -247,9 +247,12 @@ handlePushPopRegs ls st rlist = do
       let rlist' = if st then rlist ++ [RegisterName 13] else rlist
       registers.r13 <~ writeBlocks Down sp rlist'
 
-
-handleMultipleLoadStore :: Monad m => LoadStore -> RegisterName -> RegisterList -> SystemT m ()
-handleMultipleLoadStore = undefined
+handleMultipleLoadStore :: IsSystem s m => LoadStore -> RegisterName -> RegisterList -> m ()
+handleMultipleLoadStore ls baseR rlist = do
+  base <- use $ registers.rn baseR
+  registers.rn baseR <~ (case ls of
+    Load -> readBlocks Up base rlist
+    Store -> writeBlocks Up base rlist)
 
 handleConditionalBranch :: IsSystem s m => Condition -> Offset -> m ()
 handleConditionalBranch cond off =
