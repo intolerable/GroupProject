@@ -212,12 +212,13 @@ handleSPRelativeLoadStore ls destR offset = do
     Load -> registers.rn destR <~ readAddressWord addr
 
 handleLoadAddress :: IsSystem s m => BaseSource -> RegisterName -> Offset -> m ()
-handleLoadAddress b destR offset = do
-  base <- case b of
-    PC -> do
-      val <- use $ reference
-      val .&. 0xFFFFFFFD -- Mask out bit 1 as per the docs
-    SP -> use $ registers.r13
+handleLoadAddress PC destR offset = do
+  val <- use $ registers.r15
+  let base = val .&. 0xFFFFFFFD
+  let addr = base + offset
+  registers.rn destR .= addr
+handleLoadAddress SP destR offset = do
+  base <- use $ registers.r13
   let addr = base + offset
   registers.rn destR .= addr
 
