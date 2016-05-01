@@ -141,6 +141,21 @@ parseScreenEntry a b pixFormat setBaseAddr = (tileIdx, hFlip, vFlip, palBank)
 affineBG :: AddressIO m => m ()
 affineBG = undefined
 
+referencePoint :: MWord -> GLdouble
+referencePoint word
+  | sign = negate val
+  | otherwise = val
+  where
+    val = intPor + (frac / 256)
+    frac = fromIntegral $ $(bitmask 7 0) word :: GLdouble
+    intPor = fromIntegral $ $(bitmask 26 8) word :: GLdouble
+    sign = testBit word 27
+
+data BGRefPoints =  -- W. For all non text modes. For scrolling the screen
+  BGRefPoints { x :: GLdouble
+              , y :: GLdouble }
+  deriving (Show, Read, Eq)
+
 -- Returns number of tiles to be drawn
 affineBGSize :: Byte -> (Int, Int)
 affineBGSize byt
