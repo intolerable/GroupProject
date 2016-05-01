@@ -8,6 +8,7 @@ import Data.Array.IArray
 import Data.Array.Storable
 import Data.Bits
 import Graphics.Rendering.OpenGL
+import Utilities.Parser.TemplateHaskell
 
 type AddressIO m = (AddressSpace m, MonadIO m)
 type AffineParameters = (GLdouble, GLdouble, GLdouble, GLdouble)
@@ -67,3 +68,14 @@ convIntToAddr n _ = (0x00000020 * fromIntegral n)
 getTile :: PixFormat -> Address -> TileSet -> Tile
 getTile True tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000003F) (id) tileSet :: Tile)
 getTile _ tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000001F) (id) tileSet :: Tile)
+
+convToFixedNum :: Byte -> Byte -> GLdouble
+convToFixedNum low up
+  | sign = negate val
+  | otherwise = val
+  where
+    val =  intPor + (fracPor / 256.0)
+    hword = bytesToHalfWord low up
+    fracPor = fromIntegral $ $(bitmask 7 0) hword
+    intPor = fromIntegral $ $(bitmask 14 8) hword
+    sign = testBit hword 15

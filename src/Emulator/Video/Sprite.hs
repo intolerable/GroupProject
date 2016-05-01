@@ -124,17 +124,6 @@ objAffine attr1 oam = (pa, pb, pc, pd)
     pc = convToFixedNum (oam!(addr + 0x00000010)) (oam!(addr + 0x00000011))
     pd = convToFixedNum (oam!(addr + 0x00000018)) (oam!(addr + 0x00000019))
 
-convToFixedNum :: Byte -> Byte -> GLdouble
-convToFixedNum low up
-  | sign = val
-  | otherwise = negate val
-  where
-    val =  intProp + (fracProp / 256.0)
-    hword = bytesToHalfWord low up
-    fracProp = fromIntegral $ $(bitmask 7 0) hword
-    intProp = fromIntegral $ $(bitmask 14 8) hword
-    sign = testBit hword 15
-
 attributes :: OAM -> Address -> (HalfWord, HalfWord, HalfWord)
 attributes obj objAddr = (attr0, attr1, attr2)
   where
