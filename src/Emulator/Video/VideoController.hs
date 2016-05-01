@@ -59,15 +59,6 @@ data BGOffset = -- W. All layers in BG mode 0 and first two layers in BG mode 1,
            , yOffset :: HalfWord }
   deriving (Show, Read, Eq)
 
-data LowerUpperBit = Lower | Upper -- 16 bit | 12 bit
-  deriving (Show, Read, Eq)
-
-data BGReferencePoint (axis :: Axis) (bit :: LowerUpperBit) (bg :: Background) =  -- W. For all non text modes. For scrolling the screen
-  BGReferencePoint { fractProportion :: Byte
-                   , intProportion :: MWord
-                   , sign :: Bool }
-  deriving (Show, Read, Eq)
-
 data Parameter = A | B | C | D
   deriving (Show, Read, Eq)
 
@@ -176,11 +167,11 @@ recordBGOffset xAddr yAddr = do
                           (fromIntegral $ $(bitmask 8 0) yHword)
   return bgOffset
 
-recordBGReferencePoint :: MWord -> BGReferencePoint a b c
-recordBGReferencePoint mword =
-  BGReferencePoint (fromIntegral $ $(bitmask 7 0) mword)
-                   (fromIntegral $ $(bitmask 26 8) mword)
-                   (testBit mword 27)
+-- recordBGReferencePoint :: MWord -> BGReferencePoint a b c
+-- recordBGReferencePoint mword =
+--   BGReferencePoint (fromIntegral $ $(bitmask 7 0) mword)
+--                    (fromIntegral $ $(bitmask 26 8) mword)
+--                    (testBit mword 27)
 
 recordBGRotScalParam :: HalfWord -> BGRotScalParam a b
 recordBGRotScalParam hword =
