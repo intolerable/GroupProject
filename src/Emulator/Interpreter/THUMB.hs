@@ -3,6 +3,7 @@ module Emulator.Interpreter.THUMB where
 import Emulator.CPU hiding (CPUMode(..), Interrupt(..))
 import Emulator.CPU.Instructions
 import Emulator.CPU.Instructions.Flags
+import Emulator.Interpreter.ARM (readBlocks, writeBlocks)
 import Emulator.Interpreter.Monad
 import Emulator.Memory
 import Emulator.Types
@@ -234,8 +235,18 @@ handleSPAddOffset ud offset = do
     realOffset | offset `testBit` 6 = negate $ mag
                | otherwise = mag
 
-handlePushPopRegs :: Monad m => LoadStore -> StoreLR -> RegisterList -> SystemT m ()
-handlePushPopRegs = undefined
+handlePushPopRegs :: IsSystem s m => LoadStore -> StoreLR -> RegisterList -> m ()
+handlePushPopRegs ls st rlist = do
+  sp <- use $ registers.r13
+  case ls of
+    -- Read blocks of memory, from the stack, shrinking the stack upwards
+    Load -> do
+      let rlist' = if st then rlist ++ [RegisterName 15] else rlist
+      registers.r13 <~ readBlocks Up sp rlist'
+    Store -> do
+      let rlist' = if st then rlist ++ [RegisterName 13] else rlist
+      registers.r13 <~ writeBlocks Down sp rlist'
+
 
 handleMultipleLoadStore :: Monad m => LoadStore -> RegisterName -> RegisterList -> SystemT m ()
 handleMultipleLoadStore = undefined
