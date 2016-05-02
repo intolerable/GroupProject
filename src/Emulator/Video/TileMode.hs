@@ -96,7 +96,7 @@ drawTextBG _ pixFormat tileMapAddr tileSetAddr offSet@(xOff, yOff) palette = do
 readTileMap :: AddressSpace m => Address -> m (TileMap)
 readTileMap addr = readRange (addr, addr + 0x000007FF)
 
-readCharBlocks :: AddressSpace m => Address -> PixFormat -> m (TileSet)
+readCharBlocks :: AddressSpace m => Address -> PixFormat -> m TileSet
 readCharBlocks addr False = readRange (addr, addr + 0x00007FFF)
 readCharBlocks addr True = readRange (addr, addr + 0x0000FFFF)
 
