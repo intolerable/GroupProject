@@ -14,6 +14,7 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:
+    Control.Concurrent.STM.TXChan
     Emulator
     Emulator.Args
     Emulator.CPU
