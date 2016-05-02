@@ -79,3 +79,11 @@ convToFixedNum low up
     fracPor = fromIntegral $ $(bitmask 7 0) hword
     intPor = fromIntegral $ $(bitmask 14 8) hword
     sign = testBit hword 15
+
+affineParameters :: Address -> Address -> Address -> Address -> Array Address Byte -> AffineParameters
+affineParameters addr0 addr1 addr2 addr3 mem = (pa, pb, pc, pd)
+  where
+    pa = convToFixedNum (mem!(addr0)) (mem!(addr0 + 0x00000001))
+    pb = convToFixedNum (mem!(addr1)) (mem!(addr1 + 0x00000001))
+    pc = convToFixedNum (mem!(addr2)) (mem!(addr2 + 0x00000001))
+    pd = convToFixedNum (mem!(addr3)) (mem!(addr3 + 0x00000001))
