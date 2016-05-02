@@ -14,7 +14,8 @@ import Emulator.ROM.Parser
 import Emulator.Types
 import Emulator.Video.Display
 
-import Control.Concurrent.STM
+import Control.Concurrent.Async
+import Control.Concurrent.STM.TXChan
 import Control.Lens
 import Control.Monad
 import Data.Bits
@@ -30,17 +31,18 @@ import qualified Graphics.UI.GLUT as GLUT
 main :: IO ()
 main = do
   args <- getArgs
-  unless (headless args) $ do
-    initGL
-    GLUT.mainLoop
-  loadROM (romFile args) (biosFile args)
+  chan <- newEmptyTXChanIO
+  withAsync (loadROM chan (romFile args) (biosFile args)) $ \_ -> do
+    unless (headless args) $ do
+      initGL chan
+      GLUT.mainLoop
 
 -- | Initialize OpenGL and set up the window ready to render sprite- and tile-based 2D
 --     graphics. We enable double-buffering and alpha modes, create a window with a
 --     modified ortho (in order to match GBA device pixels to GL units), and then
 --     link the functions for the display and idle loops.
-initGL :: IO ()
-initGL = do
+initGL :: TXChan SystemState -> IO ()
+initGL chan = do
   _ <- GLUT.getArgsAndInitialize
   GLUT.initialDisplayMode $=
     [ GLUT.RGBAMode
@@ -55,7 +57,6 @@ initGL = do
   GLUT.clearColor $= Color4 0 0 0 0
   GLUT.texture Texture2D $= Enabled
   GLUT.displayCallback $= display
-  chan <- newEmptyTMVarIO
   GLUT.idleCallback $= Just (animate chan)
 
 -- | Callback that should be executed whenever the window is resized. We just fix the
@@ -67,15 +68,15 @@ reshape (Size x y) = do
   viewport $= (GLUT.Position 0 0, Size x y)
 
 -- | Load a ROM from a given file path, and then start executing the ROM.
-loadROM :: FilePath -> FilePath -> IO ()
-loadROM fp bios =
+loadROM :: TXChan SystemState -> FilePath -> FilePath -> IO ()
+loadROM chan fp bios =
   readROM fp >>= \case
     Left err -> putStrLn err
     Right (rh, _, bs) -> do
       biosBS <- LBS.readFile bios
       case parseARM (mwordFromBS (rh ^. startLocation)) of
         Right (AL, Branch (Link False) _) ->
-          void $ runSystemT interpretLoop $
+          void $ runSystemT (interpretLoop chan) $
             buildInitialState bs biosBS
         _ -> error "loadROM: undefined"
 

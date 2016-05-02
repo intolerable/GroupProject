@@ -9,6 +9,7 @@ import Emulator.Video.VideoController
 import Emulator.Interpreter.Monad
 
 import Control.Concurrent.STM
+import Control.Concurrent.STM.TXChan
 import Control.Monad
 import Control.Monad.IO.Class
 import Graphics.Rendering.OpenGL
@@ -19,10 +20,11 @@ display = do
   clear [GLUT.ColorBuffer]
   GLUT.swapBuffers
 
-animate' :: TMVar SystemState -> GLUT.IdleCallback
+animate' :: TXChan SystemState -> GLUT.IdleCallback
 animate' chan = do
   liftIO $ putStrLn "waiting"
-  mem <- atomically $ takeTMVar chan
+  mem <- atomically $ takeTXChan chan
+  liftIO $ putStrLn "got memory"
   void $ flip runSystemT mem $ do
     --readAddressWord 0x08000000 >>= liftIO . print
     liftIO $ clear [GLUT.ColorBuffer]
@@ -31,7 +33,7 @@ animate' chan = do
     readOAM $ objCharacterVRAMMapping record
     liftIO $ GLUT.swapBuffers
 
-animate :: TMVar SystemState -> GLUT.IdleCallback
+animate :: TXChan SystemState -> GLUT.IdleCallback
 animate _ = do
   clear [GLUT.ColorBuffer]
   GLUT.swapBuffers

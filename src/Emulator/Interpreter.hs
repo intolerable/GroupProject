@@ -11,13 +11,17 @@ import Emulator.Memory
 import Emulator.Types
 import Utilities.Show
 
+import Control.Concurrent.STM
+import Control.Concurrent.STM.TXChan
 import Control.Lens
 import Control.Monad
 import Control.Monad.IO.Class
+import Control.Monad.State.Class
 import Data.Text.Format
 
-interpretLoop :: MonadIO m => SystemT m ()
-interpretLoop = do
+interpretLoop :: TXChan SystemState -> MonadIO m => SystemT m ()
+interpretLoop chan = do
+  get >>= liftIO . atomically . writeTXChan chan
   isTHUMB <- use (registers.flags.thumbStateBit)
   if isTHUMB
     then do
@@ -32,7 +36,7 @@ interpretLoop = do
           debug Info $ format "{THUMB}: pc: {}, instr: {}\n        {}"
             (showHex pc, showHex newInstr, show instr)
           interpretThumb instr
-          interpretLoop
+          interpretLoop chan
     else do
       sysRegisters.r15 += 4
       pc <- prefetchedARM <$> use (sysRegisters.r15) -- adjusted for prefetch
@@ -47,7 +51,7 @@ interpretLoop = do
           debug Info $ format "{ARM}: addr: {}, instr: {}, condition: {} ({})\n        {}"
             (showHex pc, showHex newInstr, show cond, yesNo shouldRun, show instr)
           conditionally cond $ interpretARM instr
-          interpretLoop
+          interpretLoop chan
 
 prefetchedARM :: Address -> Address
 prefetchedARM addr = addr - 8

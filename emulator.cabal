@@ -55,6 +55,7 @@ library
     GLUT,
     OpenGL,
     array,
+    async,
     binary,
     bytestring,
     containers,
