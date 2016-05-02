@@ -35,12 +35,12 @@ mode1 :: AddressIO m => Palette -> LCDControl -> m ()
 mode1 palette _ = do
   textBG 0x04000008 0x04000010 0x04000012 palette
   textBG 0x0400000A 0x04000014 0x04000016 palette
-  affineBG
+  affineBG 0x0400000C 0x04000028 0x04000020 palette
 
 mode2 :: AddressIO m => Palette -> LCDControl -> m ()
-mode2 _ _ = do
-  affineBG
-  affineBG
+mode2 palette _ = do
+  affineBG 0x0400000C 0x04000028 0x04000020 palette
+  affineBG 0x0400000E 0x04000038 0x04000030 palette
 
 -- Text Mode
 textBG :: AddressIO m => Address -> Address -> Address -> Palette -> m ()
@@ -136,8 +136,15 @@ parseScreenEntry a b pixFormat setBaseAddr = (tileIdx, hFlip, vFlip, palBank)
     vFlip = (testBit hword 11)
     palBank = convIntToAddr (fromIntegral $ $(bitmask 15 12) hword :: Int) False
 
-affineBG :: AddressIO m => m ()
-affineBG = undefined
+affineBG :: AddressIO m => Address -> Address -> Address -> Palette -> m ()
+affineBG bgCNTAddr refBaseAddr paramBaseAddr _pal = do
+  _bg <- recordBGControl bgCNTAddr
+  xWord <- readAddressWord refBaseAddr
+  yWord <- (readAddressWord (refBaseAddr + 0x00000004))
+  paramMem <- readRange (paramBaseAddr, paramBaseAddr + 0x00000007)
+  let _refPoint = (referencePoint xWord, referencePoint yWord)
+  let _params = affineParameters paramBaseAddr (paramBaseAddr + 0x00000002) (paramBaseAddr + 0x00000004) (paramBaseAddr + 0x00000006) paramMem
+  return ()
 
 referencePoint :: MWord -> GLdouble
 referencePoint word
