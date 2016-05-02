@@ -156,11 +156,6 @@ referencePoint word
     intPor = fromIntegral $ $(bitmask 26 8) word :: GLdouble
     sign = testBit word 27
 
-data BGRefPoints =  -- W. For all non text modes. For scrolling the screen
-  BGRefPoints { x :: GLdouble
-              , y :: GLdouble }
-  deriving (Show, Read, Eq)
-
 -- Returns number of tiles to be drawn
 affineBGSize :: Byte -> (Int, Int)
 affineBGSize byt
