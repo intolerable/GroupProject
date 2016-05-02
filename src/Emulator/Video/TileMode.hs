@@ -46,13 +46,11 @@ mode2 _ _ = do
 textBG :: AddressIO m => Address -> Address -> Address -> Palette -> m ()
 textBG bgCNTAddr xOffAddr yOffAddr palette = do
   bg <- recordBGControl bgCNTAddr
-  bgOffset <- recordBGOffset xOffAddr yOffAddr
-  let xOff = -(fromIntegral (xOffset bgOffset) :: GLdouble)
-  let yOff = -(fromIntegral (yOffset bgOffset) :: GLdouble)
-  let tileSetAddr = baseTileSetAddr $ characterBaseBlock bg
-  let tileMapAddr = baseTileMapAddr $ screenBaseBlock bg
-  let paletteFormat = colorsPalettes bg
-  drawTextBG (fromIntegral (screenSize bg)) paletteFormat tileMapAddr tileSetAddr (xOff, yOff) palette
+  xHWord <- readAddressHalfWord xOffAddr
+  yHWord <- readAddressHalfWord yOffAddr
+  let xOff = negate (fromIntegral $ $(bitmask 8 0) xHWord) :: GLdouble
+  let yOff = negate (fromIntegral $ $(bitmask 8 0) yHWord) :: GLdouble
+  drawTextBG (screenSize bg) (colorsPalettes bg) (screenBaseBlock bg) (characterBaseBlock bg) (xOff, yOff) palette
   return ()
 
 -- Gets the base memory addres for the tile
@@ -163,3 +161,26 @@ affineBGSize byt
   | byt == 1 = (32, 32)
   | byt == 2 = (64, 64)
   | otherwise = (128, 128)
+
+data BGControl =       -- R/W. BGs 0-3
+  BGControl { bgPriority :: Int          -- 0 = Highest
+            , characterBaseBlock :: TileSetBaseAddress  -- =BG Tile Data. Indicates the start of tile counting
+            , mosaic :: Bool
+            , colorsPalettes :: Bool      -- (0=16/16, 1=256/1)
+            , screenBaseBlock :: TileMapBaseAddress
+            , displayAreaFlow :: Bool     -- BG 2 & BG 3 only
+            , screenSize :: Int }
+  deriving (Show, Read, Eq)
+
+-- Reads a mem address that points to bgcnt register
+recordBGControl :: AddressSpace m => Address -> m BGControl
+recordBGControl addr = do
+  hword <- readAddressHalfWord addr
+  let bgCNT = BGControl (fromIntegral $ $(bitmask 1 0) hword)
+                        (baseTileSetAddr (fromIntegral $ $(bitmask 3 2) hword))
+                        (testBit hword 6)
+                        (testBit hword 7)
+                        (baseTileMapAddr (fromIntegral $ $(bitmask 12 8) hword))
+                        (testBit hword 13)
+                        (fromIntegral $ $(bitmask 15 14) hword)
+  return bgCNT
