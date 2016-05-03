@@ -57,7 +57,7 @@ initGL chan = do
   GLUT.clearColor $= Color4 0 0 0 0
   GLUT.texture Texture2D $= Enabled
   GLUT.displayCallback $= display
-  GLUT.idleCallback $= Just (animate chan)
+  GLUT.idleCallback $= Just (animate' chan)
 
 -- | Callback that should be executed whenever the window is resized. We just fix the
 --     ortho to 240x160 and set the correct window size.

@@ -12,10 +12,11 @@ import Utilities.Parser.TemplateHaskell
 import qualified Emulator.CPU.Instructions.THUMB.Opcodes as Op
 
 import Control.Lens hiding (op)
+import Control.Monad.IO.Class
 import Data.Bits
 import Data.Int
 
-interpretThumb :: Monad m => THUMBInstruction -> SystemT m ()
+interpretThumb :: MonadIO m => THUMBInstruction -> SystemT m ()
 interpretThumb instr =
   case instr of
     MoveShiftedRegister s r ->
