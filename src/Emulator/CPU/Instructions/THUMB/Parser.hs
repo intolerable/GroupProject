@@ -75,7 +75,7 @@ readMovShifted w = MoveShiftedRegister shifted dest
       | op == 0 = LogicalLeft
       | op == 1 = LogicalRight
       | op == 2 = ArithRight
-      | otherwise = undefined
+      | otherwise = error "readMovShifted: invalid shift type"
     shifted = AmountShift (fromIntegral op) operation $ RegisterName $ fromIntegral $ $(bitmask 5 3) w
     dest = RegisterName $ fromIntegral $ w .&. 0b111
 
@@ -87,7 +87,7 @@ readMovCmpAddSub w = MovCmpAddSubImmediate opcode op1 $ fromIntegral immediate
       1 -> CMP
       2 -> ADD
       3 -> SUB
-      _ -> undefined
+      _ -> error "readMovCmpAddSub: invalid opcode"
     op1 = RegisterName $ fromIntegral $ $(bitmask 10 8) w
     immediate = w .&. 0xFF
 
@@ -203,7 +203,7 @@ readMultipleLoadStore w = MultipleLoadStore ls base rlist
     rlist = parseRegisterList (fromIntegral $ $(bitmask 7 0) w) 8
 
 readThumbSoftwareInterrupt :: HalfWord -> THUMBInstruction
-readThumbSoftwareInterrupt = undefined
+readThumbSoftwareInterrupt = error "readThumbSoftwareInterrupt: unimplemented parser"
 
 readConditionalBranch :: HalfWord -> THUMBInstruction
 readConditionalBranch w = ConditionalBranch cond offset
