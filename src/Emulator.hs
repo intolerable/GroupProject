@@ -32,10 +32,13 @@ main :: IO ()
 main = do
   args <- getArgs
   chan <- newEmptyTXChanIO
-  withAsync (loadROM chan (romFile args) (biosFile args)) $ \_ -> do
-    unless (headless args) $ do
-      initGL chan
-      GLUT.mainLoop
+  withAsync (loadROM chan (romFile args) (biosFile args)) $ \thread -> do
+    if headless args
+      then
+        wait thread
+      else do
+        initGL chan
+        GLUT.mainLoop
 
 -- | Initialize OpenGL and set up the window ready to render sprite- and tile-based 2D
 --     graphics. We enable double-buffering and alpha modes, create a window with a
