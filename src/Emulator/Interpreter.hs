@@ -28,6 +28,7 @@ interpretLoop chan = do
       sysRegisters.r15 += 2
       pc <- prefetchedTHUMB <$> use (sysRegisters.r15) -- adjusted for prefetch
       newInstr <- readAddressHalfWord pc
+      when (newInstr == 0x0000) $ error "probably broken instruction"
       case parseTHUMB newInstr of
         Left err -> do
           debug Error $ format "{} {} {}" (showHex pc, showHex newInstr, show err)
