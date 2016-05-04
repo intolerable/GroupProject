@@ -22,7 +22,9 @@ bitmapModes cnt = do
   let params = affineParameters 0x04000020 0x04000022 0x04000024 0x04000026 paramMem
   case bgMode cnt of
     3 -> mode3n5 bgCNT refPoint params (240, 160) (0x06000000, 0x06012BFF)
-    4 -> mode4 bgCNT refPoint params (240, 160) (0x0600A000, 0x006013FFF)
+    4 -> if displayFrameSelect cnt
+      then mode4 bgCNT refPoint params (240, 160) (0x0600A000, 0x060135FF)
+      else mode4 bgCNT refPoint params (240, 160) (0x06000000, 0x0060095FF)
     _ -> if displayFrameSelect cnt
       then mode3n5 bgCNT refPoint params (160, 128) (0x0600A000, 0x006013FFF)
       else mode3n5 bgCNT refPoint params (160, 128) (0x06000000, 0x006009FFF)
