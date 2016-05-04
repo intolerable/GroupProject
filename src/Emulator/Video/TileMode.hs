@@ -13,9 +13,7 @@ import Data.Bits
 import Graphics.Rendering.OpenGL
 
 type ScreenEntry = (Address, Bool, Bool, Address)
-type TileMapBaseAddress = Address
 type TileMap = Array Address Byte
-type AffineRefPoints = (GLdouble, GLdouble)
 
 tileModes :: AddressIO m => LCDControl -> m ()
 tileModes cnt = do
@@ -53,13 +51,6 @@ textBG bgCNTAddr xOffAddr yOffAddr palette = do
   let yOff = negate (fromIntegral $ $(bitmask 8 0) yHWord) :: GLdouble
   drawTextBG (screenSize bg) (colorsPalettes bg) (screenBaseBlock bg) (characterBaseBlock bg) (xOff, yOff) palette
   return ()
-
--- Gets the base memory addres for the tile
-baseTileSetAddr :: Byte -> TileSetBaseAddress
-baseTileSetAddr tileBase = 0x06000000 + (0x00004000 * (fromIntegral tileBase))
-
-baseTileMapAddr :: Byte -> TileMapBaseAddress
-baseTileMapAddr mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))
 
 -- if False then Colour is 4bpp aka S-tiles
 drawTextBG :: AddressIO m => Int -> PixFormat -> TileMapBaseAddress -> TileSetBaseAddress -> TileOffset -> Palette -> m ()
@@ -156,16 +147,6 @@ drawAffineBG 1 _pixFormat _tileMapAddr _tileSetAddr _params _refPoints _pal = un
 drawAffineBG 2 _pixFormat _tileMapAddr _tileSetAddr _params _refPoints _pal = undefined
 drawAffineBG _ _pixFormat _tileMapAddr _tileSetAddr _params _refPoints _pal = undefined
 
-referencePoint :: MWord -> GLdouble
-referencePoint word
-  | sign = negate val
-  | otherwise = val
-  where
-    val = intPor + (frac / 256)
-    frac = fromIntegral $ $(bitmask 7 0) word :: GLdouble
-    intPor = fromIntegral $ $(bitmask 26 8) word :: GLdouble
-    sign = testBit word 27
-
 -- Returns number of tiles to be drawn
 affineBGSize :: Byte -> (Int, Int)
 affineBGSize byt
@@ -173,26 +154,3 @@ affineBGSize byt
   | byt == 1 = (32, 32)
   | byt == 2 = (64, 64)
   | otherwise = (128, 128)
-
-data BGControl =       -- R/W. BGs 0-3
-  BGControl { bgPriority :: Int          -- 0 = Highest
-            , characterBaseBlock :: TileSetBaseAddress  -- =BG Tile Data. Indicates the start of tile counting
-            , mosaic :: Bool
-            , colorsPalettes :: Bool      -- (0=16/16, 1=256/1)
-            , screenBaseBlock :: TileMapBaseAddress
-            , displayAreaFlow :: Bool     -- BG 2 & BG 3 only
-            , screenSize :: Int }
-  deriving (Show, Read, Eq)
-
--- Reads a mem address that points to bgcnt register
-recordBGControl :: AddressSpace m => Address -> m BGControl
-recordBGControl addr = do
-  hword <- readAddressHalfWord addr
-  let bgCNT = BGControl (fromIntegral $ $(bitmask 1 0) hword)
-                        (baseTileSetAddr (fromIntegral $ $(bitmask 3 2) hword))
-                        (testBit hword 6)
-                        (testBit hword 7)
-                        (baseTileMapAddr (fromIntegral $ $(bitmask 12 8) hword))
-                        (testBit hword 13)
-                        (fromIntegral $ $(bitmask 15 14) hword)
-  return bgCNT

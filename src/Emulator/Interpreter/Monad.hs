@@ -20,6 +20,8 @@ data SystemState =
   SystemState { _systemStateSysRegisters :: Registers
               , _systemStateSysBIOS :: Memory
               , _systemStateSysROM :: Memory
+              , _systemStateSysIORegisters :: Memory
+              , _systemStateSysPaletteRAM :: Memory
               , _systemStateSysRAM :: Memory
               , _systemStateSysOAM :: Memory
               , _systemStateSysVRAM :: Memory }
@@ -29,11 +31,13 @@ makeFields ''SystemState
 
 buildInitialState :: ByteString -> ByteString -> SystemState
 buildInitialState rom bios =
-  SystemState (def & r15 .~ 0x08000004) biosArray romArray initialRAM initialVRAM initialOAM
+  SystemState (def & r15 .~ 0x00000004) biosArray romArray initialIORegs initialPaletteRAM initialRAM initialOAM initialVRAM
     where
       initialRAM = accumArray const 0 (0x02000000, 0x0203FFFF) []
       initialVRAM = accumArray const 0 (0x06000000, 0x06017FFF) []
       initialOAM = accumArray const 0 (0x07000000, 0x070003FF) []
+      initialIORegs = accumArray const 0 (0x04000000, 0x040003FF) []
+      initialPaletteRAM = accumArray const 0 (0x05000000, 0x050003FF) []
       -- not totally sure that this is producing the correct output
       romArray = accumArray (flip const) 0 (0x08000000, 0x0DFFFFFF) $ zip [0x08000000..] $ BS.unpack rom
       biosArray = accumArray (flip const) 0 (0x00000000, 0x00003FFF) $ zip [0x00000000..] $ BS.unpack bios
@@ -59,6 +63,18 @@ instance Monad m => CanWrite WRAM (SystemT m) where
 
 instance Monad m => CanRead WRAM (SystemT m) where
   readByte _ a = SystemT $ zoom sysRAM $ gets (! a)
+
+instance Monad m => CanWrite IORegisters (SystemT m) where
+  writeByte _ a b = SystemT $ zoom sysIORegisters $ modify (// [(a, b)])
+
+instance Monad m => CanRead IORegisters (SystemT m) where
+  readByte _ a = SystemT $ zoom sysIORegisters $ gets (! a)
+
+instance Monad m => CanWrite PaletteRAM (SystemT m) where
+  writeByte _ a b = SystemT $ zoom sysPaletteRAM $ modify (// [(a, b)])
+
+instance Monad m => CanRead PaletteRAM (SystemT m) where
+  readByte _ a = SystemT $ zoom sysPaletteRAM $ gets (! a)
 
 instance Monad m => CanRead ROM (SystemT m) where
   readByte _ a = SystemT $ zoom sysROM $ gets (! a)

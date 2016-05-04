@@ -12,12 +12,17 @@ import Utilities.Parser.TemplateHaskell
 
 type AddressIO m = (AddressSpace m, MonadIO m)
 type AffineParameters = (GLdouble, GLdouble, GLdouble, GLdouble)
+type AffineRefPoints = (GLdouble, GLdouble)
 type PixFormat = Bool
 type QuadCoords = ((GLdouble, GLdouble), (GLdouble, GLdouble), (GLdouble, GLdouble), (GLdouble, GLdouble))
 type Tile = Array Address Byte
+type TileMapBaseAddress = Address
 type TileOffset = (GLdouble, GLdouble)
 type TileSet = Array Address Byte
 type TileSetBaseAddress = Address
+
+-- drawTile :: StorableArray Address HalfWord -> QuadCoords -> IO ()
+-- drawTile arr coords = drawTile' arr coords UnsignedByte
 
 drawTile :: StorableArray Address HalfWord -> QuadCoords -> IO ()
 drawTile arr ((x1, y1), (x2, y2), (x3, y3), (x4, y4)) = do
@@ -50,7 +55,7 @@ loadTexture :: StorableArray Address HalfWord -> IO TextureObject
 loadTexture arr = withStorableArray arr $ \ptr -> do
     tile <- genObjectName
     textureBinding Texture2D $= Just tile
-    texImage2D Texture2D NoProxy 0 RGBA' (TextureSize2D 8 8) 0 (PixelData RGB UnsignedByte ptr)
+    texImage2D Texture2D NoProxy 0 RGBA' (TextureSize2D 8 8) 0 (PixelData RGB UnsignedShort ptr)
     return tile
 
 bytesToHalfWord :: Byte -> Byte -> HalfWord
@@ -80,6 +85,16 @@ convToFixedNum low up
     intPor = fromIntegral $ $(bitmask 14 8) hword
     sign = testBit hword 15
 
+referencePoint :: MWord -> GLdouble
+referencePoint word
+  | sign = negate val
+  | otherwise = val
+  where
+    val = intPor + (frac / 256)
+    frac = fromIntegral $ $(bitmask 7 0) word :: GLdouble
+    intPor = fromIntegral $ $(bitmask 26 8) word :: GLdouble
+    sign = testBit word 27
+
 affineParameters :: Address -> Address -> Address -> Address -> Array Address Byte -> AffineParameters
 affineParameters addr0 addr1 addr2 addr3 mem = (pa, pb, pc, pd)
   where
@@ -87,3 +102,33 @@ affineParameters addr0 addr1 addr2 addr3 mem = (pa, pb, pc, pd)
     pb = convToFixedNum (mem!(addr1)) (mem!(addr1 + 0x00000001))
     pc = convToFixedNum (mem!(addr2)) (mem!(addr2 + 0x00000001))
     pd = convToFixedNum (mem!(addr3)) (mem!(addr3 + 0x00000001))
+
+data BGControl =       -- R/W. BGs 0-3
+  BGControl { bgPriority :: Int          -- 0 = Highest
+            , characterBaseBlock :: TileSetBaseAddress  -- =BG Tile Data. Indicates the start of tile counting
+            , mosaic :: Bool
+            , colorsPalettes :: Bool      -- (0=16/16, 1=256/1)
+            , screenBaseBlock :: TileMapBaseAddress
+            , displayAreaFlow :: Bool     -- BG 2 & BG 3 only
+            , screenSize :: Int }
+  deriving (Show, Read, Eq)
+
+-- Reads a mem address that points to bgcnt register
+recordBGControl :: AddressSpace m => Address -> m BGControl
+recordBGControl addr = do
+  hword <- readAddressHalfWord addr
+  let bgCNT = BGControl (fromIntegral $ $(bitmask 1 0) hword)
+                        (baseTileSetAddr (fromIntegral $ $(bitmask 3 2) hword))
+                        (testBit hword 6)
+                        (testBit hword 7)
+                        (baseTileMapAddr (fromIntegral $ $(bitmask 12 8) hword))
+                        (testBit hword 13)
+                        (fromIntegral $ $(bitmask 15 14) hword)
+  return bgCNT
+
+-- Gets the base memory addres for the tile
+baseTileSetAddr :: Byte -> TileSetBaseAddress
+baseTileSetAddr tileBase = 0x06000000 + (0x00004000 * (fromIntegral tileBase))
+
+baseTileMapAddr :: Byte -> TileMapBaseAddress
+baseTileMapAddr mapBase = 0x06000000 + (0x00000800 * (fromIntegral mapBase))

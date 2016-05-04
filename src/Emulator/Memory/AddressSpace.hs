@@ -6,6 +6,8 @@ module Emulator.Memory.AddressSpace
   , BIOS
   , VRAM
   , WRAM
+  , IORegisters
+  , PaletteRAM
   , GamePakWRAM
   , PureMemoryT()
   , PureMemory
@@ -69,6 +71,8 @@ data VRAM
 data WRAM
 data GamePakWRAM
 data BIOS
+data IORegisters
+data PaletteRAM
 
 newtype PureMemoryT x m a = PureMemoryT (StateT Memory m a)
   deriving (Functor, Applicative, Monad, MonadTrans, MonadIO)
