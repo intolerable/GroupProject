@@ -8,7 +8,6 @@ import Utilities.Parser.TemplateHaskell
 import Data.Array
 import Data.Bits
 import Data.Proxy
-import Control.Monad.IO.Class
 
 type AddressSpace m =
   ( Functor m, Monad m
@@ -18,12 +17,10 @@ type AddressSpace m =
   , CanRead OAM m, CanWrite OAM m
   , CanRead VRAM m, CanWrite VRAM m
   , CanRead IORegisters m, CanWrite IORegisters m
-  , CanRead PaletteRAM m, CanWrite PaletteRAM m
-  , MonadIO m )
+  , CanRead PaletteRAM m, CanWrite PaletteRAM m )
 
 writeAddressByte :: AddressSpace m => Address -> Byte -> m ()
 writeAddressByte addr b = do
-  liftIO $ print addr
   case addressToRegionType addr of
     (_, BIOS) -> return ()
     (_, WRAM) -> writeByte (Proxy :: Proxy WRAM) addr b
@@ -38,7 +35,6 @@ writeAddressByte addr b = do
 
 readAddressByte :: AddressSpace m => Address -> m Byte
 readAddressByte addr = do
-  liftIO $ print addr
   case addressToRegionType addr of
     (_, BIOS) -> readByte (Proxy :: Proxy BIOS) addr
     (_, WRAM) -> readByte (Proxy :: Proxy WRAM) addr
@@ -53,7 +49,6 @@ readAddressByte addr = do
 
 writeAddressHalfWord :: AddressSpace m => Address -> HalfWord -> m ()
 writeAddressHalfWord addr hw = do
-  liftIO $ print addr
   case addressToRegionType addr of
     (_, BIOS) -> return ()
     (_, WRAM) -> writeHalfWord (Proxy :: Proxy WRAM) addr hw
@@ -68,7 +63,6 @@ writeAddressHalfWord addr hw = do
 
 readAddressHalfWord :: AddressSpace m => Address -> m HalfWord
 readAddressHalfWord addr = do
-  liftIO $ print addr
   case addressToRegionType addr of
     (_, BIOS) -> readHalfWord (Proxy :: Proxy BIOS) addr
     (_, WRAM) -> readHalfWord (Proxy :: Proxy WRAM) addr
@@ -83,7 +77,6 @@ readAddressHalfWord addr = do
 
 writeAddressWord :: AddressSpace m => Address -> MWord -> m ()
 writeAddressWord addr w = do
-  liftIO $ print addr
   case addressToRegionType addr of
     (_, BIOS) -> return ()
     (_, WRAM) -> writeWord (Proxy :: Proxy WRAM) addr w
@@ -98,7 +91,6 @@ writeAddressWord addr w = do
 
 readAddressWord :: AddressSpace m => Address -> m MWord
 readAddressWord addr = do
-  liftIO $ print addr
   case addressToRegionType addr of
     (_, BIOS) -> readWord (Proxy :: Proxy BIOS) addr
     (_, WRAM) -> readWord (Proxy :: Proxy WRAM) addr
