@@ -50,7 +50,7 @@ loadTexture :: StorableArray Address HalfWord -> IO TextureObject
 loadTexture arr = withStorableArray arr $ \ptr -> do
     tile <- genObjectName
     textureBinding Texture2D $= Just tile
-    texImage2D Texture2D NoProxy 0 RGBA' (TextureSize2D 8 8) 0 (PixelData RGB UnsignedByte ptr)
+    texImage2D Texture2D NoProxy 0 RGBA' (TextureSize2D 8 8) 0 (PixelData RGB UnsignedShort ptr)
     return tile
 
 bytesToHalfWord :: Byte -> Byte -> HalfWord
