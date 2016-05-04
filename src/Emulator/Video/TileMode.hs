@@ -15,6 +15,7 @@ import Graphics.Rendering.OpenGL
 type ScreenEntry = (Address, Bool, Bool, Address)
 type TileMapBaseAddress = Address
 type TileMap = Array Address Byte
+type AffineRefPoints = (GLdouble, GLdouble)
 
 tileModes :: AddressIO m => LCDControl -> m ()
 tileModes cnt = do
@@ -145,6 +146,15 @@ affineBG bgCNTAddr refBaseAddr paramBaseAddr _pal = do
   let _refPoint = (referencePoint xWord, referencePoint yWord)
   let _params = affineParameters paramBaseAddr (paramBaseAddr + 0x00000002) (paramBaseAddr + 0x00000004) (paramBaseAddr + 0x00000006) paramMem
   return ()
+
+drawAffineBG :: AddressIO m => Int -> PixFormat -> TileMapBaseAddress -> TileSetBaseAddress -> AffineParameters -> AffineRefPoints -> Palette -> m ()
+drawAffineBG 0 pixFormat tileMapAddr tileSetAddr _params _refPoints _pal = do
+  _tileMap <- readTileMap tileMapAddr
+  _tileSet <- readCharBlocks tileSetAddr pixFormat
+  return ()
+drawAffineBG 1 _pixFormat _tileMapAddr _tileSetAddr _params _refPoints _pal = undefined
+drawAffineBG 2 _pixFormat _tileMapAddr _tileSetAddr _params _refPoints _pal = undefined
+drawAffineBG _ _pixFormat _tileMapAddr _tileSetAddr _params _refPoints _pal = undefined
 
 referencePoint :: MWord -> GLdouble
 referencePoint word
