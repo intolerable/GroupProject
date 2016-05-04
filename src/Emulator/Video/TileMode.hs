@@ -35,24 +35,22 @@ mode1 :: AddressIO m => Palette -> LCDControl -> m ()
 mode1 palette _ = do
   textBG 0x04000008 0x04000010 0x04000012 palette
   textBG 0x0400000A 0x04000014 0x04000016 palette
-  affineBG
+  affineBG 0x0400000C 0x04000028 0x04000020 palette
 
 mode2 :: AddressIO m => Palette -> LCDControl -> m ()
-mode2 _ _ = do
-  affineBG
-  affineBG
+mode2 palette _ = do
+  affineBG 0x0400000C 0x04000028 0x04000020 palette
+  affineBG 0x0400000E 0x04000038 0x04000030 palette
 
 -- Text Mode
 textBG :: AddressIO m => Address -> Address -> Address -> Palette -> m ()
 textBG bgCNTAddr xOffAddr yOffAddr palette = do
   bg <- recordBGControl bgCNTAddr
-  bgOffset <- recordBGOffset xOffAddr yOffAddr
-  let xOff = -(fromIntegral (xOffset bgOffset) :: GLdouble)
-  let yOff = -(fromIntegral (yOffset bgOffset) :: GLdouble)
-  let tileSetAddr = baseTileSetAddr $ characterBaseBlock bg
-  let tileMapAddr = baseTileMapAddr $ screenBaseBlock bg
-  let paletteFormat = colorsPalettes bg
-  drawTextBG (fromIntegral (screenSize bg)) paletteFormat tileMapAddr tileSetAddr (xOff, yOff) palette
+  xHWord <- readAddressHalfWord xOffAddr
+  yHWord <- readAddressHalfWord yOffAddr
+  let xOff = negate (fromIntegral $ $(bitmask 8 0) xHWord) :: GLdouble
+  let yOff = negate (fromIntegral $ $(bitmask 8 0) yHWord) :: GLdouble
+  drawTextBG (screenSize bg) (colorsPalettes bg) (screenBaseBlock bg) (characterBaseBlock bg) (xOff, yOff) palette
   return ()
 
 -- Gets the base memory addres for the tile
@@ -98,7 +96,7 @@ drawTextBG _ pixFormat tileMapAddr tileSetAddr offSet@(xOff, yOff) palette = do
 readTileMap :: AddressSpace m => Address -> m (TileMap)
 readTileMap addr = readRange (addr, addr + 0x000007FF)
 
-readCharBlocks :: AddressSpace m => Address -> PixFormat -> m (TileSet)
+readCharBlocks :: AddressSpace m => Address -> PixFormat -> m TileSet
 readCharBlocks addr False = readRange (addr, addr + 0x00007FFF)
 readCharBlocks addr True = readRange (addr, addr + 0x0000FFFF)
 
@@ -138,8 +136,15 @@ parseScreenEntry a b pixFormat setBaseAddr = (tileIdx, hFlip, vFlip, palBank)
     vFlip = (testBit hword 11)
     palBank = convIntToAddr (fromIntegral $ $(bitmask 15 12) hword :: Int) False
 
-affineBG :: AddressIO m => m ()
-affineBG = undefined
+affineBG :: AddressIO m => Address -> Address -> Address -> Palette -> m ()
+affineBG bgCNTAddr refBaseAddr paramBaseAddr _pal = do
+  _bg <- recordBGControl bgCNTAddr
+  xWord <- readAddressWord refBaseAddr
+  yWord <- (readAddressWord (refBaseAddr + 0x00000004))
+  paramMem <- readRange (paramBaseAddr, paramBaseAddr + 0x00000007)
+  let _refPoint = (referencePoint xWord, referencePoint yWord)
+  let _params = affineParameters paramBaseAddr (paramBaseAddr + 0x00000002) (paramBaseAddr + 0x00000004) (paramBaseAddr + 0x00000006) paramMem
+  return ()
 
 referencePoint :: MWord -> GLdouble
 referencePoint word
@@ -151,11 +156,6 @@ referencePoint word
     intPor = fromIntegral $ $(bitmask 26 8) word :: GLdouble
     sign = testBit word 27
 
-data BGRefPoints =  -- W. For all non text modes. For scrolling the screen
-  BGRefPoints { x :: GLdouble
-              , y :: GLdouble }
-  deriving (Show, Read, Eq)
-
 -- Returns number of tiles to be drawn
 affineBGSize :: Byte -> (Int, Int)
 affineBGSize byt
@@ -163,3 +163,26 @@ affineBGSize byt
   | byt == 1 = (32, 32)
   | byt == 2 = (64, 64)
   | otherwise = (128, 128)
+
+data BGControl =       -- R/W. BGs 0-3
+  BGControl { bgPriority :: Int          -- 0 = Highest
+            , characterBaseBlock :: TileSetBaseAddress  -- =BG Tile Data. Indicates the start of tile counting
+            , mosaic :: Bool
+            , colorsPalettes :: Bool      -- (0=16/16, 1=256/1)
+            , screenBaseBlock :: TileMapBaseAddress
+            , displayAreaFlow :: Bool     -- BG 2 & BG 3 only
+            , screenSize :: Int }
+  deriving (Show, Read, Eq)
+
+-- Reads a mem address that points to bgcnt register
+recordBGControl :: AddressSpace m => Address -> m BGControl
+recordBGControl addr = do
+  hword <- readAddressHalfWord addr
+  let bgCNT = BGControl (fromIntegral $ $(bitmask 1 0) hword)
+                        (baseTileSetAddr (fromIntegral $ $(bitmask 3 2) hword))
+                        (testBit hword 6)
+                        (testBit hword 7)
+                        (baseTileMapAddr (fromIntegral $ $(bitmask 12 8) hword))
+                        (testBit hword 13)
+                        (fromIntegral $ $(bitmask 15 14) hword)
+  return bgCNT

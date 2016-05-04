@@ -116,13 +116,10 @@ getAffineBaseAddr :: Int -> Address
 getAffineBaseAddr n = 0x07000006 + (0x00000008 * fromIntegral n)
 
 objAffine :: HalfWord -> OAM -> AffineParameters
-objAffine attr1 oam = (pa, pb, pc, pd)
+objAffine attr1 oam = params
   where
     addr = getAffineBaseAddr $ fromIntegral $ $(bitmask 13 9) attr1
-    pa = convToFixedNum (oam!(addr)) (oam!(addr + 0x00000001))
-    pb = convToFixedNum (oam!(addr + 0x00000008)) (oam!(addr + 0x00000009))
-    pc = convToFixedNum (oam!(addr + 0x00000010)) (oam!(addr + 0x00000011))
-    pd = convToFixedNum (oam!(addr + 0x00000018)) (oam!(addr + 0x00000019))
+    params = affineParameters addr (addr + 0x00000008) (addr + 0x00000010) (addr + 0x00000018) oam
 
 attributes :: OAM -> Address -> (HalfWord, HalfWord, HalfWord)
 attributes obj objAddr = (attr0, attr1, attr2)
