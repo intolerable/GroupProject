@@ -23,5 +23,5 @@ spec = do
     it "should be able to handle a branch instruction" $ do
       let run instr = snd $ runIdentity $ runSystemT instr initialSystem
       -- these don't take into account the prefetch because they don't ever have pc incremented
-      run (interpretARM (Branch (Link False) 184)) ^. sysRegisters.r15 `shouldBe` 0x080000C0
-      run (interpretARM (Branch (Link True) 184)) ^. sysRegisters.r14 `shouldBe` 0x08000004
+      run (interpretARM (Branch (Link False) 184)) ^. sysRegisters.r15 `shouldBe` 0x000000C0
+      run (interpretARM (Branch (Link True) 184)) ^. sysRegisters.r14 `shouldBe` 0x00000004
