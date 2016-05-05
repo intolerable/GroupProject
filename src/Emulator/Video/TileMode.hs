@@ -9,7 +9,6 @@ import Utilities.Parser.TemplateHaskell
 
 import Data.Array.IArray
 import Data.Bits
-import Graphics.Rendering.OpenGL
 
 data ScreenObj =
   NormalBG [Tile'] Priority |
@@ -66,8 +65,8 @@ readTextBG bgCNTAddr xOffAddr yOffAddr = do
   bg <- recordBGControl bgCNTAddr
   xHWord <- readAddressHalfWord xOffAddr
   yHWord <- readAddressHalfWord yOffAddr
-  let xOff = negate (fromIntegral $ $(bitmask 8 0) xHWord) :: GLdouble
-  let yOff = negate (fromIntegral $ $(bitmask 8 0) yHWord) :: GLdouble
+  let xOff = negate (fromIntegral $ $(bitmask 8 0) xHWord)
+  let yOff = negate (fromIntegral $ $(bitmask 8 0) yHWord)
   tileSet <- readCharBlocks (characterBaseBlock bg) (colorsPalettes bg)
   tileMapSets <- getTextTileMaps (screenSize bg) (screenBaseBlock bg)
   return (bg, (xOff, yOff), (tileMapSets, tileSet))
