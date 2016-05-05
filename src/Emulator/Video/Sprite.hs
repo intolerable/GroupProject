@@ -31,14 +31,12 @@ readOAM mapMode = do
   return ()
 
 -- Access all 128 objects in the OAM
-recurseOAM :: AddressIO m => OAM -> TileSet -> MappingMode -> Int -> Palette -> m ()
-recurseOAM _ _ _ 128 _ = return ()
-recurseOAM oam tileSet mapMode n pal = do
-  parseObjectAttr obj oam tileSet mapMode objAddr pal
-  recurseOAM oam tileSet mapMode (n+1) pal
+recurseOAM :: OAM -> TileSet -> MappingMode -> Int -> Palette -> Address -> [ScreenObj]
+recurseOAM _ _ _ 0 _ _ = []
+recurseOAM oam tileSet mapMode n pal objAddr = screenObj:recurseOAM oam tileSet mapMode (n-1) pal (objAddr + 0x00000008)
   where
+    screenObj = parseObjectAttr obj oam tileSet mapMode objAddr pal
     obj = ixmap (objAddr, objAddr + 0x00000005) (id) oam
-    objAddr = 0x07000000 + 0x00000008 * (fromIntegral n)
 
 -- Access attributes of object
 parseObjectAttr :: OAM -> OAM -> TileSet -> MappingMode -> Address -> Palette -> ScreenObj
