@@ -76,7 +76,8 @@ readMovShifted w = MoveShiftedRegister shifted dest
       | op == 1 = LogicalRight
       | op == 2 = ArithRight
       | otherwise = error "readMovShifted: invalid shift type"
-    shifted = AmountShift (fromIntegral op) operation $ RegisterName $ fromIntegral $ $(bitmask 5 3) w
+    shifted = AmountShift (fromIntegral shiftVal) operation $ RegisterName $ fromIntegral $ $(bitmask 5 3) w
+    shiftVal = $(bitmask 10 6) w
     dest = RegisterName $ fromIntegral $ w .&. 0b111
 
 readMovCmpAddSub :: HalfWord -> THUMBInstruction
