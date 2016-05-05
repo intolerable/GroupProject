@@ -36,7 +36,8 @@ parseTHUMB w = case greaterId of
       else
         if testBit w 10
           then Right $ readPushPopRegisters w
-          else Right $ readAddOffsetToSP w
+          else if not $ testBit w 11 then Right $ readAddOffsetToSP w
+                                     else error $ "Undefined instruction: 0x" ++ showHex w
   6 ->
     if not modifierBit
       then Right $ readMultipleLoadStore w
