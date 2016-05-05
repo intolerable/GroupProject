@@ -37,7 +37,7 @@ parseTHUMB w = case greaterId of
         if testBit w 10
           then Right $ readPushPopRegisters w
           else if not $ testBit w 11 then Right $ readAddOffsetToSP w
-                                     else error $ "Undefined instruction: 0x" ++ showHex w
+                                     else error $ "Undefined instruction: " ++ showHex w
   6 ->
     if not modifierBit
       then Right $ readMultipleLoadStore w
@@ -46,7 +46,7 @@ parseTHUMB w = case greaterId of
           then Right $ readThumbSoftwareInterrupt w
           else Right $ readConditionalBranch w
   7 -> if modifierBit then Right $ readLongBranchWithLink w else Right $ readUnconditionalBranch w
-  _ -> error $ "Undefined opcode: 0x" ++ showHex w
+  _ -> error $ "Undefined opcode: " ++ showHex w
   where
     greaterId = $(bitmask 15 13) w
     lesserId = $(bitmask 12 11) w
