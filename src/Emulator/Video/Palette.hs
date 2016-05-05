@@ -31,6 +31,22 @@ pixelData _ palette tile palBank = do
     palLowBound = fst $ bounds palette
     palBankAddr = palLowBound + palBank
 
+pixelData' :: PixFormat -> Palette -> Tile -> Address -> [HalfWord]
+-- 256/1 palette format
+pixelData' True palette tile _ = tilePixelDataList
+  where
+    tilePixelDataList = palette256 palette tile (fst tileBounds) 64
+    tileBounds = bounds tile
+
+-- 16/16 palette format
+pixelData' _ palette tile palBank = tilePixelDataList
+  where
+    bank = ixmap (palBankAddr, (palBankAddr + 0x0000001F)) (id) palette :: Palette
+    tilePixelDataList = palette16 bank tile palBankAddr (fst tileBounds) 32
+    tileBounds = bounds tile
+    palLowBound = fst $ bounds palette
+    palBankAddr = palLowBound + palBank
+
 palette16 :: Palette -> Tile -> Address -> Address -> Int -> [HalfWord]
 palette16 _ _ _ _ 0 = []
 palette16 bank tile palBankBaseAddr tileAddr n = col1:col2:palette16 bank tile palBankBaseAddr (tileAddr + 0x00000001) (n-1)
