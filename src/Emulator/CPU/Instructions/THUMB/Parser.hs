@@ -220,7 +220,10 @@ readLongBranchWithLink :: HalfWord -> THUMBInstruction
 readLongBranchWithLink w = LongBranchWLink lh offset
   where
     lh = if testBit w 11 then Low else High
-    offset = fromIntegral $ $(bitmask 10 0) w
+    offset =
+      case lh of
+        Low -> fromIntegral $ $(bitmask 10 0) w `shiftL` 1
+        High -> fromIntegral ($(bitmask 10 0) w `shiftL` 21) `shiftR` 9
 
 readUnconditionalBranch :: HalfWord -> THUMBInstruction
 readUnconditionalBranch w = ThumbBranch offset
