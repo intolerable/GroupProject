@@ -41,12 +41,11 @@ recurseOAM oam tileSet mapMode n pal = do
     objAddr = 0x07000000 + 0x00000008 * (fromIntegral n)
 
 -- Access attributes of object
-parseObjectAttr :: AddressIO m => OAM -> OAM -> TileSet -> MappingMode -> Address -> Palette -> m ()
-parseObjectAttr obj oam tileSet mapMode objAddr pal = do
-  case mode of
-    0 -> drawSprite size (xOff, yOff) tileIdx mapMode attribs flips
-    1 -> drawAffine size (xOff, yOff) tileIdx mapMode attribs affineParams centre
-    _ -> return ()
+parseObjectAttr :: OAM -> OAM -> TileSet -> MappingMode -> Address -> Palette -> ScreenObj
+parseObjectAttr obj oam tileSet mapMode objAddr pal
+  | mode == 0 = NormalSprite pixData flips priority
+  | mode == 1 = AffineSprite (transformCoords pixData centre affineParams) priority
+  | otherwise = Hidden
   where
     (attr0, attr1, attr2) = attributes obj objAddr
     mode = (fromIntegral $ $(bitmask 9 8) attr0) :: Int
@@ -60,7 +59,9 @@ parseObjectAttr obj oam tileSet mapMode objAddr pal = do
     flips = (testBit attr1 12, testBit attr1 13) :: (Bool, Bool)
     affineParams = objAffine attr1 oam
     palBank = convIntToAddr (fromIntegral $ $(bitmask 15 12) attr2 :: Int) False
+    priority = (fromIntegral $ $(bitmask 11 10) attr2) :: Int
     attribs = SpriteAttribs pixFormat tileSet pal palBank
+    pixData = concat $ spriteTiles size (xOff, yOff) tileIdx mapMode attribs
 
 spriteTiles :: SpriteSize -> TileOffset -> TileSetBaseAddress -> MappingMode -> SpriteAttribs -> [[Tile']]
 spriteTiles (0, _) _ _ _ _ = []
