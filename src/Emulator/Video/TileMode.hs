@@ -69,20 +69,20 @@ readTextBG bgCNTAddr xOffAddr yOffAddr = do
   let xOff = negate (fromIntegral $ $(bitmask 8 0) xHWord) :: GLdouble
   let yOff = negate (fromIntegral $ $(bitmask 8 0) yHWord) :: GLdouble
   tileSet <- readCharBlocks (characterBaseBlock bg) (colorsPalettes bg)
-  tileMapSets <- getTileMaps (screenSize bg) (screenBaseBlock bg)
+  tileMapSets <- getTextTileMaps (screenSize bg) (screenBaseBlock bg)
   return (bg, (xOff, yOff), (tileMapSets, tileSet))
 
-getTileMaps :: AddressSpace m => Int -> TileMapBaseAddress -> m [TileMap]
-getTileMaps 0 tileMapAddr = do
+getTextTileMaps :: AddressSpace m => Int -> TileMapBaseAddress -> m [TileMap]
+getTextTileMaps 0 tileMapAddr = do
   tileMap0 <- readTileMap tileMapAddr
   return [tileMap0]
-getTileMaps 3 tileMapAddr = do
+getTextTileMaps 3 tileMapAddr = do
   tileMap0 <- readTileMap tileMapAddr
   tileMap1 <- readTileMap (tileMapAddr + 0x00000800)
   tileMap2 <- readTileMap (tileMapAddr + 0x00001000)
   tileMap3 <- readTileMap (tileMapAddr + 0x00001800)
   return [tileMap0, tileMap1, tileMap2, tileMap3]
-getTileMaps _ tileMapAddr = do
+getTextTileMaps _ tileMapAddr = do
   tileMap0 <- readTileMap tileMapAddr
   tileMap1 <- readTileMap (tileMapAddr + 0x00000800)
   return [tileMap0, tileMap1]
