@@ -258,7 +258,7 @@ operand2Lens (Right (Rotated x b)) =
       let oldc = r ^. cpsr.carry in
       (oldc, fromIntegral b)
     n -> to $ const $
-      (testBit x (32 - n), fromIntegral x `rotateL` n)
+      (testBit x (32 - n), fromIntegral b `rotateR` n)
 
 fromByte :: forall a. (Enum a, Bounded a) => Byte -> Maybe a
 fromByte b =
