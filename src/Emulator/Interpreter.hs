@@ -17,7 +17,7 @@ import Control.Lens
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.State.Class
-import Data.Text.Format
+import Data.Text.Format hiding (print)
 
 interpretLoop :: TXChan SystemState -> MonadIO m => SystemT m ()
 interpretLoop chan = do
@@ -68,3 +68,17 @@ _debugRegisters :: MonadIO m => SystemT m ()
 _debugRegisters = do
   rs <- mapM use $ map (registers.) [r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15]
   debug Warning $ format "{} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}" (map (showHexPadded 8) rs)
+
+_debugger :: MonadIO m => SystemT m () -> SystemT m ()
+_debugger act = do
+  line <- liftIO getLine
+  case line of
+    "" -> return ()
+    "r" -> do
+      _debugRegisters
+      act
+    "s" -> do
+      f <- use flags
+      liftIO $ print f
+      act
+    _ -> return ()
