@@ -90,7 +90,13 @@ textBG (bg, offset, mapSet) palette = NormalBG bgTiles priority
     bgTiles = getTextBGTiles (screenSize bg) (colorsPalettes bg) offset palette mapSet (screenBaseBlock bg) (characterBaseBlock bg)
     priority = bgPriority bg
 
--- THIS NEEDS TO GET THE TILES USING DRAWTILEMAP
+affineBG :: (BGControl, AffineRefPoints, AffineParameters, (Int, Int), TileMap, TileSet, Centre) -> Palette -> ScreenObj
+affineBG (bg, refPoint, param, size, tileMap, tileSet, centre) pal = AffineBG affineBgTiles priority
+  where
+    bgTiles = concat $ mapToTileSet size (colorsPalettes bg) tileMap tileSet refPoint pal (screenBaseBlock bg) (characterBaseBlock bg)
+    priority = bgPriority bg
+    affineBgTiles = transformCoords bgTiles centre param
+
 getTextBGTiles :: Int -> PixFormat -> TileOffset -> Palette -> ([TileMap], TileSet) -> TileMapBaseAddress -> TileSetBaseAddress -> [Tile']
 getTextBGTiles 0 pixFormat offSet pal (maps, tileSet) tileMapAddr tileSetAddr = bgTiles
   where
