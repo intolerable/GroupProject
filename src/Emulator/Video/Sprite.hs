@@ -3,14 +3,12 @@ module Emulator.Video.Sprite where
 import Emulator.Memory
 import Emulator.Types
 import Emulator.Video.Palette
-import Emulator.Video.Renderer
 import Emulator.Video.Util
-import Graphics.Rendering.OpenGL
-import Utilities.Parser.TemplateHaskell
 
-import Control.Monad.IO.Class
 import Data.Array.IArray
 import Data.Bits
+import Graphics.Rendering.OpenGL
+import Utilities.Parser.TemplateHaskell
 
 type MappingMode = Bool
 type OAM = Array Address Byte
