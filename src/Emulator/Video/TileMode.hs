@@ -23,7 +23,7 @@ type Priority = Int
 type ScreenEntry = (Address, Bool, Bool, Address)
 type TileMap = Array Address Byte
 
-tileModes :: AddressIO m => LCDControl -> m ()
+tileModes :: AddressIO m => LCDControl -> m [ScreenObj]
 tileModes cnt = do
   palette <- readRange (0x05000000, 0x050001FF)
   case bgMode cnt of
@@ -31,20 +31,19 @@ tileModes cnt = do
     1 -> mode1 palette cnt
     _ -> mode2 palette cnt
 
-mode0 :: AddressSpace m => Palette -> LCDControl -> m ()
+mode0 :: AddressSpace m => Palette -> LCDControl -> m [ScreenObj]
 mode0 palette _ = do
   bg0Data <- readTextBG 0x04000008 0x04000010 0x04000012
   bg1Data <- readTextBG 0x0400000A 0x04000014 0x04000016
   bg2Data <- readTextBG 0x0400000C 0x04000018 0x0400001A
   bg3Data <- readTextBG 0x0400000E 0x0400001C 0x0400001E
-  let _bg0 = textBG bg0Data palette
-  let _bg1 = textBG bg1Data palette
-  let _bg2 = textBG bg2Data palette
-  let _bg3 = textBG bg3Data palette
-  return ()
+  let bg0 = textBG bg0Data palette
+  let bg1 = textBG bg1Data palette
+  let bg2 = textBG bg2Data palette
+  let bg3 = textBG bg3Data palette
+  return [bg0, bg1, bg2, bg3]
 
-
-mode1 :: AddressIO m => Palette -> LCDControl -> m ()
+mode1 :: AddressIO m => Palette -> LCDControl -> m [ScreenObj]
 mode1 palette _ = do
   bg0Data <- readTextBG 0x04000008 0x04000010 0x04000012
   bg1Data <- readTextBG 0x0400000A 0x04000014 0x04000016
@@ -53,7 +52,7 @@ mode1 palette _ = do
   affineBG 0x0400000C 0x04000028 0x04000020 palette
   return ()
 
-mode2 :: AddressIO m => Palette -> LCDControl -> m ()
+mode2 :: AddressIO m => Palette -> LCDControl -> m [ScreenObj]
 mode2 palette _ = do
   affineBG 0x0400000C 0x04000028 0x04000020 palette
   affineBG 0x0400000E 0x04000038 0x04000030 palette
