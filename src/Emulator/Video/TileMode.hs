@@ -17,7 +17,6 @@ data ScreenObj =
   NormalSprite [Tile'] Priority |
   AffineSprite [Tile'] Priority
 
-
 data Tile' = Tile' [HalfWord] QuadCoords
 
 type Priority = Int
