@@ -1,7 +1,6 @@
 module Utilities.Bits where
 
 import Emulator.Types
-import Utilities.Parser.TemplateHaskell
 
 import Data.Bits
 import Data.Int
