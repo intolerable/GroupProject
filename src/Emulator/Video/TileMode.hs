@@ -32,67 +32,85 @@ tileModes cnt = do
     1 -> mode1 palette cnt
     _ -> mode2 palette cnt
 
-mode0 :: AddressIO m => Palette -> LCDControl -> m ()
+mode0 :: AddressSpace m => Palette -> LCDControl -> m ()
 mode0 palette _ = do
-  textBG 0x04000008 0x04000010 0x04000012 palette
-  textBG 0x0400000A 0x04000014 0x04000016 palette
-  textBG 0x0400000C 0x04000018 0x0400001A palette
-  textBG 0x0400000E 0x0400001C 0x0400001E palette
+  bg0Data <- readTextBG 0x04000008 0x04000010 0x04000012
+  bg1Data <- readTextBG 0x0400000A 0x04000014 0x04000016
+  bg2Data <- readTextBG 0x0400000C 0x04000018 0x0400001A
+  bg3Data <- readTextBG 0x0400000E 0x0400001C 0x0400001E
+  let _bg0 = textBG bg0Data palette
+  let _bg1 = textBG bg1Data palette
+  let _bg2 = textBG bg2Data palette
+  let _bg3 = textBG bg3Data palette
+  return ()
+
 
 mode1 :: AddressIO m => Palette -> LCDControl -> m ()
 mode1 palette _ = do
-  textBG 0x04000008 0x04000010 0x04000012 palette
-  textBG 0x0400000A 0x04000014 0x04000016 palette
+  bg0Data <- readTextBG 0x04000008 0x04000010 0x04000012
+  bg1Data <- readTextBG 0x0400000A 0x04000014 0x04000016
+  let _bg0 = textBG bg0Data palette
+  let _bg1 = textBG bg1Data palette
   affineBG 0x0400000C 0x04000028 0x04000020 palette
+  return ()
 
 mode2 :: AddressIO m => Palette -> LCDControl -> m ()
 mode2 palette _ = do
   affineBG 0x0400000C 0x04000028 0x04000020 palette
   affineBG 0x0400000E 0x04000038 0x04000030 palette
 
--- Text Mode
-textBG :: AddressIO m => Address -> Address -> Address -> Palette -> m ()
-textBG bgCNTAddr xOffAddr yOffAddr palette = do
+readTextBG :: AddressSpace m => Address -> Address -> Address -> m (BGControl, TileOffset, ([TileMap], TileSet))
+readTextBG bgCNTAddr xOffAddr yOffAddr = do
   bg <- recordBGControl bgCNTAddr
   xHWord <- readAddressHalfWord xOffAddr
   yHWord <- readAddressHalfWord yOffAddr
   let xOff = negate (fromIntegral $ $(bitmask 8 0) xHWord) :: GLdouble
   let yOff = negate (fromIntegral $ $(bitmask 8 0) yHWord) :: GLdouble
-  drawTextBG (screenSize bg) (colorsPalettes bg) (screenBaseBlock bg) (characterBaseBlock bg) (xOff, yOff) palette
-  return ()
+  tileSet <- readCharBlocks (characterBaseBlock bg) (colorsPalettes bg)
+  tileMapSets <- getTileMaps (screenSize bg) (screenBaseBlock bg)
+  return (bg, (xOff, yOff), (tileMapSets, tileSet))
 
--- if False then Colour is 4bpp aka S-tiles
-drawTextBG :: AddressIO m => Int -> PixFormat -> TileMapBaseAddress -> TileSetBaseAddress -> TileOffset -> Palette -> m ()
-drawTextBG 0 pixFormat tileMapAddr tileSetAddr offSet palette = do
+getTileMaps :: AddressSpace m => Int -> TileMapBaseAddress -> m [TileMap]
+getTileMaps 0 tileMapAddr = do
   tileMap0 <- readTileMap tileMapAddr
-  tileSet <- readCharBlocks tileSetAddr pixFormat
-  drawTileMap (32, 32) pixFormat tileMap0 tileSet offSet palette tileMapAddr tileSetAddr
-  return ()
-drawTextBG 1 pixFormat tileMapAddr tileSetAddr offSet@(xOff, yOff) palette = do
-  tileMap0 <- readTileMap tileMapAddr
-  tileMap1 <- readTileMap (tileMapAddr + 0x00000800)
-  tileSet <- readCharBlocks tileSetAddr pixFormat
-  drawTileMap (32, 32) pixFormat tileMap0 tileSet offSet palette tileMapAddr tileSetAddr
-  drawTileMap (32, 32) pixFormat tileMap1 tileSet (xOff + 32, yOff) palette tileMapAddr tileSetAddr
-  return ()
-drawTextBG 2 pixFormat tileMapAddr tileSetAddr offSet@(xOff, yOff) palette = do
-  tileMap0 <- readTileMap tileMapAddr
-  tileMap1 <- readTileMap (tileMapAddr + 0x00000800)
-  tileSet <- readCharBlocks tileSetAddr pixFormat
-  drawTileMap (32, 32) pixFormat tileMap0 tileSet offSet palette tileMapAddr tileSetAddr
-  drawTileMap (32, 32) pixFormat tileMap1 tileSet (xOff, yOff + 32) palette tileMapAddr tileSetAddr
-  return ()
-drawTextBG _ pixFormat tileMapAddr tileSetAddr offSet@(xOff, yOff) palette = do
+  return [tileMap0]
+getTileMaps 3 tileMapAddr = do
   tileMap0 <- readTileMap tileMapAddr
   tileMap1 <- readTileMap (tileMapAddr + 0x00000800)
   tileMap2 <- readTileMap (tileMapAddr + 0x00001000)
   tileMap3 <- readTileMap (tileMapAddr + 0x00001800)
-  tileSet <- readCharBlocks tileSetAddr pixFormat
-  drawTileMap (32, 32) pixFormat tileMap0 tileSet offSet palette tileMapAddr tileSetAddr
-  drawTileMap (32, 32) pixFormat tileMap1 tileSet (xOff + 32, yOff) palette tileMapAddr tileSetAddr
-  drawTileMap (32, 32) pixFormat tileMap2 tileSet (xOff, yOff + 32) palette tileMapAddr tileSetAddr
-  drawTileMap (32, 32) pixFormat tileMap3 tileSet (xOff + 32, yOff + 32) palette tileMapAddr tileSetAddr
-  return ()
+  return [tileMap0, tileMap1, tileMap2, tileMap3]
+getTileMaps _ tileMapAddr = do
+  tileMap0 <- readTileMap tileMapAddr
+  tileMap1 <- readTileMap (tileMapAddr + 0x00000800)
+  return [tileMap0, tileMap1]
+
+-- -- Text Mode
+textBG :: (BGControl, TileOffset, ([TileMap], TileSet)) -> Palette -> ScreenObj
+textBG (bg, offset, mapSet) palette = NormalBG bgTiles priority
+  where
+    bgTiles = getTextBGTiles (screenSize bg) (colorsPalettes bg) offset palette mapSet (screenBaseBlock bg) (characterBaseBlock bg)
+    priority = bgPriority bg
+
+-- THIS NEEDS TO GET THE TILES USING DRAWTILEMAP
+getTextBGTiles :: Int -> PixFormat -> TileOffset -> Palette -> ([TileMap], TileSet) -> TileMapBaseAddress -> TileSetBaseAddress -> [Tile']
+getTextBGTiles 0 pixFormat offSet pal (maps, tileSet) tileMapAddr tileSetAddr = bgTiles
+  where
+    bgTiles = concat $ mapToTileSet (32, 32) pixFormat (maps!!0) tileSet offSet pal tileMapAddr tileSetAddr
+getTextBGTiles 1 pixFormat (x, y) pal (maps, tileSet) tileMapAddr tileSetAddr = bgTiles0 ++ bgTiles1
+  where
+    bgTiles0 = concat $ mapToTileSet (32, 32) pixFormat (maps!!0) tileSet (x, y) pal tileMapAddr tileSetAddr
+    bgTiles1 = concat $ mapToTileSet (32, 32) pixFormat (maps!!1) tileSet (x+32, y) pal tileMapAddr tileSetAddr
+getTextBGTiles 2 pixFormat (x, y) pal (maps, tileSet) tileMapAddr tileSetAddr = bgTiles0 ++ bgTiles1
+  where
+    bgTiles0 = concat $ mapToTileSet (32, 32) pixFormat (maps!!0) tileSet (x, y) pal tileMapAddr tileSetAddr
+    bgTiles1 = concat $ mapToTileSet (32, 32) pixFormat (maps!!1) tileSet (x, y+32) pal tileMapAddr tileSetAddr
+getTextBGTiles _ pixFormat (x, y) pal (maps, tileSet) tileMapAddr tileSetAddr = bgTiles0 ++ bgTiles1 ++ bgTiles2 ++ bgTiles3
+  where
+    bgTiles0 = concat $ mapToTileSet (32, 32) pixFormat (maps!!0) tileSet (x, y) pal tileMapAddr tileSetAddr
+    bgTiles1 = concat $ mapToTileSet (32, 32) pixFormat (maps!!1) tileSet (x+32, y) pal tileMapAddr tileSetAddr
+    bgTiles2 = concat $ mapToTileSet (32, 32) pixFormat (maps!!2) tileSet (x, y+32) pal tileMapAddr tileSetAddr
+    bgTiles3 = concat $ mapToTileSet (32, 32) pixFormat (maps!!3) tileSet (x+32, y+32) pal tileMapAddr tileSetAddr
 
 readTileMap :: AddressSpace m => Address -> m (TileMap)
 readTileMap addr = readRange (addr, addr + 0x000007FF)
@@ -102,24 +120,20 @@ readCharBlocks addr False = readRange (addr, addr + 0x00007FFF)
 readCharBlocks addr True = readRange (addr, addr + 0x0000FFFF)
 
 -- Draw 32x32 tiles at a time
-drawTileMap :: AddressIO m => (Int, Int) -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileMapBaseAddress -> TileSetBaseAddress -> m ()
-drawTileMap (0, _) _ _ _ _ _ _ _ = return ()
-drawTileMap (rows, cols) pixFormat tileMap tileSet bgOffset@(xOff, yOff) palette baseAddr setBaseAddr = do
-  drawHLine cols baseAddr pixFormat tileMapRow tileSet bgOffset palette setBaseAddr
-  drawTileMap (rows-1, cols) pixFormat tileMap tileSet (xOff, yOff + 8) palette (baseAddr + 0x00000040) setBaseAddr
-  return ()
+mapToTileSet :: (Int, Int) -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileMapBaseAddress -> TileSetBaseAddress -> [[Tile']]
+mapToTileSet (0, _) _ _ _ _ _ _ _ = []
+mapToTileSet (rows, cols) pixFormat tileMap tileSet bgOffset@(xOff, yOff) palette baseAddr setBaseAddr = row:mapToTileSet (rows-1, cols) pixFormat tileMap tileSet (xOff, yOff + 8) palette (baseAddr + 0x00000040) setBaseAddr
   where
+    row = mapRow cols baseAddr pixFormat tileMapRow tileSet bgOffset palette setBaseAddr
     tileMapRow = ixmap (baseAddr, baseAddr + 0x0000003F) (id) tileMap :: TileMap
 
 -- Need to recurse using int instead
-drawHLine :: AddressIO m => Int -> Address -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileSetBaseAddress -> m ()
-drawHLine 0 _ _ _ _ _ _ _ = return ()
-drawHLine column mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr = do
-  pixData <- pixelData pixFormat palette tile palBank
-  liftIO $ drawTile pixData tileCoords
-  drawHLine (column-1) (mapIndex + 0x00000002) pixFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
-  return ()
+mapRow :: Int -> Address -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileSetBaseAddress -> [Tile']
+mapRow 0 _ _ _ _ _ _ _ = []
+mapRow column mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr =
+  Tile' pixData tileCoords:mapRow (column-1) (mapIndex + 0x00000002) pixFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
   where
+    pixData = pixelData' pixFormat palette tile palBank
     tile = getTile pixFormat tileIdx tileSet
     upperByte = (tileMapRow!(mapIndex + 0x00000001))
     lowerByte = (tileMapRow!mapIndex)
