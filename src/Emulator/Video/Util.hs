@@ -12,7 +12,7 @@ import Utilities.Parser.TemplateHaskell
 data ScreenObj =
   NormalBG [Tile'] Priority |
   AffineBG [Tile'] Priority |
-  NormalSprite [Tile'] Priority |
+  NormalSprite [Tile'] (Bool, Bool) Priority |
   AffineSprite [Tile'] Priority |
   Hidden
 
