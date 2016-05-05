@@ -1,6 +1,7 @@
 module Utilities.Bits where
 
 import Emulator.Types
+import Utilities.Parser.TemplateHaskell
 
 import Data.Bits
 import Data.Int
@@ -22,3 +23,9 @@ byteExtend b = fromIntegral (fromIntegral (fromIntegral b :: Int8) :: Int32)
 
 arithExtend :: MWord -> Int -> MWord
 arithExtend v n = clearBit (if (testBit v n) then setBit v 31 else v) n
+
+twosCompExtend :: MWord -> Int -> MWord
+twosCompExtend w n = w .|. mask
+  where
+    mask | testBit w n = $(bitmask 31 n) 0xFFFFFFFF
+         | otherwise = 0
