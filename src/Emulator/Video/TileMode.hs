@@ -10,15 +10,6 @@ import Utilities.Parser.TemplateHaskell
 import Data.Array.IArray
 import Data.Bits
 
-data ScreenObj =
-  NormalBG [Tile'] Priority |
-  AffineBG [Tile'] Priority |
-  NormalSprite [Tile'] Priority |
-  AffineSprite [Tile'] Priority
-
-data Tile' = Tile' [HalfWord] QuadCoords
-
-type Priority = Int
 type ScreenEntry = (Address, Bool, Bool, Address)
 type TileMap = Array Address Byte
 

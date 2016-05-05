@@ -9,6 +9,17 @@ import Data.Bits
 import Graphics.Rendering.OpenGL
 import Utilities.Parser.TemplateHaskell
 
+data ScreenObj =
+  NormalBG [Tile'] Priority |
+  AffineBG [Tile'] Priority |
+  NormalSprite [Tile'] Priority |
+  AffineSprite [Tile'] Priority |
+  Hidden
+
+data Tile' = Tile' [HalfWord] QuadCoords
+
+type Priority = Int
+
 type AddressIO m = (AddressSpace m, MonadIO m)
 type AffineParameters = (GLdouble, GLdouble, GLdouble, GLdouble)
 type AffineRefPoints = (GLdouble, GLdouble)
