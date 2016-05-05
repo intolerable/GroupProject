@@ -47,15 +47,19 @@ mode1 :: AddressIO m => Palette -> LCDControl -> m [ScreenObj]
 mode1 palette _ = do
   bg0Data <- readTextBG 0x04000008 0x04000010 0x04000012
   bg1Data <- readTextBG 0x0400000A 0x04000014 0x04000016
-  let _bg0 = textBG bg0Data palette
-  let _bg1 = textBG bg1Data palette
-  affineBG 0x0400000C 0x04000028 0x04000020 palette
-  return ()
+  bg2Data <- readAffineBG 0x0400000C 0x04000028 0x04000020
+  let bg0 = textBG bg0Data palette
+  let bg1 = textBG bg1Data palette
+  let bg2 = affineBG bg2Data palette
+  return [bg0, bg1, bg2]
 
 mode2 :: AddressIO m => Palette -> LCDControl -> m [ScreenObj]
 mode2 palette _ = do
-  affineBG 0x0400000C 0x04000028 0x04000020 palette
-  affineBG 0x0400000E 0x04000038 0x04000030 palette
+  bg2Data <- readAffineBG 0x0400000C 0x04000028 0x04000020
+  bg3Data <- readAffineBG 0x0400000E 0x04000038 0x04000030
+  let bg2 = affineBG bg2Data palette
+  let bg3 = affineBG bg3Data palette
+  return [bg2, bg3]
 
 readTextBG :: AddressSpace m => Address -> Address -> Address -> m (BGControl, TileOffset, ([TileMap], TileSet))
 readTextBG bgCNTAddr xOffAddr yOffAddr = do
