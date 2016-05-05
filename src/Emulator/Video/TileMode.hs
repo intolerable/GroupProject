@@ -170,10 +170,20 @@ drawAffineBG 1 _pixFormat _tileMapAddr _tileSetAddr _params _refPoints _pal = un
 drawAffineBG 2 _pixFormat _tileMapAddr _tileSetAddr _params _refPoints _pal = undefined
 drawAffineBG _ _pixFormat _tileMapAddr _tileSetAddr _params _refPoints _pal = undefined
 
+-- what will be returned (BGControl, AffineRefPoints, AffineParameters, ([TileMap], TileSet))
+readAffineBG :: AddressSpace m => Address -> Address -> Address -> m ()
+readAffineBG bgCNTAddr refBaseAddr paramBaseAddr = do
+  bg <- recordBGControl bgCNTAddr
+  _xWord <- readAddressWord refBaseAddr
+  _yWord <- (readAddressWord (refBaseAddr + 0x00000004))
+  _paramMem <- readRange (paramBaseAddr, paramBaseAddr + 0x00000007)
+  let _size = affineBGSize (screenSize bg)
+  return ()
+
 -- Returns number of tiles to be drawn
-affineBGSize :: Byte -> (Int, Int)
-affineBGSize byt
-  | byt == 0 = (16, 16)
-  | byt == 1 = (32, 32)
-  | byt == 2 = (64, 64)
+affineBGSize :: Int -> (Int, Int)
+affineBGSize n
+  | n == 0 = (16, 16)
+  | n == 1 = (32, 32)
+  | n == 2 = (64, 64)
   | otherwise = (128, 128)
