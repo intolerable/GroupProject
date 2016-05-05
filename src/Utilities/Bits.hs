@@ -27,5 +27,17 @@ arithExtend v n = clearBit (if (testBit v n) then setBit v 31 else v) n
 twosCompExtend :: MWord -> Int -> MWord
 twosCompExtend w n = w .|. mask
   where
-    mask | testBit w n = $(bitmask 31 n) 0xFFFFFFFF
+    mask | testBit w n = staticBitmask 31 n 0xFFFFFFFF
          | otherwise = 0
+
+-- For when we cant use the TemplateHaskell version
+staticBitmask :: Int -> Int -> MWord -> MWord
+staticBitmask x y w = (w .&. mask) `shiftR` y
+  where
+    a, b :: MWord
+    a = 1 `shiftL` fromIntegral x
+    b = 1 `shiftL` fromIntegral y
+    mask :: MWord
+    mask = ((a - 1) .&. complement (b - 1)) .|. a
+
+--  bitmask 7 0 -> w_aiHy -> ((w_aiHy .&. 255) `shiftR` b)
