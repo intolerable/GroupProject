@@ -120,10 +120,11 @@ readCharBlocks addr True = readRange (addr, addr + 0x0000FFFF)
 -- Draw 32x32 tiles at a time
 mapToTileSet :: (Int, Int) -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileMapBaseAddress -> TileSetBaseAddress -> [[Tile']]
 mapToTileSet (0, _) _ _ _ _ _ _ _ = []
-mapToTileSet (rows, cols) pixFormat tileMap tileSet bgOffset@(xOff, yOff) palette baseAddr setBaseAddr = row:mapToTileSet (rows-1, cols) pixFormat tileMap tileSet (xOff, yOff + 8) palette (baseAddr + 0x00000040) setBaseAddr
+mapToTileSet (rows, cols) pixFormat tileMap tileSet bgOffset@(xOff, yOff) palette baseAddr setBaseAddr = row:mapToTileSet (rows-1, cols) pixFormat tileMap tileSet (xOff, yOff + 8) palette (baseAddr + tileMapRowWidth) setBaseAddr
   where
     row = mapRow cols baseAddr pixFormat tileMapRow tileSet bgOffset palette setBaseAddr
-    tileMapRow = ixmap (baseAddr, baseAddr + 0x0000003F) (id) tileMap :: TileMap
+    tileMapRow = ixmap (baseAddr, baseAddr + (tileMapRowWidth - 0x00000001)) (id) tileMap :: TileMap
+    tileMapRowWidth = (fromIntegral cols) * 0x00000002
 
 -- Need to recurse using int instead
 mapRow :: Int -> Address -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileSetBaseAddress -> [Tile']
