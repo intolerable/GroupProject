@@ -136,15 +136,15 @@ mapRow column mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBase
     tile = getTile pixFormat tileIdx tileSet
     upperByte = (tileMapRow!(mapIndex + 0x00000001))
     lowerByte = (tileMapRow!mapIndex)
-    (tileIdx, _hFlip, _vFlip, palBank) = parseScreenEntry upperByte lowerByte pixFormat setBaseAddr
+    (tileIdx, _hFlip, _vFlip, palBank) = parseScreenEntry lowerByte upperByte pixFormat setBaseAddr
     tileCoords = ((xOff, yOff), (xOff+8, yOff), (xOff, yOff+8), (xOff+8, yOff+8))
 -- NEED TO SORT HFLIP AND VFLIP WHEN GRAPHICS RUN
 
--- a is the upper byte, b is the lower
+-- a is the lower byte, b is the upper
 parseScreenEntry :: Byte -> Byte -> PixFormat -> TileSetBaseAddress -> ScreenEntry
 parseScreenEntry a b pixFormat setBaseAddr = (tileIdx, hFlip, vFlip, palBank)
   where
-    hword = bytesToHalfWord b a
+    hword = bytesToHalfWord a b
     tileIdx = setBaseAddr + convIntToAddr (fromIntegral $ $(bitmask 9 0) hword :: Int) pixFormat
     hFlip = (testBit hword 10)
     vFlip = (testBit hword 11)
