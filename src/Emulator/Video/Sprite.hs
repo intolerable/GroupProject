@@ -62,23 +62,18 @@ parseObjectAttr obj oam tileSet mapMode objAddr pal = do
     palBank = convIntToAddr (fromIntegral $ $(bitmask 15 12) attr2 :: Int) False
     attribs = SpriteAttribs pixFormat tileSet pal palBank
 
-drawSprite :: AddressIO m => SpriteSize -> TileOffset -> TileSetBaseAddress -> MappingMode -> SpriteAttribs -> (Bool, Bool) -> m ()
-drawSprite (0, _) _ _ _ _ _ = return ()
-drawSprite (rows, cols) offset@(x, y) tileIdx mapMode attribs flips = do
-  normalSpriteRow cols offset tileIdx attribs flips
-  drawSprite (rows - 1, cols) (x, y + 8) nextTile mapMode attribs flips
-  return ()
+spriteTiles :: SpriteSize -> TileOffset -> TileSetBaseAddress -> MappingMode -> SpriteAttribs -> [[Tile']]
+spriteTiles (0, _) _ _ _ _ = []
+spriteTiles (rows, cols) offset@(x, y) tileIdx mapMode attribs = row:spriteTiles (rows - 1, cols) (x, y + 8) nextTile mapMode attribs
   where
+    row = spriteRow cols offset tileIdx attribs
     nextTile = nextTileIdx tileIdx cols (getPixFormat attribs) mapMode
 
-normalSpriteRow :: AddressIO m => Int -> TileOffset -> TileSetBaseAddress -> SpriteAttribs -> (Bool, Bool) -> m ()
-normalSpriteRow 0 _ _ _ _ = return ()
-normalSpriteRow cols (xOff, yOff) tileIdx attribs (hFlip, vFlip) = do
-  pixData <- pixelData pixFormat (getPal attribs) tile (getPalBank attribs)
-  liftIO $ drawTile pixData tileCoords
-  normalSpriteRow (cols - 1) (xOff + 8, yOff) nextTile attribs (hFlip, vFlip)
-  return ()
+spriteRow :: Int -> TileOffset -> TileSetBaseAddress -> SpriteAttribs -> [Tile']
+spriteRow 0 _ _ _ = []
+spriteRow cols (xOff, yOff) tileIdx attribs = Tile' pixData tileCoords:spriteRow (cols - 1) (xOff + 8, yOff) nextTile attribs
   where
+    pixData = pixelData' pixFormat (getPal attribs) tile (getPalBank attribs)
     tile = getTile pixFormat tileIdx (getTileSet attribs)
     nextTile = if pixFormat then tileIdx + 0x00000040 else tileIdx + 0x00000020
     tileCoords = ((xOff, yOff), (xOff+8, yOff), (xOff, yOff+8), (xOff+8, yOff+8))
