@@ -7,7 +7,6 @@ import Emulator.Video.Util
 import Emulator.Video.VideoController
 import Utilities.Parser.TemplateHaskell
 
-import Control.Monad.IO.Class
 import Data.Array.IArray
 import Data.Bits
 import Graphics.Rendering.OpenGL
