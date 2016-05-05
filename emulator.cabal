@@ -43,6 +43,7 @@ library
     Emulator.Video.BitmapModes
     Emulator.Video.Display
     Emulator.Video.Palette
+    Emulator.Video.Renderer
     Emulator.Video.Sprite
     Emulator.Video.TileMode
     Emulator.Video.Util
