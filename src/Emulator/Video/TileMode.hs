@@ -150,34 +150,20 @@ parseScreenEntry a b pixFormat setBaseAddr = (tileIdx, hFlip, vFlip, palBank)
     vFlip = (testBit hword 11)
     palBank = convIntToAddr (fromIntegral $ $(bitmask 15 12) hword :: Int) False
 
-affineBG :: AddressIO m => Address -> Address -> Address -> Palette -> m ()
-affineBG bgCNTAddr refBaseAddr paramBaseAddr _pal = do
-  _bg <- recordBGControl bgCNTAddr
+readAffineBG :: AddressSpace m => Address -> Address -> Address -> m (BGControl, AffineRefPoints, AffineParameters, (Int, Int), TileMap, TileSet, Centre)
+readAffineBG bgCNTAddr refBaseAddr paramBaseAddr = do
+  bg <- recordBGControl bgCNTAddr
   xWord <- readAddressWord refBaseAddr
   yWord <- (readAddressWord (refBaseAddr + 0x00000004))
   paramMem <- readRange (paramBaseAddr, paramBaseAddr + 0x00000007)
-  let _refPoint = (referencePoint xWord, referencePoint yWord)
-  let _params = affineParameters paramBaseAddr (paramBaseAddr + 0x00000002) (paramBaseAddr + 0x00000004) (paramBaseAddr + 0x00000006) paramMem
-  return ()
-
-drawAffineBG :: AddressIO m => Int -> PixFormat -> TileMapBaseAddress -> TileSetBaseAddress -> AffineParameters -> AffineRefPoints -> Palette -> m ()
-drawAffineBG 0 pixFormat tileMapAddr tileSetAddr _params _refPoints _pal = do
-  _tileMap <- readTileMap tileMapAddr
-  _tileSet <- readCharBlocks tileSetAddr pixFormat
-  return ()
-drawAffineBG 1 _pixFormat _tileMapAddr _tileSetAddr _params _refPoints _pal = undefined
-drawAffineBG 2 _pixFormat _tileMapAddr _tileSetAddr _params _refPoints _pal = undefined
-drawAffineBG _ _pixFormat _tileMapAddr _tileSetAddr _params _refPoints _pal = undefined
-
--- what will be returned (BGControl, AffineRefPoints, AffineParameters, ([TileMap], TileSet))
-readAffineBG :: AddressSpace m => Address -> Address -> Address -> m ()
-readAffineBG bgCNTAddr refBaseAddr paramBaseAddr = do
-  bg <- recordBGControl bgCNTAddr
-  _xWord <- readAddressWord refBaseAddr
-  _yWord <- (readAddressWord (refBaseAddr + 0x00000004))
-  _paramMem <- readRange (paramBaseAddr, paramBaseAddr + 0x00000007)
-  let _size = affineBGSize (screenSize bg)
-  return ()
+  let refPoint@(x, y) = (referencePoint xWord, referencePoint yWord)
+  let params = affineParameters paramBaseAddr (paramBaseAddr + 0x00000002) (paramBaseAddr + 0x00000004) (paramBaseAddr + 0x00000006) paramMem
+  let size@(w, h) = affineBGSize (screenSize bg)
+  let centre = (x + ((fromIntegral w)/2), y + ((fromIntegral h)/2))
+  tileSet <- readCharBlocks (characterBaseBlock bg) (colorsPalettes bg)
+  let mapSize = fromIntegral ((w * h * 2) - 1) :: Address
+  tileMap <- readRange ((screenBaseBlock bg), (screenBaseBlock bg) + mapSize)
+  return (bg, refPoint, params, size, tileMap, tileSet, centre)
 
 -- Returns number of tiles to be drawn
 affineBGSize :: Int -> (Int, Int)
