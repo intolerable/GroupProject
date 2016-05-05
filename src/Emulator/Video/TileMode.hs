@@ -165,12 +165,6 @@ readAffineBG bgCNTAddr refBaseAddr paramBaseAddr = do
   tileMap <- readRange ((screenBaseBlock bg), (screenBaseBlock bg) + mapSize)
   return (bg, refPoint, params, size, tileMap, tileSet, centre)
 
-transformCoords :: [Tile'] -> Centre -> AffineParameters -> [Tile']
-transformCoords [] _ _ = []
-transformCoords ((Tile' pix coords):xs) centre params = Tile' pix affCoords:transformCoords xs centre params
-  where
-    affCoords = affineCoords' centre params coords
-
 -- Returns number of tiles to be drawn
 affineBGSize :: Int -> (Int, Int)
 affineBGSize n

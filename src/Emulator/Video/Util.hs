@@ -46,6 +46,12 @@ affineCoords (xOff, yOff) (xCentre, yCentre) (pa, pb, pc, pd) = ((x1, y1), (x2, 
     x4 = (pa * ((xOff + 8) - xCentre)) + (pb * ((yOff + 8) - yCentre)) + xCentre
     y4 = (pc * ((xOff + 8) - xCentre)) + (pd * ((yOff + 8) - yCentre)) + yCentre
 
+transformCoords :: [Tile'] -> Centre -> AffineParameters -> [Tile']
+transformCoords [] _ _ = []
+transformCoords ((Tile' pix coords):xs) centre params = Tile' pix affCoords:transformCoords xs centre params
+  where
+    affCoords = affineCoords' centre params coords
+
 -- this will be the function that is used
 affineCoords' :: Centre -> AffineParameters -> QuadCoords -> QuadCoords
 affineCoords' (xCentre, yCentre) (pa, pb, pc, pd) coords = ((affx1, affy1), (affx2, affy2), (affx3, affy3), (affx4, affy4))
