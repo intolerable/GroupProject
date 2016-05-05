@@ -20,6 +20,7 @@ type TileMapBaseAddress = Address
 type TileOffset = (GLdouble, GLdouble)
 type TileSet = Array Address Byte
 type TileSetBaseAddress = Address
+type Centre = (GLdouble, GLdouble)
 
 -- drawTile :: StorableArray Address HalfWord -> QuadCoords -> IO ()
 -- drawTile arr coords = drawTile' arr coords UnsignedByte
@@ -39,6 +40,7 @@ drawTile arr ((x1, y1), (x2, y2), (x3, y3), (x4, y4)) = do
     vertex $ Vertex2 x3 (y3 :: GLdouble)
 
 -- Affine transformation
+-- when mapping this make the TileOffset param the actual 4 coords for the tile to be rotated
 affineCoords :: TileOffset -> (GLdouble, GLdouble) -> AffineParameters -> QuadCoords
 affineCoords (xOff, yOff) (xCentre, yCentre) (pa, pb, pc, pd) = ((x1, y1), (x2, y2), (x3, y3), (x4, y4))
   where
@@ -50,6 +52,20 @@ affineCoords (xOff, yOff) (xCentre, yCentre) (pa, pb, pc, pd) = ((x1, y1), (x2, 
     y3 = (pc * (xOff - xCentre)) + pd * ((yOff + 8) - yCentre) + yCentre
     x4 = (pa * ((xOff + 8) - xCentre)) + (pb * ((yOff + 8) - yCentre)) + xCentre
     y4 = (pc * ((xOff + 8) - xCentre)) + (pd * ((yOff + 8) - yCentre)) + yCentre
+
+-- this will be the function that is used
+affineCoords' :: Centre -> AffineParameters -> QuadCoords -> QuadCoords
+affineCoords' (xCentre, yCentre) (pa, pb, pc, pd) coords = ((affx1, affy1), (affx2, affy2), (affx3, affy3), (affx4, affy4))
+  where
+    ((x1, y1), (x2, y2), (x3, y3), (x4, y4)) = coords
+    affx1 = (pa * (x1 - xCentre)) + (pb * (y1 - yCentre)) + xCentre
+    affy1 = (pc * (x1 - xCentre)) + (pd * (y1 - yCentre)) + yCentre
+    affx2 = (pa * (x2 - xCentre)) + (pb * (y2 - yCentre)) + xCentre
+    affy2 = (pc * (x2 - xCentre)) + (pd * (y2 - yCentre)) + yCentre
+    affx3 = (pa * (x3 - xCentre)) + (pb * (y3 - yCentre)) + xCentre
+    affy3 = (pc * (x3 - xCentre)) + (pd * (y3 - yCentre)) + yCentre
+    affx4 = (pa * (x4 - xCentre)) + (pb * (y4 - yCentre)) + xCentre
+    affy4 = (pc * (x4 - xCentre)) + (pd * (y4 - yCentre)) + yCentre
 
 loadTexture :: StorableArray Address HalfWord -> IO TextureObject
 loadTexture arr = withStorableArray arr $ \ptr -> do
