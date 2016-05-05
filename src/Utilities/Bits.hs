@@ -24,12 +24,6 @@ byteExtend b = fromIntegral (fromIntegral (fromIntegral b :: Int8) :: Int32)
 arithExtend :: MWord -> Int -> MWord
 arithExtend v n = clearBit (if (testBit v n) then setBit v 31 else v) n
 
-twosCompExtend :: MWord -> Int -> MWord
-twosCompExtend w n = w .|. mask
-  where
-    mask | testBit w n = staticBitmask 31 n 0xFFFFFFFF
-         | otherwise = 0
-
 -- For when we cant use the TemplateHaskell version
 staticBitmask :: Int -> Int -> MWord -> MWord
 staticBitmask x y w = (w .&. mask) `shiftR` y
