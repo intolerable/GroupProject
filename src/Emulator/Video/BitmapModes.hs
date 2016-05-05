@@ -4,6 +4,7 @@ import Emulator.Memory
 import Emulator.Types
 import Emulator.Video.Util
 import Emulator.Video.Palette
+import Emulator.Video.Renderer
 import Emulator.Video.VideoController
 
 import Control.Monad.IO.Class

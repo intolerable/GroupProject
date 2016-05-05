@@ -3,6 +3,7 @@ module Emulator.Video.Sprite where
 import Emulator.Memory
 import Emulator.Types
 import Emulator.Video.Palette
+import Emulator.Video.Renderer
 import Emulator.Video.Util
 import Graphics.Rendering.OpenGL
 import Utilities.Parser.TemplateHaskell

@@ -5,7 +5,6 @@ import Emulator.Types
 
 import Control.Monad.IO.Class
 import Data.Array.IArray
-import Data.Array.Storable
 import Data.Bits
 import Graphics.Rendering.OpenGL
 import Utilities.Parser.TemplateHaskell
@@ -21,23 +20,6 @@ type TileOffset = (GLdouble, GLdouble)
 type TileSet = Array Address Byte
 type TileSetBaseAddress = Address
 type Centre = (GLdouble, GLdouble)
-
--- drawTile :: StorableArray Address HalfWord -> QuadCoords -> IO ()
--- drawTile arr coords = drawTile' arr coords UnsignedByte
-
-drawTile :: StorableArray Address HalfWord -> QuadCoords -> IO ()
-drawTile arr ((x1, y1), (x2, y2), (x3, y3), (x4, y4)) = do
-  _ <- liftIO $ loadTexture arr
-  textureFilter Texture2D $= ((Nearest, Nothing), Nearest)
-  renderPrimitive Quads $ do
-    texCoord $ TexCoord2 0 (0 :: GLdouble)
-    vertex $ Vertex2 x1 (y1 :: GLdouble)
-    texCoord $ TexCoord2 1 (0 :: GLdouble)
-    vertex $ Vertex2 x2 (y2 :: GLdouble)
-    texCoord $ TexCoord2 1 (1 :: GLdouble)
-    vertex $ Vertex2 x4 (y4 :: GLdouble)
-    texCoord $ TexCoord2 0 (1 :: GLdouble)
-    vertex $ Vertex2 x3 (y3 :: GLdouble)
 
 -- Affine transformation
 -- when mapping this make the TileOffset param the actual 4 coords for the tile to be rotated
@@ -66,13 +48,6 @@ affineCoords' (xCentre, yCentre) (pa, pb, pc, pd) coords = ((affx1, affy1), (aff
     affy3 = (pc * (x3 - xCentre)) + (pd * (y3 - yCentre)) + yCentre
     affx4 = (pa * (x4 - xCentre)) + (pb * (y4 - yCentre)) + xCentre
     affy4 = (pc * (x4 - xCentre)) + (pd * (y4 - yCentre)) + yCentre
-
-loadTexture :: StorableArray Address HalfWord -> IO TextureObject
-loadTexture arr = withStorableArray arr $ \ptr -> do
-    tile <- genObjectName
-    textureBinding Texture2D $= Just tile
-    texImage2D Texture2D NoProxy 0 RGBA' (TextureSize2D 8 8) 0 (PixelData RGB UnsignedShort ptr)
-    return tile
 
 bytesToHalfWord :: Byte -> Byte -> HalfWord
 bytesToHalfWord lower upper = ((fromIntegral upper :: HalfWord) `shiftL` 8) .|. ((fromIntegral lower :: HalfWord) .&. 0xFF) :: HalfWord
