@@ -84,27 +84,6 @@ normalSpriteRow cols (xOff, yOff) tileIdx attribs (hFlip, vFlip) = do
     tileCoords = ((xOff, yOff), (xOff+8, yOff), (xOff, yOff+8), (xOff+8, yOff+8))
     pixFormat = getPixFormat attribs
 
-drawAffine :: AddressIO m => SpriteSize -> TileOffset -> TileSetBaseAddress -> MappingMode -> SpriteAttribs -> AffineParameters -> SpriteCentre -> m ()
-drawAffine (0, _) _ _ _ _ _ _ = return ()
-drawAffine (rows, cols) offset@(x, y) tileIdx mapMode attribs params centre = do
-  affineSpriteRow cols offset tileIdx attribs params centre
-  drawAffine (rows - 1, cols) (x, y + 8) nextTile mapMode attribs params centre
-  where
-    nextTile = nextTileIdx tileIdx cols (getPixFormat attribs) mapMode
-
-affineSpriteRow :: AddressIO m => Int -> TileOffset -> TileSetBaseAddress -> SpriteAttribs -> AffineParameters -> SpriteCentre -> m ()
-affineSpriteRow 0 _ _ _ _ _ = return ()
-affineSpriteRow cols offset@(xOff, yOff) tileIdx attribs params centre = do
-  pixData <- pixelData pixFormat (getPal attribs) tile (getPalBank attribs)
-  liftIO $ drawTile pixData tileCoords
-  affineSpriteRow (cols - 1) (xOff + 8, yOff) nextTile attribs params centre
-  return ()
-  where
-    tile = getTile pixFormat tileIdx (getTileSet attribs)
-    nextTile = if pixFormat then tileIdx + 0x00000040 else tileIdx + 0x00000020
-    tileCoords = affineCoords offset centre params
-    pixFormat = getPixFormat attribs
-
 nextTileIdx :: TileSetBaseAddress -> Int -> PixFormat -> MappingMode -> TileSetBaseAddress
 -- 1D mapping. Each row of tiles in a sprite follows on from the last in the charBlock
 nextTileIdx tileIdx cols pixFormat True = tileIdx + (convIntToAddr cols pixFormat)
