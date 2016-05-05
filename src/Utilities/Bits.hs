@@ -39,5 +39,3 @@ staticBitmask x y w = (w .&. mask) `shiftR` y
     b = 1 `shiftL` fromIntegral y
     mask :: MWord
     mask = ((a - 1) .&. complement (b - 1)) .|. a
-
---  bitmask 7 0 -> w_aiHy -> ((w_aiHy .&. 255) `shiftR` b)
