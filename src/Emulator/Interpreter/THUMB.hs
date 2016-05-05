@@ -266,7 +266,7 @@ handleThumbBranch :: IsSystem s m => BranchOffset -> m ()
 handleThumbBranch off = do
   pc <- use $ registers.r15
   let val = (fromIntegral pc) + off
-  registers.r15 .= fromIntegral (val + 4)
+  registers.r15 .= fromIntegral (val + 2)
 
 handleLongBranchWLink :: IsSystem s m => LowHigh -> Offset -> m ()
 handleLongBranchWLink Low offset = do
