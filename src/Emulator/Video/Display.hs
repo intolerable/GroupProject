@@ -29,7 +29,7 @@ animate' chan = do
     liftIO $ clear [GLUT.ColorBuffer]
     record <- recordLCDControl
     _backgrounds <- if bgMode record <= 2 then tileModes record else tileModes record
-    readOAM $ objCharacterVRAMMapping record
+    _sprites <- readOAM $ objCharacterVRAMMapping record
     liftIO $ GLUT.swapBuffers
 
 animate :: TXChan SystemState -> GLUT.IdleCallback
