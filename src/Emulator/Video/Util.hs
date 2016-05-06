@@ -10,14 +10,14 @@ import Graphics.Rendering.OpenGL
 import Utilities.Parser.TemplateHaskell
 
 data ScreenObj =
-  NormalBG [Tile'] Priority |
-  AffineBG [Tile'] Priority |
-  BitMapBG Tile' Priority |
-  NormalSprite [Tile'] (Bool, Bool) Priority |
-  AffineSprite [Tile'] Priority |
+  NormalBG [Tile] Priority |
+  AffineBG [Tile] Priority |
+  BitmapBG Tile Priority |
+  NormalSprite [Tile] (Bool, Bool) Priority |
+  AffineSprite [Tile] Priority |
   Hidden
 
-data Tile' = Tile' [HalfWord] QuadCoords
+data Tile = Tile [HalfWord] QuadCoords
 
 type Priority = Int
 
@@ -26,17 +26,16 @@ type AffineParameters = (GLdouble, GLdouble, GLdouble, GLdouble)
 type AffineRefPoints = (GLdouble, GLdouble)
 type PixFormat = Bool
 type QuadCoords = ((GLdouble, GLdouble), (GLdouble, GLdouble), (GLdouble, GLdouble), (GLdouble, GLdouble))
-type Tile = Array Address Byte
+type TilePixData = Array Address Byte
 type TileMapBaseAddress = Address
 type TileOffset = (GLdouble, GLdouble)
 type TileSet = Array Address Byte
 type TileSetBaseAddress = Address
 type Centre = (GLdouble, GLdouble)
 
-
-transformCoords :: [Tile'] -> Centre -> AffineParameters -> [Tile']
+transformCoords :: [Tile] -> Centre -> AffineParameters -> [Tile]
 transformCoords [] _ _ = []
-transformCoords ((Tile' pix coords):xs) centre params = Tile' pix affCoords:transformCoords xs centre params
+transformCoords ((Tile pix coords):xs) centre params = Tile pix affCoords:transformCoords xs centre params
   where
     affCoords = affineCoords centre params coords
 
@@ -66,9 +65,9 @@ convIntToAddr n _ = (0x00000020 * fromIntegral n)
 
 -- If pixel format is 8bpp then TileSet is read in chunks of 40h
 -- If not then TileSet is read in chunks of 20h
-getTile :: PixFormat -> Address -> TileSet -> Tile
-getTile True tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000003F) (id) tileSet :: Tile)
-getTile _ tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000001F) (id) tileSet :: Tile)
+getTile :: PixFormat -> Address -> TileSet -> TilePixData
+getTile True tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000003F) (id) tileSet :: TilePixData)
+getTile _ tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000001F) (id) tileSet :: TilePixData)
 
 convToFixedNum :: Byte -> Byte -> GLdouble
 convToFixedNum low up

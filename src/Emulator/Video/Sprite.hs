@@ -61,16 +61,16 @@ parseObjectAttr obj oam tileSet mapMode objAddr pal
     attribs = SpriteAttribs pixFormat tileSet pal palBank
     pixData = concat $ spriteTiles size (xOff, yOff) tileIdx mapMode attribs
 
-spriteTiles :: SpriteSize -> TileOffset -> TileSetBaseAddress -> MappingMode -> SpriteAttribs -> [[Tile']]
+spriteTiles :: SpriteSize -> TileOffset -> TileSetBaseAddress -> MappingMode -> SpriteAttribs -> [[Tile]]
 spriteTiles (0, _) _ _ _ _ = []
 spriteTiles (rows, cols) offset@(x, y) tileIdx mapMode attribs = row:spriteTiles (rows - 1, cols) (x, y + 8) nextTile mapMode attribs
   where
     row = spriteRow cols offset tileIdx attribs
     nextTile = nextTileIdx tileIdx cols (getPixFormat attribs) mapMode
 
-spriteRow :: Int -> TileOffset -> TileSetBaseAddress -> SpriteAttribs -> [Tile']
+spriteRow :: Int -> TileOffset -> TileSetBaseAddress -> SpriteAttribs -> [Tile]
 spriteRow 0 _ _ _ = []
-spriteRow cols (xOff, yOff) tileIdx attribs = Tile' pixData tileCoords:spriteRow (cols - 1) (xOff + 8, yOff) nextTile attribs
+spriteRow cols (xOff, yOff) tileIdx attribs = Tile pixData tileCoords:spriteRow (cols - 1) (xOff + 8, yOff) nextTile attribs
   where
     pixData = pixelData pixFormat (getPal attribs) tile (getPalBank attribs)
     tile = getTile pixFormat tileIdx (getTileSet attribs)

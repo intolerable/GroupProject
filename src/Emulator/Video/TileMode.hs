@@ -91,7 +91,7 @@ affineBG (bg, refPoint, param, size, tileMap, tileSet, centre) pal = AffineBG af
     priority = bgPriority bg
     affineBgTiles = transformCoords bgTiles centre param
 
-getTextBGTiles :: Int -> PixFormat -> TileOffset -> Palette -> ([TileMap], TileSet) -> TileMapBaseAddress -> TileSetBaseAddress -> [Tile']
+getTextBGTiles :: Int -> PixFormat -> TileOffset -> Palette -> ([TileMap], TileSet) -> TileMapBaseAddress -> TileSetBaseAddress -> [Tile]
 getTextBGTiles 0 pixFormat offSet pal (maps, tileSet) tileMapAddr tileSetAddr = bgTiles
   where
     bgTiles = concat $ mapToTileSet (32, 32) pixFormat (maps!!0) tileSet offSet pal tileMapAddr tileSetAddr
@@ -118,7 +118,7 @@ readCharBlocks addr False = readRange (addr, addr + 0x00007FFF)
 readCharBlocks addr True = readRange (addr, addr + 0x0000FFFF)
 
 -- Draw 32x32 tiles at a time
-mapToTileSet :: (Int, Int) -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileMapBaseAddress -> TileSetBaseAddress -> [[Tile']]
+mapToTileSet :: (Int, Int) -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileMapBaseAddress -> TileSetBaseAddress -> [[Tile]]
 mapToTileSet (0, _) _ _ _ _ _ _ _ = []
 mapToTileSet (rows, cols) pixFormat tileMap tileSet bgOffset@(xOff, yOff) palette baseAddr setBaseAddr = row:mapToTileSet (rows-1, cols) pixFormat tileMap tileSet (xOff, yOff + 8) palette (baseAddr + tileMapRowWidth) setBaseAddr
   where
@@ -127,10 +127,10 @@ mapToTileSet (rows, cols) pixFormat tileMap tileSet bgOffset@(xOff, yOff) palett
     tileMapRowWidth = (fromIntegral cols) * 0x00000002
 
 -- Need to recurse using int instead
-mapRow :: Int -> Address -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileSetBaseAddress -> [Tile']
+mapRow :: Int -> Address -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileSetBaseAddress -> [Tile]
 mapRow 0 _ _ _ _ _ _ _ = []
 mapRow column mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr =
-  Tile' pixData tileCoords:mapRow (column-1) (mapIndex + 0x00000002) pixFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
+  Tile pixData tileCoords:mapRow (column-1) (mapIndex + 0x00000002) pixFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
   where
     pixData = pixelData pixFormat palette tile palBank
     tile = getTile pixFormat tileIdx tileSet
