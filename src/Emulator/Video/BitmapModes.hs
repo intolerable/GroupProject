@@ -4,14 +4,9 @@ import Emulator.Memory
 import Emulator.Types
 import Emulator.Video.Util
 import Emulator.Video.Palette
-import Emulator.Video.Renderer
 import Emulator.Video.VideoController
 
-import Control.Monad.IO.Class
 import Data.Array.IArray
-import Data.Array.Storable
-
-type Bitmap = Array Address Byte
 
 bitmapModes :: AddressIO m => LCDControl -> m (ScreenObj)
 bitmapModes cnt = do
