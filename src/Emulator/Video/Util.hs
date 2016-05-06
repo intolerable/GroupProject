@@ -33,29 +33,16 @@ type TileSet = Array Address Byte
 type TileSetBaseAddress = Address
 type Centre = (GLdouble, GLdouble)
 
--- Affine transformation
--- when mapping this make the TileOffset param the actual 4 coords for the tile to be rotated
-affineCoords :: TileOffset -> (GLdouble, GLdouble) -> AffineParameters -> QuadCoords
-affineCoords (xOff, yOff) (xCentre, yCentre) (pa, pb, pc, pd) = ((x1, y1), (x2, y2), (x3, y3), (x4, y4))
-  where
-    x1 = (pa * (xOff - xCentre)) + (pb * (yOff - yCentre)) + xCentre
-    y1 = (pc * (xOff - xCentre)) + (pd * (yOff - yCentre)) + yCentre
-    x2 = (pa * ((xOff + 8) - xCentre)) + (pb * (yOff - yCentre)) + xCentre
-    y2 = (pc * ((xOff + 8) - xCentre)) + (pd * (yOff - yCentre)) + yCentre
-    x3 = (pa * (xOff - xCentre)) + pb * ((yOff + 8) - yCentre) + xCentre
-    y3 = (pc * (xOff - xCentre)) + pd * ((yOff + 8) - yCentre) + yCentre
-    x4 = (pa * ((xOff + 8) - xCentre)) + (pb * ((yOff + 8) - yCentre)) + xCentre
-    y4 = (pc * ((xOff + 8) - xCentre)) + (pd * ((yOff + 8) - yCentre)) + yCentre
 
 transformCoords :: [Tile'] -> Centre -> AffineParameters -> [Tile']
 transformCoords [] _ _ = []
 transformCoords ((Tile' pix coords):xs) centre params = Tile' pix affCoords:transformCoords xs centre params
   where
-    affCoords = affineCoords' centre params coords
+    affCoords = affineCoords centre params coords
 
 -- this will be the function that is used
-affineCoords' :: Centre -> AffineParameters -> QuadCoords -> QuadCoords
-affineCoords' (xCentre, yCentre) (pa, pb, pc, pd) coords = ((affx1, affy1), (affx2, affy2), (affx3, affy3), (affx4, affy4))
+affineCoords :: Centre -> AffineParameters -> QuadCoords -> QuadCoords
+affineCoords (xCentre, yCentre) (pa, pb, pc, pd) coords = ((affx1, affy1), (affx2, affy2), (affx3, affy3), (affx4, affy4))
   where
     ((x1, y1), (x2, y2), (x3, y3), (x4, y4)) = coords
     affx1 = (pa * (x1 - xCentre)) + (pb * (y1 - yCentre)) + xCentre
