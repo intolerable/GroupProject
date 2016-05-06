@@ -46,7 +46,10 @@ module Emulator.CPU
   , opcodeFromByte
   , Interrupt(..)
   , ThumbOpcode(..)
-  , thumbOpcodeFromByte ) where
+  , thumbOpcodeFromByte
+  , sp
+  , lr
+  , pc ) where
 
 import Emulator.Types
 
@@ -162,6 +165,14 @@ mkRegisters :: MWord -- ^ 'r0' field
             -> Flags -- ^ 'cpsr' field (the flags field)
             -> Registers
 mkRegisters = Registers
+
+-- Alias some named registers
+sp :: (Functor f, HasR13 s a) => (a -> f a) -> s -> f s
+sp = r13
+lr :: (Functor f, HasR14 s a) => (a -> f a) -> s -> f s
+lr = r14
+pc :: (Functor f, HasR15 s a) => (a -> f a) -> s -> f s
+pc = r15
 
 -- | Shifted registers in instructions can be shifted by one of four methods.
 data ShiftType = LogicalLeft -- ^ a logical left shift
