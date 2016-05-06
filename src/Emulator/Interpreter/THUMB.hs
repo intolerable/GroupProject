@@ -62,7 +62,21 @@ interpretThumb instr =
       handleLongBranchWLink lh offset
 
 handleMoveShiftedRegister :: IsSystem s m => Shifted RegisterName -> RegisterName -> m ()
-handleMoveShiftedRegister sr r = (registers.rn r) <~ use (registers.shiftedRegisterLens sr)
+handleMoveShiftedRegister (AmountShift b t base) r = do
+  val <- use $ registers.rn base
+  c <- use $ flags.carry
+  let (newCarry, res) = applyShiftTypeWithCarry t val (fromIntegral b) c
+  registers.rn r .= res
+  setFlagsLogic res
+  flags.carry .= newCarry
+handleMoveShiftedRegister (RegisterShift nr t vr) dest = do
+  n <- use $ registers.rn nr
+  v <- use $ registers.rn vr
+  c <- use $ flags.carry
+  let (newCarry, res) = applyShiftTypeWithCarry t v (fromIntegral n) c
+  setFlagsLogic res
+  flags.carry .= newCarry
+  registers.rn dest .= res
 
 handleAddSubtractImmediate :: IsSystem s m => AddSub -> Offset -> RegisterName -> RegisterName -> m ()
 handleAddSubtractImmediate  as immed dest source = do
