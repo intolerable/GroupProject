@@ -4,42 +4,19 @@ import Emulator.Types
 import Emulator.Video.Util
 import Utilities.Parser.TemplateHaskell
 
-import Control.Monad.IO.Class
 import Data.Array.IArray
-import Data.Array.MArray
-import Data.Array.Storable
 
 type Palette = Array Address Byte
 
-pixelData :: AddressIO m => PixFormat -> Palette -> Tile -> Address -> m (StorableArray Address HalfWord)
+pixelData :: PixFormat -> Palette -> Tile -> Address -> [HalfWord]
 -- 256/1 palette format
-pixelData True palette tile _ = do
-  tilePixelData <- liftIO $ newListArray tileBounds tilePixelDataList
-  return tilePixelData
+pixelData True palette tile _ = tilePixelDataList
   where
     tilePixelDataList = palette256 palette tile (fst tileBounds) 64
     tileBounds = bounds tile
 
 -- 16/16 palette format
-pixelData _ palette tile palBank = do
-  tilePixelData <- liftIO $ newListArray tileBounds tilePixelDataList
-  return tilePixelData
-  where
-    bank = ixmap (palBankAddr, (palBankAddr + 0x0000001F)) (id) palette :: Palette
-    tilePixelDataList = palette16 bank tile palBankAddr (fst tileBounds) 32
-    tileBounds = bounds tile
-    palLowBound = fst $ bounds palette
-    palBankAddr = palLowBound + palBank
-
-pixelData' :: PixFormat -> Palette -> Tile -> Address -> [HalfWord]
--- 256/1 palette format
-pixelData' True palette tile _ = tilePixelDataList
-  where
-    tilePixelDataList = palette256 palette tile (fst tileBounds) 64
-    tileBounds = bounds tile
-
--- 16/16 palette format
-pixelData' _ palette tile palBank = tilePixelDataList
+pixelData _ palette tile palBank = tilePixelDataList
   where
     bank = ixmap (palBankAddr, (palBankAddr + 0x0000001F)) (id) palette :: Palette
     tilePixelDataList = palette16 bank tile palBankAddr (fst tileBounds) 32

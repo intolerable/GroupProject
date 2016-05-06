@@ -132,7 +132,7 @@ mapRow 0 _ _ _ _ _ _ _ = []
 mapRow column mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr =
   Tile' pixData tileCoords:mapRow (column-1) (mapIndex + 0x00000002) pixFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
   where
-    pixData = pixelData' pixFormat palette tile palBank
+    pixData = pixelData pixFormat palette tile palBank
     tile = getTile pixFormat tileIdx tileSet
     upperByte = (tileMapRow!(mapIndex + 0x00000001))
     lowerByte = (tileMapRow!mapIndex)

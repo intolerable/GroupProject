@@ -72,7 +72,7 @@ spriteRow :: Int -> TileOffset -> TileSetBaseAddress -> SpriteAttribs -> [Tile']
 spriteRow 0 _ _ _ = []
 spriteRow cols (xOff, yOff) tileIdx attribs = Tile' pixData tileCoords:spriteRow (cols - 1) (xOff + 8, yOff) nextTile attribs
   where
-    pixData = pixelData' pixFormat (getPal attribs) tile (getPalBank attribs)
+    pixData = pixelData pixFormat (getPal attribs) tile (getPalBank attribs)
     tile = getTile pixFormat tileIdx (getTileSet attribs)
     nextTile = if pixFormat then tileIdx + 0x00000040 else tileIdx + 0x00000020
     tileCoords = ((xOff, yOff), (xOff+8, yOff), (xOff, yOff+8), (xOff+8, yOff+8))
