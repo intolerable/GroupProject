@@ -220,7 +220,7 @@ handleBranchExchange opReg = do
   op' <- use (registers.rn opReg)
   let thumb = op' `testBit` 0
   let realOp = op' .&. 0xFFFFFFFE
-  registers.r15 .= realOp
+  registers.pc .= (realOp + 4)
   flags.thumbStateBit .= thumb
 
 directionToOperator :: Num a => OffsetDirection -> (a -> a -> a)
