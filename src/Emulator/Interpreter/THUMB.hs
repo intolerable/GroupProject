@@ -282,15 +282,16 @@ handleThumbBranch off = do
   let val = (fromIntegral pc') + off
   registers.pc .= fromIntegral (val + 2)
 
-handleLongBranchWLink :: IsSystem s m => LowHigh -> BranchOffset -> m ()
-handleLongBranchWLink High offset = do
-  registers.r14 %= \x -> fromIntegral (fromIntegral x + offset)
-  oldPC <- use (registers.r15)
-  registers.r15 <~ use (registers.r14)
-  registers.r15 .= (oldPC + 4) `setBit` 0
+handleLongBranchWLink :: IsSystem s m => LowHigh -> Offset -> m ()
 handleLongBranchWLink Low offset = do
-  oldPC <- use (registers.r15)
-  registers.r14 .= fromIntegral (fromIntegral oldPC + offset)
+  registers.lr += offset `shiftL` 1
+  oldPC <- use (registers.pc)
+  registers.pc <~ use (registers.lr)
+  registers.lr .= (oldPC + 4)
+handleLongBranchWLink High offset = do
+  let off = fromIntegral $ arithExtend offset 10 :: Int32
+  oldPC <- use (registers.pc)
+  registers.lr .= fromIntegral (fromIntegral oldPC + (off `shiftL` 12))
 
 addSubToOperator :: Num a => AddSub -> (a -> a -> a)
 addSubToOperator Add = (+)
