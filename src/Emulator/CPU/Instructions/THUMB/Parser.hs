@@ -214,7 +214,7 @@ readConditionalBranch w = ConditionalBranch cond offset
       (Just v) -> v
       Nothing -> error "Error reading condition ThumbParser.hs:210"
     maybeCond = conditionFromByte $ fromIntegral $ $(bitmask 11 8) w
-    offset = fromIntegral $ $(bitmask 7 0) w
+    offset = (fromIntegral $ $(bitmask 7 0) w) `shiftL` 1
 
 readLongBranchWithLink :: HalfWord -> THUMBInstruction
 readLongBranchWithLink w = LongBranchWLink lh offset
