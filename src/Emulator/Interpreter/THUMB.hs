@@ -59,7 +59,7 @@ interpretThumb instr =
     ThumbBranch offset ->
       handleThumbBranch offset
     LongBranchWLink lh offset ->
-      handleLongBranchWLink lh offset
+      handleLongBranchWLink lh (fromIntegral offset)
 
 handleMoveShiftedRegister :: IsSystem s m => Shifted RegisterName -> RegisterName -> m ()
 handleMoveShiftedRegister (AmountShift b t base) r = do
