@@ -35,26 +35,23 @@ readBitmapVram 4 False = readRange (0x06000000, 0x0060095FF)
 readBitmapVram _ True = readRange (0x0600A000, 0x006013FFF)
 readBitmapVram _ False = readRange (0x06000000, 0x006009FFF)
 
-mode3n5 :: AddressIO m => BGControl -> AffineRefPoints -> AffineParameters -> (Int, Int) -> (Address, Address) -> m ()
-mode3n5 _bgCNT ref@(x, y) params (w, h) vramAddr = do
-  vram <- readRange vramAddr
-  let bitmapList = convToBitmap vram (fst vramAddr) (w * h)
-  bitmapArray <- liftIO $ newListArray vramAddr bitmapList
-  let centre = (x + fromIntegral w, y + fromIntegral h)
-  let coords = affineCoords ref centre params
-  liftIO $ drawTile bitmapArray coords
-  return ()
+mode3n5 :: BGControl -> AffineRefPoints -> AffineParameters -> (Int, Int) -> Array Address Byte -> ScreenObj
+mode3n5 bgCNT (x, y) params (w, h) vram = BitmapBG quad (bgPriority bgCNT)
+  where
+    bitmapList = convToBitmap vram (fst (bounds vram)) (w * h)
+    centre = (x + fromIntegral w, y + fromIntegral h)
+    preAffineCoords = ((x, y), (x+8, y), (x, y+8), (x+8, y+8))
+    coords = affineCoords centre params preAffineCoords
+    quad = Tile bitmapList coords
 
-mode4 :: AddressIO m => BGControl -> AffineRefPoints -> AffineParameters -> (Int, Int) -> (Address, Address) -> m ()
-mode4 _bgCNT ref@(x, y) params (w, h) vramAddr = do
-  vram <- readRange vramAddr
-  pal <- readRange (0x05000000, 0x050001FF)
-  let bitmapList = palette256 pal vram (fst vramAddr) (w * h)
-  bitmapArray <- liftIO $ newListArray vramAddr bitmapList
-  let centre = (x + fromIntegral w, y + fromIntegral h)
-  let coords = affineCoords ref centre params
-  liftIO $ drawTile bitmapArray coords
-  return ()
+mode4 :: BGControl -> AffineRefPoints -> AffineParameters -> (Int, Int) -> Array Address Byte -> Palette -> ScreenObj
+mode4 bgCNT (x, y) params (w, h) vram pal = BitmapBG quad (bgPriority bgCNT)
+  where
+    bitmapList = palette256 pal vram (fst (bounds vram)) (w * h)
+    centre = (x + fromIntegral w, y + fromIntegral h)
+    preAffineCoords = ((x, y), (x+8, y), (x, y+8), (x+8, y+8))
+    coords = affineCoords centre params preAffineCoords
+    quad = Tile bitmapList coords
 
 convToBitmap :: Array Address Byte -> Address -> Int -> [HalfWord]
 convToBitmap _ _ 0 = []
