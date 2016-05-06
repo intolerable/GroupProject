@@ -152,8 +152,8 @@ handleThumbBranchExchange r = do
 
 handlePCRelativeLoad :: IsSystem s m => RegisterName -> Offset -> m ()
 handlePCRelativeLoad dest off = do
-  sp <- use $ registers.r15
-  let addr = sp + off
+  pc' <- use $ registers.pc
+  let addr = pc' + off
   word <- readAddressWord addr
   registers.rn dest .= word
 
@@ -239,8 +239,8 @@ handleLoadAddress SP destR offset = do
 
 handleSPAddOffset :: IsSystem s m => OffsetDirection -> Offset -> m ()
 handleSPAddOffset ud offset = do
-  sp <- use $ registers.r13
-  registers.r13 .= op sp realOffset
+  stack <- use $ registers.r13
+  registers.r13 .= op stack realOffset
   where
     op = case ud of
             Up -> (+)
@@ -251,15 +251,15 @@ handleSPAddOffset ud offset = do
 
 handlePushPopRegs :: IsSystem s m => LoadStore -> StoreLR -> RegisterList -> m ()
 handlePushPopRegs ls st rlist = do
-  sp <- use $ registers.r13
+  stack <- use $ registers.sp
   case ls of
     -- Read blocks of memory, from the stack, shrinking the stack upwards
     Load -> do
       let rlist' = if st then rlist ++ [RegisterName 15] else rlist
-      registers.r13 <~ readBlocks Up sp rlist'
+      registers.r13 <~ readBlocks Up stack rlist'
     Store -> do
       let rlist' = if st then rlist ++ [RegisterName 13] else rlist
-      registers.r13 <~ writeBlocks Down sp rlist'
+      registers.r13 <~ writeBlocks Down stack rlist'
 
 handleMultipleLoadStore :: IsSystem s m => LoadStore -> RegisterName -> RegisterList -> m ()
 handleMultipleLoadStore ls baseR rlist = do
@@ -271,16 +271,16 @@ handleMultipleLoadStore ls baseR rlist = do
 handleConditionalBranch :: IsSystem s m => Condition -> Offset -> m ()
 handleConditionalBranch cond off =
   conditionally cond $
-    registers.r15 %= \x -> fromIntegral (fromIntegral x + off + 4)
+    registers.r15 %= \x -> fromIntegral $ (fromIntegral x) + off + 4
 
 handleThumbSoftwareInterrupt :: Monad m => Value -> SystemT m ()
 handleThumbSoftwareInterrupt = error "Unimplemented instruction: Thumb software interrupt"
 
 handleThumbBranch :: IsSystem s m => BranchOffset -> m ()
 handleThumbBranch off = do
-  pc <- use $ registers.r15
-  let val = (fromIntegral pc) + off
-  registers.r15 .= fromIntegral (val + 2)
+  pc' <- use $ registers.pc
+  let val = (fromIntegral pc') + off
+  registers.pc .= fromIntegral (val + 2)
 
 handleLongBranchWLink :: IsSystem s m => LowHigh -> BranchOffset -> m ()
 handleLongBranchWLink High offset = do
