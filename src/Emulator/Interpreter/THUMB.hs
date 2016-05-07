@@ -294,16 +294,6 @@ handleLongBranchWLink Low off = do
   registers.pc .= fromIntegral (fromIntegral oldLR + offset + 0) -- MIGHT BE +4 ???
   registers.lr .= ((oldPC + 4) `setBit` 0)
 
---handleLongBranchWLink Low offset = do
---  registers.lr += offset `shiftL` 1
---  oldPC <- use (registers.pc)
---  registers.pc <~ ((+4) <$> use (registers.lr))
---  registers.lr .= (oldPC + 4)
---handleLongBranchWLink High offset = do
---  let off = fromIntegral $ arithExtend offset 10 :: Int32
---  oldPC <- use (registers.pc)
---  registers.lr .= fromIntegral (fromIntegral oldPC + (off `shiftL` 12))
-
 addSubToOperator :: Num a => AddSub -> (a -> a -> a)
 addSubToOperator Add = (+)
 addSubToOperator Subtract = (-)
