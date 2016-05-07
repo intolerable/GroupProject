@@ -25,5 +25,5 @@ data THUMBInstruction
   | ConditionalBranch Condition Offset
   | ThumbSoftwareInterrupt Value
   | ThumbBranch BranchOffset
-  | LongBranchWLink LowHigh BranchOffset
+  | LongBranchWLink LowHigh HalfWord
   deriving (Show, Eq)

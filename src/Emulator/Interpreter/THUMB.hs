@@ -59,7 +59,7 @@ interpretThumb instr =
     ThumbBranch offset ->
       handleThumbBranch offset
     LongBranchWLink lh offset ->
-      handleLongBranchWLink lh (fromIntegral offset)
+      handleLongBranchWLink lh offset
 
 handleMoveShiftedRegister :: IsSystem s m => Shifted RegisterName -> RegisterName -> m ()
 handleMoveShiftedRegister (AmountShift b t base) r = do
@@ -282,16 +282,27 @@ handleThumbBranch off = do
   let val = (fromIntegral pc') + off
   registers.pc .= fromIntegral (val + 2)
 
-handleLongBranchWLink :: IsSystem s m => LowHigh -> Offset -> m ()
-handleLongBranchWLink Low offset = do
-  registers.lr += offset `shiftL` 1
+handleLongBranchWLink :: IsSystem s m => LowHigh -> HalfWord -> m ()
+handleLongBranchWLink High off = do
+  let offset = (fromIntegral ((fromIntegral off :: MWord) `shiftL` 21) :: Int32) `shiftR` 9
   oldPC <- use (registers.pc)
-  registers.pc <~ use (registers.lr)
-  registers.lr .= (oldPC + 4)
-handleLongBranchWLink High offset = do
-  let off = fromIntegral $ arithExtend offset 10 :: Int32
+  registers.lr .= fromIntegral (fromIntegral oldPC + offset)
+handleLongBranchWLink Low off = do
+  let offset = fromIntegral off `shiftL` 1 :: Int32
+  oldLR <- use (registers.lr)
   oldPC <- use (registers.pc)
-  registers.lr .= fromIntegral (fromIntegral oldPC + (off `shiftL` 12))
+  registers.pc .= fromIntegral (fromIntegral oldLR + offset + 0) -- MIGHT BE +4 ???
+  registers.lr .= ((oldPC + 4) `setBit` 0)
+
+--handleLongBranchWLink Low offset = do
+--  registers.lr += offset `shiftL` 1
+--  oldPC <- use (registers.pc)
+--  registers.pc <~ ((+4) <$> use (registers.lr))
+--  registers.lr .= (oldPC + 4)
+--handleLongBranchWLink High offset = do
+--  let off = fromIntegral $ arithExtend offset 10 :: Int32
+--  oldPC <- use (registers.pc)
+--  registers.lr .= fromIntegral (fromIntegral oldPC + (off `shiftL` 12))
 
 addSubToOperator :: Num a => AddSub -> (a -> a -> a)
 addSubToOperator Add = (+)
