@@ -36,3 +36,24 @@ animate :: TXChan SystemState -> GLUT.IdleCallback
 animate _ = do
   clear [GLUT.ColorBuffer]
   GLUT.swapBuffers
+
+-- right end of list will be drawn last therefore will appear on top
+-- left = low, right = high priority
+comparePrio :: ScreenObj -> ScreenObj -> Ordering
+comparePrio (BG _ prio1 layer1) (BG _ prio2 layer2)
+  | prio1 < prio2 = GT
+  | prio1 > prio2 = LT
+  | otherwise = if layer1 < layer2 then GT else LT
+comparePrio (Sprite _ prio1) (Sprite _ prio2)
+  | prio1 < prio2 = GT
+  | prio1 > prio2 = LT
+  | otherwise = EQ
+comparePrio (BG _ prio1 _) (Sprite _ prio2)
+  | prio1 < prio2 = GT
+  | prio1 > prio2 = LT
+  | otherwise = LT
+comparePrio (Sprite _ prio1) (BG _ prio2 _)
+  | prio1 < prio2 = GT
+  | prio1 > prio2 = LT
+  | otherwise = GT
+comparePrio _ _ = EQ
