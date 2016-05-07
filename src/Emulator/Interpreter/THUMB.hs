@@ -271,7 +271,7 @@ handleMultipleLoadStore ls baseR rlist = do
 handleConditionalBranch :: IsSystem s m => Condition -> Offset -> m ()
 handleConditionalBranch cond off =
   conditionally cond $
-    registers.r15 %= \x -> fromIntegral $ (fromIntegral x) + off + 4
+    registers.r15 %= \x -> fromIntegral $ (fromIntegral x) + off + 2
 
 handleThumbSoftwareInterrupt :: Monad m => Value -> SystemT m ()
 handleThumbSoftwareInterrupt = error "Unimplemented instruction: Thumb software interrupt"
