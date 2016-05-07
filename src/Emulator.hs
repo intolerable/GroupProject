@@ -79,7 +79,7 @@ loadROM chan fp bios =
       biosBS <- LBS.readFile bios
       case parseARM (mwordFromBS (rh ^. startLocation)) of
         Right (AL, Branch (Link False) _) ->
-          void $ runSystemT (interpretLoop chan) $
+          void $ runSystemT (interpretLoop 100 chan) $
             buildInitialState bs biosBS
         _ -> error "loadROM: undefined"
 
