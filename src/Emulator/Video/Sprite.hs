@@ -41,8 +41,8 @@ recurseOAM oam tileSet mapMode n pal objAddr = screenObj:recurseOAM oam tileSet 
 -- Access attributes of object
 parseObjectAttr :: OAM -> OAM -> TileSet -> MappingMode -> Address -> Palette -> ScreenObj
 parseObjectAttr obj oam tileSet mapMode objAddr pal
-  | mode == 0 = NormalSprite pixData flips priority
-  | mode == 1 = AffineSprite (transformCoords pixData centre affineParams) priority
+  | mode == 0 = Sprite pixData priority
+  | mode == 1 = Sprite (transformCoords pixData centre affineParams) priority
   | otherwise = Hidden
   where
     (attr0, attr1, attr2) = attributes obj objAddr
@@ -54,7 +54,7 @@ parseObjectAttr obj oam tileSet mapMode objAddr pal
     pixFormat = (testBit attr0 13)
     _gfx = (fromIntegral $ $(bitmask 11 10) attr0) :: Integer
     tileIdx = 0x06010000 + convIntToAddr (fromIntegral $ $(bitmask 9 0) attr2 :: Int) pixFormat
-    flips = (testBit attr1 12, testBit attr1 13) :: (Bool, Bool)
+    _flips = (testBit attr1 12, testBit attr1 13) :: (Bool, Bool)
     affineParams = objAffine attr1 oam
     palBank = convIntToAddr (fromIntegral $ $(bitmask 15 12) attr2 :: Int) False
     priority = (fromIntegral $ $(bitmask 11 10) attr2) :: Int

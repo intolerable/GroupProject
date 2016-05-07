@@ -27,10 +27,10 @@ mode0 palette _ = do
   bg1Data <- readTextBG 0x0400000A 0x04000014 0x04000016
   bg2Data <- readTextBG 0x0400000C 0x04000018 0x0400001A
   bg3Data <- readTextBG 0x0400000E 0x0400001C 0x0400001E
-  let bg0 = textBG bg0Data palette
-  let bg1 = textBG bg1Data palette
-  let bg2 = textBG bg2Data palette
-  let bg3 = textBG bg3Data palette
+  let bg0 = textBG bg0Data palette 0
+  let bg1 = textBG bg1Data palette 1
+  let bg2 = textBG bg2Data palette 2
+  let bg3 = textBG bg3Data palette 3
   return [bg0, bg1, bg2, bg3]
 
 mode1 :: AddressIO m => Palette -> LCDControl -> m [ScreenObj]
@@ -38,17 +38,17 @@ mode1 palette _ = do
   bg0Data <- readTextBG 0x04000008 0x04000010 0x04000012
   bg1Data <- readTextBG 0x0400000A 0x04000014 0x04000016
   bg2Data <- readAffineBG 0x0400000C 0x04000028 0x04000020
-  let bg0 = textBG bg0Data palette
-  let bg1 = textBG bg1Data palette
-  let bg2 = affineBG bg2Data palette
+  let bg0 = textBG bg0Data palette 1
+  let bg1 = textBG bg1Data palette 2
+  let bg2 = affineBG bg2Data palette 3
   return [bg0, bg1, bg2]
 
 mode2 :: AddressIO m => Palette -> LCDControl -> m [ScreenObj]
 mode2 palette _ = do
   bg2Data <- readAffineBG 0x0400000C 0x04000028 0x04000020
   bg3Data <- readAffineBG 0x0400000E 0x04000038 0x04000030
-  let bg2 = affineBG bg2Data palette
-  let bg3 = affineBG bg3Data palette
+  let bg2 = affineBG bg2Data palette 2
+  let bg3 = affineBG bg3Data palette 3
   return [bg2, bg3]
 
 readTextBG :: AddressSpace m => Address -> Address -> Address -> m (BGControl, TileOffset, ([TileMap], TileSet))
@@ -78,14 +78,14 @@ getTextTileMaps _ tileMapAddr = do
   return [tileMap0, tileMap1]
 
 -- -- Text Mode
-textBG :: (BGControl, TileOffset, ([TileMap], TileSet)) -> Palette -> ScreenObj
-textBG (bg, offset, mapSet) palette = NormalBG bgTiles priority
+textBG :: (BGControl, TileOffset, ([TileMap], TileSet)) -> Palette -> Layer -> ScreenObj
+textBG (bg, offset, mapSet) palette layer = BG bgTiles priority layer
   where
     bgTiles = getTextBGTiles (screenSize bg) (colorsPalettes bg) offset palette mapSet (screenBaseBlock bg) (characterBaseBlock bg)
     priority = bgPriority bg
 
-affineBG :: (BGControl, AffineRefPoints, AffineParameters, (Int, Int), TileMap, TileSet, Centre) -> Palette -> ScreenObj
-affineBG (bg, refPoint, param, size, tileMap, tileSet, centre) pal = AffineBG affineBgTiles priority
+affineBG :: (BGControl, AffineRefPoints, AffineParameters, (Int, Int), TileMap, TileSet, Centre) -> Palette -> Layer -> ScreenObj
+affineBG (bg, refPoint, param, size, tileMap, tileSet, centre) pal layer = BG affineBgTiles priority layer
   where
     bgTiles = concat $ mapToTileSet size (colorsPalettes bg) tileMap tileSet refPoint pal (screenBaseBlock bg) (characterBaseBlock bg)
     priority = bgPriority bg

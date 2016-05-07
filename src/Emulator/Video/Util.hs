@@ -10,15 +10,15 @@ import Graphics.Rendering.OpenGL
 import Utilities.Parser.TemplateHaskell
 
 data ScreenObj =
-  NormalBG [Tile] Priority |
-  AffineBG [Tile] Priority |
-  BitmapBG Tile Priority |
-  NormalSprite [Tile] (Bool, Bool) Priority |
-  AffineSprite [Tile] Priority |
+  BG [Tile] Priority Layer |
+  Sprite [Tile] Priority |
   Hidden
+  deriving (Show, Read, Eq)
 
 data Tile = Tile [HalfWord] QuadCoords
+  deriving (Show, Read, Eq)
 
+type Layer = Int
 type Priority = Int
 
 type AddressIO m = (AddressSpace m, MonadIO m)
