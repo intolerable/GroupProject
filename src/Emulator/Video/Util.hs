@@ -74,7 +74,7 @@ convToFixedNum low up
   | sign = negate val
   | otherwise = val
   where
-    val =  intPor + (fracPor / 256.0)
+    val =  intPor + (fracPor / 256)
     hword = bytesToHalfWord low up
     fracPor = fromIntegral $ $(bitmask 7 0) hword
     intPor = fromIntegral $ $(bitmask 14 8) hword
