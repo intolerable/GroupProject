@@ -118,7 +118,7 @@ tNeg src dest = do
 
 
 doCmp :: IsSystem s m => (MWord -> MWord -> MWord) -> (Word64 -> Word64 -> Word64) -> RegisterName -> RegisterName -> m ()
-doCmp op bigOp dest src = do
+doCmp op bigOp src dest = do
   v <- use $ registers.rn dest
   v' <- use $ registers.rn src
   let val = op v v'
