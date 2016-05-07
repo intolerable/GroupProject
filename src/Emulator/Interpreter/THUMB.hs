@@ -256,10 +256,10 @@ handlePushPopRegs ls st rlist = do
     -- Read blocks of memory, from the stack, shrinking the stack upwards
     Load -> do
       let rlist' = if st then rlist ++ [RegisterName 15] else rlist
-      registers.r13 <~ readBlocks Up stack rlist'
+      registers.sp <~ readBlocks Up stack rlist'
     Store -> do
       let rlist' = if st then rlist ++ [RegisterName 13] else rlist
-      registers.r13 <~ writeBlocks Down stack rlist'
+      registers.sp <~ writeBlocks Down stack rlist'
 
 handleMultipleLoadStore :: IsSystem s m => LoadStore -> RegisterName -> RegisterList -> m ()
 handleMultipleLoadStore ls baseR rlist = do
