@@ -25,8 +25,11 @@ interpretARM instr =
       registers.r15 %= \x -> fromIntegral (fromIntegral x + offset + 4)
     DataProcessing _ _ _ (RegisterName 15) (Left (RegisterShift _ _ _)) -> error "interpretARM: invalid r15 usage!"
     DataProcessing _ _ _ _ (Left (RegisterShift _ _ (RegisterName 15))) -> error "interpretARM: invalid r15 usage!"
-    DataProcessing opcode (SetCondition setCond) dest op1 op2 -> do
+    DataProcessing opcode (SetCondition setCond) dest@(RegisterName r) op1 op2 -> do
       (functionFromOpcode opcode) (registerLens dest) (registerLens op1) (operand2Lens op2) setCond
+      when (r == 15) $ do
+        val <- use $ registers.pc
+        registers.pc .= val + 4
     HalfwordDataTransferRegister pp ud wb ls s g base dest offset ->
       handleHalfwordDataTransferRegister pp ud wb ls s g base dest offset
     HalfwordDataTransferImmediate pp ud wb ls s g base dest offset ->
@@ -54,20 +57,18 @@ handleSingleDataTransfer :: IsSystem s m
                          => PrePost -> OffsetDirection -> (Granularity 'Full) -> WriteBack -> LoadStore -> RegisterName -> RegisterName -> Either (Shifted RegisterName) Offset -> m ()
 handleSingleDataTransfer pp ud gran wb ls base target op2 = do
   baseVal <- use $ registers.rn base
-  offsetVal <- use $ registers.either shiftedRegisterLens (to . const) op2
+  offsetVal <- either getShiftedRegister return op2
   let (addr, final) = mkPrePost pp ud baseVal offsetVal
   case (ls, gran) of
     (Load, Byte) -> do
       byte <- readAddressByte addr
       registers.rn target .= fromIntegral byte
     (Load, Word) -> do
-      word <- readAddressWord ($(bitmask 31 2) addr)
+      word <- readAddressWord $ addr .&. 0xFFFFFFFC
       registers.rn target .= word `rotateR` (fromIntegral $ $(bitmask 1 0) addr * 8)
-    (Store, Byte) -> do
-      use (registers.rn target) >>= writeAddressByte addr . fromIntegral
-    (Store, Word) -> use (registers.rn target) >>= writeAddressWord ($(bitmask 31 2) addr)
-  when wb $
-    registers.rn base .= final
+    (Store, Byte) -> use (registers.rn target) >>= writeAddressByte addr . fromIntegral
+    (Store, Word) -> use (registers.rn target) >>= writeAddressWord (addr .&. 0xFFFFFFFC)
+  when wb $ registers.rn base .= final
 
 handleBlockDataTranfer :: IsSystem s m => PrePost -> OffsetDirection -> ForceUserMode -> WriteBack -> LoadStore -> RegisterName -> RegisterList -> m ()
 handleBlockDataTranfer pp ud user wb ls base rlist = do
@@ -220,8 +221,23 @@ handleBranchExchange opReg = do
   op' <- use (registers.rn opReg)
   let thumb = op' `testBit` 0
   let realOp = op' .&. 0xFFFFFFFE
-  registers.r15 .= realOp
+  registers.pc .= (realOp + 4)
   flags.thumbStateBit .= thumb
+
+getShiftedRegister :: IsSystem s m => Shifted RegisterName -> m MWord
+getShiftedRegister (AmountShift n st r) = do
+  (isCarry, val) <- applyShiftTypeWithCarry st <$> use (registers.rn r)
+                                               <*> pure (fromIntegral (fromIntegral n :: HalfWord))
+                                               <*> use (flags.carry)
+  flags.carry .= isCarry
+  return val
+getShiftedRegister (RegisterShift n st r) = do
+  (isCarry, val) <- applyShiftTypeWithCarry st <$> use (registers.rn r)
+                                               <*> (getLSB <$> use (registers.rn n))
+                                               <*> use (flags.carry)
+  flags.carry .= isCarry
+  return val
+  where getLSB x = fromIntegral (fromIntegral (fromIntegral x :: Word8) :: Word16) :: Int
 
 directionToOperator :: Num a => OffsetDirection -> (a -> a -> a)
 directionToOperator d = case d of

@@ -59,10 +59,24 @@ interpretThumb instr =
     ThumbBranch offset ->
       handleThumbBranch offset
     LongBranchWLink lh offset ->
-      handleLongBranchWLink lh offset
+      handleLongBranchWLink lh (fromIntegral offset)
 
 handleMoveShiftedRegister :: IsSystem s m => Shifted RegisterName -> RegisterName -> m ()
-handleMoveShiftedRegister sr r = (registers.rn r) <~ use (registers.shiftedRegisterLens sr)
+handleMoveShiftedRegister (AmountShift b t base) r = do
+  val <- use $ registers.rn base
+  c <- use $ flags.carry
+  let (newCarry, res) = applyShiftTypeWithCarry t val (fromIntegral b) c
+  registers.rn r .= res
+  setFlagsLogic res
+  flags.carry .= newCarry
+handleMoveShiftedRegister (RegisterShift nr t vr) dest = do
+  n <- use $ registers.rn nr
+  v <- use $ registers.rn vr
+  c <- use $ flags.carry
+  let (newCarry, res) = applyShiftTypeWithCarry t v (fromIntegral n) c
+  setFlagsLogic res
+  flags.carry .= newCarry
+  registers.rn dest .= res
 
 handleAddSubtractImmediate :: IsSystem s m => AddSub -> Offset -> RegisterName -> RegisterName -> m ()
 handleAddSubtractImmediate  as immed dest source = do
@@ -138,8 +152,8 @@ handleThumbBranchExchange r = do
 
 handlePCRelativeLoad :: IsSystem s m => RegisterName -> Offset -> m ()
 handlePCRelativeLoad dest off = do
-  sp <- use $ registers.r15
-  let addr = sp + off
+  pc' <- use $ registers.pc
+  let addr = pc' + off
   word <- readAddressWord addr
   registers.rn dest .= word
 
@@ -225,8 +239,8 @@ handleLoadAddress SP destR offset = do
 
 handleSPAddOffset :: IsSystem s m => OffsetDirection -> Offset -> m ()
 handleSPAddOffset ud offset = do
-  sp <- use $ registers.r13
-  registers.r13 .= op sp realOffset
+  stack <- use $ registers.r13
+  registers.r13 .= op stack realOffset
   where
     op = case ud of
             Up -> (+)
@@ -237,15 +251,15 @@ handleSPAddOffset ud offset = do
 
 handlePushPopRegs :: IsSystem s m => LoadStore -> StoreLR -> RegisterList -> m ()
 handlePushPopRegs ls st rlist = do
-  sp <- use $ registers.r13
+  stack <- use $ registers.sp
   case ls of
     -- Read blocks of memory, from the stack, shrinking the stack upwards
     Load -> do
       let rlist' = if st then rlist ++ [RegisterName 15] else rlist
-      registers.r13 <~ readBlocks Up sp rlist'
+      registers.r13 <~ readBlocks Up stack rlist'
     Store -> do
       let rlist' = if st then rlist ++ [RegisterName 13] else rlist
-      registers.r13 <~ writeBlocks Down sp rlist'
+      registers.r13 <~ writeBlocks Down stack rlist'
 
 handleMultipleLoadStore :: IsSystem s m => LoadStore -> RegisterName -> RegisterList -> m ()
 handleMultipleLoadStore ls baseR rlist = do
@@ -257,27 +271,27 @@ handleMultipleLoadStore ls baseR rlist = do
 handleConditionalBranch :: IsSystem s m => Condition -> Offset -> m ()
 handleConditionalBranch cond off =
   conditionally cond $
-    registers.r15 %= \x -> fromIntegral (fromIntegral x + off + 4)
+    registers.r15 %= \x -> fromIntegral $ (fromIntegral x) + off + 4
 
 handleThumbSoftwareInterrupt :: Monad m => Value -> SystemT m ()
 handleThumbSoftwareInterrupt = error "Unimplemented instruction: Thumb software interrupt"
 
 handleThumbBranch :: IsSystem s m => BranchOffset -> m ()
 handleThumbBranch off = do
-  pc <- use $ registers.r15
-  let val = (fromIntegral pc) + off
-  registers.r15 .= fromIntegral (val + 4)
+  pc' <- use $ registers.pc
+  let val = (fromIntegral pc') + off
+  registers.pc .= fromIntegral (val + 2)
 
 handleLongBranchWLink :: IsSystem s m => LowHigh -> Offset -> m ()
 handleLongBranchWLink Low offset = do
-  registers.r14 += offset `shiftL` 1
-  oldPC <- use (registers.r15)
-  registers.r15 <~ use (registers.r14)
-  registers.r15 .= (oldPC + 4) `setBit` 0
+  registers.lr += offset `shiftL` 1
+  oldPC <- use (registers.pc)
+  registers.pc <~ use (registers.lr)
+  registers.lr .= (oldPC + 4)
 handleLongBranchWLink High offset = do
   let off = fromIntegral $ arithExtend offset 10 :: Int32
-  oldPC <- use (registers.r15)
-  registers.r14 .= fromIntegral (fromIntegral oldPC + (off `shiftL` 12))
+  oldPC <- use (registers.pc)
+  registers.lr .= fromIntegral (fromIntegral oldPC + (off `shiftL` 12))
 
 addSubToOperator :: Num a => AddSub -> (a -> a -> a)
 addSubToOperator Add = (+)

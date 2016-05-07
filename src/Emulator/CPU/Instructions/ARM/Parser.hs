@@ -53,7 +53,7 @@ readBranch :: MWord -> ARMInstruction
 readBranch br = Branch linkBit offset
   where
     linkBit = Link $ testBit br 24
-    offset = $(bitmask 23 0) (fromIntegral br) `shiftL` 2
+    offset = fromIntegral (br `shiftL` 8) `shiftR` 6
 
 -- Detect whether it is a Multiply or a Multiply long
 readGeneralMultiply :: MWord -> ARMInstruction

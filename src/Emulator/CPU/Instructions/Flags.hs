@@ -4,7 +4,7 @@ import Emulator.CPU
 import Emulator.Interpreter.Monad
 import Emulator.Types
 
-import Control.Lens
+import Control.Lens hiding (op)
 import Data.Bits
 import Data.Word
 

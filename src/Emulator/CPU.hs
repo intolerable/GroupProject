@@ -46,7 +46,10 @@ module Emulator.CPU
   , opcodeFromByte
   , Interrupt(..)
   , ThumbOpcode(..)
-  , thumbOpcodeFromByte ) where
+  , thumbOpcodeFromByte
+  , sp
+  , lr
+  , pc ) where
 
 import Emulator.Types
 
@@ -163,6 +166,14 @@ mkRegisters :: MWord -- ^ 'r0' field
             -> Registers
 mkRegisters = Registers
 
+-- Alias some named registers
+sp :: (Functor f, HasR13 s a) => (a -> f a) -> s -> f s
+sp = r13
+lr :: (Functor f, HasR14 s a) => (a -> f a) -> s -> f s
+lr = r14
+pc :: (Functor f, HasR15 s a) => (a -> f a) -> s -> f s
+pc = r15
+
 -- | Shifted registers in instructions can be shifted by one of four methods.
 data ShiftType = LogicalLeft -- ^ a logical left shift
                | LogicalRight -- ^ a logical right shift
@@ -258,7 +269,7 @@ operand2Lens (Right (Rotated x b)) =
       let oldc = r ^. cpsr.carry in
       (oldc, fromIntegral b)
     n -> to $ const $
-      (testBit x (32 - n), fromIntegral x `rotateL` n)
+      (testBit x (32 - n), fromIntegral b `rotateR` n)
 
 fromByte :: forall a. (Enum a, Bounded a) => Byte -> Maybe a
 fromByte b =

@@ -36,7 +36,8 @@ parseTHUMB w = case greaterId of
       else
         if testBit w 10
           then Right $ readPushPopRegisters w
-          else Right $ readAddOffsetToSP w
+          else if not $ testBit w 11 then Right $ readAddOffsetToSP w
+                                     else error $ "Undefined instruction: " ++ showHex w
   6 ->
     if not modifierBit
       then Right $ readMultipleLoadStore w
@@ -45,7 +46,7 @@ parseTHUMB w = case greaterId of
           then Right $ readThumbSoftwareInterrupt w
           else Right $ readConditionalBranch w
   7 -> if modifierBit then Right $ readLongBranchWithLink w else Right $ readUnconditionalBranch w
-  _ -> error $ "Undefined opcode: 0x" ++ showHex w
+  _ -> error $ "Undefined opcode: " ++ showHex w
   where
     greaterId = $(bitmask 15 13) w
     lesserId = $(bitmask 12 11) w
@@ -76,7 +77,8 @@ readMovShifted w = MoveShiftedRegister shifted dest
       | op == 1 = LogicalRight
       | op == 2 = ArithRight
       | otherwise = error "readMovShifted: invalid shift type"
-    shifted = AmountShift (fromIntegral op) operation $ RegisterName $ fromIntegral $ $(bitmask 5 3) w
+    shifted = AmountShift (fromIntegral shiftVal) operation $ RegisterName $ fromIntegral $ $(bitmask 5 3) w
+    shiftVal = $(bitmask 10 6) w
     dest = RegisterName $ fromIntegral $ w .&. 0b111
 
 readMovCmpAddSub :: HalfWord -> THUMBInstruction
@@ -212,13 +214,16 @@ readConditionalBranch w = ConditionalBranch cond offset
       (Just v) -> v
       Nothing -> error "Error reading condition ThumbParser.hs:210"
     maybeCond = conditionFromByte $ fromIntegral $ $(bitmask 11 8) w
-    offset = fromIntegral $ $(bitmask 7 0) w
+    offset = (fromIntegral $ $(bitmask 7 0) w) `shiftL` 1
 
 readLongBranchWithLink :: HalfWord -> THUMBInstruction
 readLongBranchWithLink w = LongBranchWLink lh offset
   where
     lh = if testBit w 11 then Low else High
-    offset = fromIntegral $ $(bitmask 10 0) w
+    offset =
+      case lh of
+        Low -> fromIntegral $ $(bitmask 10 0) w `shiftL` 1
+        High -> fromIntegral ($(bitmask 10 0) w `shiftL` 21) `shiftR` 9
 
 readUnconditionalBranch :: HalfWord -> THUMBInstruction
 readUnconditionalBranch w = ThumbBranch offset
