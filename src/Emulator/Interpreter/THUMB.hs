@@ -153,7 +153,7 @@ handleThumbBranchExchange r = do
 handlePCRelativeLoad :: IsSystem s m => RegisterName -> Offset -> m ()
 handlePCRelativeLoad dest off = do
   pc' <- use $ registers.pc
-  let addr = pc' + off
+  let addr = pc' + off - 2 --Prefetch
   word <- readAddressWord addr
   registers.rn dest .= word
 
