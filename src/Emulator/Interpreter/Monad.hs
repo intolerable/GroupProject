@@ -20,6 +20,7 @@ data SystemState =
   SystemState { _systemStateSysRegisters :: Registers
               , _systemStateSysBIOS :: Memory
               , _systemStateSysROM :: Memory
+              , _systemStateSysGamePakWRAM :: Memory
               , _systemStateSysIORegisters :: Memory
               , _systemStateSysPaletteRAM :: Memory
               , _systemStateSysRAM :: Memory
@@ -31,10 +32,11 @@ makeFields ''SystemState
 
 buildInitialState :: ByteString -> ByteString -> SystemState
 buildInitialState rom bios =
-  SystemState (def & r15 .~ 0x00000004) biosArray romArray initialIORegs initialPaletteRAM initialRAM initialOAM initialVRAM
+  SystemState (def & r15 .~ 0x00000004) biosArray romArray initialGamePakWRAM initialIORegs initialPaletteRAM initialRAM initialOAM initialVRAM
     where
       initialRAM = accumArray const 0 (0x02000000, 0x0203FFFF) []
       initialVRAM = accumArray const 0 (0x06000000, 0x06017FFF) []
+      initialGamePakWRAM = accumArray const 0 (0x03000000, 0x03007FFF) []
       initialOAM = accumArray const 0 (0x07000000, 0x070003FF) []
       initialIORegs = accumArray const 0 (0x04000000, 0x040003FF) []
       initialPaletteRAM = accumArray const 0 (0x05000000, 0x050003FF) []
@@ -63,6 +65,12 @@ instance Monad m => CanWrite WRAM (SystemT m) where
 
 instance Monad m => CanRead WRAM (SystemT m) where
   readByte _ a = SystemT $ zoom sysRAM $ gets (! a)
+
+instance Monad m => CanWrite GamePakWRAM (SystemT m) where
+  writeByte _ a b = SystemT $ zoom sysGamePakWRAM $ modify (// [(a, b)])
+
+instance Monad m => CanRead GamePakWRAM (SystemT m) where
+  readByte _ a = SystemT $ zoom sysGamePakWRAM $ gets (! a)
 
 instance Monad m => CanWrite IORegisters (SystemT m) where
   writeByte _ a b = SystemT $ zoom sysIORegisters $ modify (// [(a, b)])
