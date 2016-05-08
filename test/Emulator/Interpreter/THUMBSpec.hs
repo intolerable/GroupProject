@@ -18,18 +18,32 @@ spec = do
 
   describe "interpretThumb" $ do
 
-    romFile <- runIO $ ByteString.readFile "./res/suite.gba"
-    let test = trySystem (buildInitialState romFile ByteString.empty)
-
     context "ConditionalBranch" $ do
-      test "can manage a basic conditional branch" 0x0807AE68 $ do
-        registers.pc .= 0x0807AE52
+      system "can manage a basic conditional branch" 0x0807AE6A $ do
+        registers.pc .= 0x0807AE54
         flags.zero .= True
         interpretThumb $ ConditionalBranch EQ 18
         registers.pc += 2
         use (registers.pc)
 
-trySystem :: (Show a, Eq a) => SystemState -> String -> a -> SystemT Identity a -> SpecWith ()
-trySystem start label val act = do
+      system "shouldn't branch if the condition isn't met" 0x807AE1E $ do
+        registers.pc .= 0x807AE1C
+        flags.zero .= False
+        interpretThumb $ ConditionalBranch EQ 30
+        registers.pc += 2
+        use (registers.pc)
+
+    context "LongBranchWLink" $ do
+      system "should be able to long branch properly" (0x0807AE02, 0x0807ACAD) $ do
+        registers.pc .= 0x0807ACA8
+        interpretThumb $ LongBranchWLink High 0
+        registers.pc += 2
+        interpretThumb $ LongBranchWLink Low 171
+        registers.pc += 2
+        (,) <$> use (registers.pc) <*> use (registers.lr)
+
+system :: (Show a, Eq a) => String -> a -> SystemT Identity a -> Spec
+system label val act = do
+  romFile <- runIO $ ByteString.readFile "./res/suite.gba"
   it label $
-    fst (runIdentity (runSystemT act start)) `shouldBe` val
+    fst (runIdentity (runSystemT act (buildInitialState romFile ByteString.empty))) `shouldBe` val
