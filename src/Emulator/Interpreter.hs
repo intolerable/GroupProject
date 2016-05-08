@@ -11,7 +11,6 @@ import Emulator.Memory
 import Emulator.Types
 import Utilities.Show
 
-import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Concurrent.STM.TXChan
 import Control.Lens
