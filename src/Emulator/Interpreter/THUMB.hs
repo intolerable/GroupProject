@@ -238,16 +238,8 @@ handleLoadAddress SP destR offset = do
   registers.rn destR .= addr
 
 handleSPAddOffset :: IsSystem s m => OffsetDirection -> Offset -> m ()
-handleSPAddOffset ud offset = do
-  stack <- use $ registers.r13
-  registers.r13 .= op stack realOffset
-  where
-    op = case ud of
-            Up -> (+)
-            Down -> (-)
-    mag = ($(bitmask 5 0) offset) `shiftL` 2
-    realOffset | offset `testBit` 6 = negate $ mag
-               | otherwise = mag
+handleSPAddOffset ud offset =
+  registers.sp %= directionToOperator ud offset
 
 handlePushPopRegs :: IsSystem s m => LoadStore -> StoreLR -> RegisterList -> m ()
 handlePushPopRegs ls st rlist =

@@ -195,7 +195,7 @@ readAddOffsetToSP :: HalfWord -> THUMBInstruction
 readAddOffsetToSP w = SPAddOffset dir offset
   where
     dir = if testBit w 7 then Down else Up
-    offset = fromIntegral $ $(bitmask 6 0) w
+    offset = fromIntegral $ $(bitmask 6 0) w `shiftL` 2
 
 readMultipleLoadStore :: HalfWord -> THUMBInstruction
 readMultipleLoadStore w = MultipleLoadStore ls base rlist
