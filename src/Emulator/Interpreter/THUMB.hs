@@ -154,7 +154,7 @@ handlePCRelativeLoad :: IsSystem s m => RegisterName -> Offset -> m ()
 handlePCRelativeLoad dest off = do
   pc' <- use $ registers.pc
   let addr = pc' + off
-  word <- readAddressWord addr
+  word <- readAddressWord (addr .&. 0xFFFFFFC)
   registers.rn dest .= word
 
 handleThumbLoadStoreRegisterOffset :: IsSystem s m => LoadStore -> Granularity 'Full -> RegisterName -> RegisterName -> RegisterName -> m ()
