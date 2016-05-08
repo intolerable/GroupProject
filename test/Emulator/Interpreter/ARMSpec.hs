@@ -4,6 +4,7 @@ import Emulator.CPU
 import Emulator.CPU.Instructions
 import Emulator.Interpreter.ARM
 import Emulator.Interpreter.Monad
+import Emulator.Types
 
 import Control.Lens
 import Test.Hspec
@@ -17,11 +18,30 @@ spec = do
 
   describe "interpretARM" $ do
 
-    romFile <- runIO $ ByteString.readFile "./res/suite.gba"
-    let initialSystem = buildInitialState romFile ByteString.empty
+    context "Branch" $ do
 
-    it "should be able to handle a branch instruction" $ do
-      let run instr = snd $ runIdentity $ runSystemT instr initialSystem
-      -- these don't take into account the prefetch because they don't ever have pc incremented
-      run (interpretARM (Branch (Link False) 184)) ^. sysRegisters.r15 `shouldBe` 0x000000C0
-      run (interpretARM (Branch (Link True) 184)) ^. sysRegisters.r14 `shouldBe` 0x00000004
+      system "should be able to branch" (0x00000024, 0x00000000) $ do
+        registers.pc .= 0x00000004
+        registers.pc += 4
+        interpretARM $ Branch (Link False) 24
+        (,) <$> use (registers.pc) <*> use (registers.lr)
+
+      system "should be able to branch with link" (0x00000024, 0x00000008) $ do
+        registers.pc .= 0x00000004
+        registers.pc += 4
+        interpretARM $ Branch (Link True) 24
+        (,) <$> use (registers.pc) <*> use (registers.lr)
+
+      system "should be able to branch with link, then branch exchange back" 0x00000008 $ do
+        registers.pc .= 0x00000004
+        registers.pc += 4
+        interpretARM $ Branch (Link True) 24
+        registers.pc += 4
+        interpretARM $ BranchExchange (RegisterName 14)
+        use (registers.pc)
+
+system :: (Show a, Eq a) => String -> a -> SystemT Identity a -> Spec
+system label val act = do
+  romFile <- runIO $ ByteString.readFile "./res/suite.gba"
+  it label $
+    fst (runIdentity (runSystemT act (buildInitialState romFile ByteString.empty))) `shouldBe` val
