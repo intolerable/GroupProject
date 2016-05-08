@@ -3,7 +3,7 @@ module Emulator.Interpreter.THUMB where
 import Emulator.CPU hiding (CPUMode(..), Interrupt(..))
 import Emulator.CPU.Instructions
 import Emulator.CPU.Instructions.Flags
-import Emulator.Interpreter.ARM (readBlocks, writeBlocks)
+import Emulator.Interpreter.ARM (readBlocks, writeBlocks, directionToOperator)
 import Emulator.Interpreter.Monad
 import Emulator.Memory
 import Emulator.Types
