@@ -250,16 +250,28 @@ handleSPAddOffset ud offset = do
                | otherwise = mag
 
 handlePushPopRegs :: IsSystem s m => LoadStore -> StoreLR -> RegisterList -> m ()
-handlePushPopRegs ls st rlist = do
-  stack <- use $ registers.sp
+handlePushPopRegs ls st rlist =
   case ls of
     -- Read blocks of memory, from the stack, shrinking the stack upwards
     Load -> do
       let rlist' = if st then rlist ++ [RegisterName 15] else rlist
-      registers.sp <~ readBlocks Up stack rlist'
+      mapM_ popFromStack rlist'
     Store -> do
       let rlist' = if st then rlist ++ [RegisterName 14] else rlist
-      registers.sp <~ writeBlocks Down stack rlist'
+      mapM_ pushToStack rlist'
+
+pushToStack :: IsSystem s m => RegisterName -> m ()
+pushToStack r = do
+  currentStackPointer <- use (registers.sp)
+  registerValue <- use (registers.rn r)
+  writeAddressWord currentStackPointer registerValue
+  registers.sp -= 4
+
+popFromStack :: IsSystem s m => RegisterName -> m ()
+popFromStack r = do
+  registers.sp += 4
+  currentStackPointer <- use (registers.sp)
+  registers.rn r <~ readAddressWord currentStackPointer
 
 handleMultipleLoadStore :: IsSystem s m => LoadStore -> RegisterName -> RegisterList -> m ()
 handleMultipleLoadStore ls baseR rlist = do
