@@ -84,6 +84,16 @@ spec = do
         interpretThumb $ ThumbLoadStoreHalfword Load 10 (RegisterName 6) (RegisterName 2)
         use $ registers.r2
 
+    context "ThumbLoadStoreImmediateOffset" $ do
+
+      system "should be able to load a word from a register address" 0xE3A00301 $ do
+        registers.pc .= 0x0807AE48
+        registers.pc += 2
+        registers.r2 .= 0x080000E0
+        interpretThumb $
+          ThumbLoadStoreImmediateOffset Word Load 0 (RegisterName 2) (RegisterName 1)
+        use (registers.r1)
+
 system :: (Show a, Eq a) => String -> a -> SystemT Identity a -> Spec
 system label val act = do
   romFile <- runIO $ ByteString.readFile "./res/suite.gba"
