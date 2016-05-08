@@ -21,25 +21,25 @@ spec = do
     context "ConditionalBranch" $ do
       system "can manage a basic conditional branch" 0x0807AE6A $ do
         registers.pc .= 0x0807AE54
+        registers.pc += 2
         flags.zero .= True
         interpretThumb $ ConditionalBranch EQ 18
-        registers.pc += 2
         use (registers.pc)
 
       system "shouldn't branch if the condition isn't met" 0x807AE1E $ do
         registers.pc .= 0x807AE1C
+        registers.pc += 2
         flags.zero .= False
         interpretThumb $ ConditionalBranch EQ 30
-        registers.pc += 2
         use (registers.pc)
 
     context "LongBranchWLink" $ do
-      system "should be able to long branch properly" (0x0807AE02, 0x0807ACAD) $ do
+      system "should be able to long branch properly" (0x0807AE02, 0x0807ACAF) $ do
         registers.pc .= 0x0807ACA8
+        registers.pc += 2
         interpretThumb $ LongBranchWLink High 0
         registers.pc += 2
         interpretThumb $ LongBranchWLink Low 171
-        registers.pc += 2
         (,) <$> use (registers.pc) <*> use (registers.lr)
 
 system :: (Show a, Eq a) => String -> a -> SystemT Identity a -> Spec
