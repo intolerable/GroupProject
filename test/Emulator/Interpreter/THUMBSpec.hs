@@ -76,6 +76,13 @@ spec = do
         interpretThumb $ HiRegOperation T_MOV (RegisterName 10) (RegisterName 4)
         use (registers.r4)
 
+    context "LoadStoreHalfword" $ do
+
+      system "should be able to load a halfword from memory" 0x2411 $ do
+        registers.pc .= 0x08000000
+        registers.r6 .= 0x0800000A
+        interpretThumb $ ThumbLoadStoreHalfword Load 10 (RegisterName 6) (RegisterName 2)
+        use $ registers.r2
 
 system :: (Show a, Eq a) => String -> a -> SystemT Identity a -> Spec
 system label val act = do
