@@ -239,7 +239,7 @@ handleLoadAddress SP destR offset = do
 
 handleSPAddOffset :: IsSystem s m => OffsetDirection -> Offset -> m ()
 handleSPAddOffset ud offset =
-  registers.sp %= directionToOperator ud offset
+  registers.sp %= \x -> directionToOperator ud x offset
 
 handlePushPopRegs :: IsSystem s m => LoadStore -> StoreLR -> RegisterList -> m ()
 handlePushPopRegs ls st rlist =
