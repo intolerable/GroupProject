@@ -4,10 +4,13 @@ import Emulator.Memory.AddressSpace
 import Emulator.Memory.Regions
 import Emulator.Types
 import Utilities.Parser.TemplateHaskell
+import Utilities.Show
 
 import Data.Array
 import Data.Bits
 import Data.Proxy
+import Data.Text.Format
+import qualified Data.Text.Lazy as Text
 
 type AddressSpace m =
   ( Functor m, Monad m
@@ -32,7 +35,7 @@ writeAddressByte addr b = do
     (_, ObjAttributes) -> writeByte (Proxy :: Proxy OAM) addr b
     (_, GamePakROM) -> return ()
     (_, GamePakSRAM) -> error "Undefined memory proxy location (GamePakSRAM)!"
-    (_, Unused) -> return ()
+    (_, Unused) -> error $ Text.unpack $ format "Unused memory location (write byte)! {}" $ Only $ showHex addr
 
 readAddressByte :: AddressSpace m => Address -> m Byte
 readAddressByte addr = do
@@ -46,7 +49,7 @@ readAddressByte addr = do
     (_, ObjAttributes) -> readByte (Proxy :: Proxy OAM) addr
     (_, GamePakROM) -> readByte (Proxy :: Proxy ROM) addr
     (_, GamePakSRAM) -> error "Undefined memory proxy location (GamePakSRAM)!"
-    (_, Unused) -> return 0
+    (_, Unused) -> error $ Text.unpack $ format "Unused memory location (read byte)! {}" $ Only $ showHex addr
 
 writeAddressHalfWord :: AddressSpace m => Address -> HalfWord -> m ()
 writeAddressHalfWord addr hw = do
@@ -60,7 +63,7 @@ writeAddressHalfWord addr hw = do
     (_, ObjAttributes) -> writeHalfWord (Proxy :: Proxy OAM) addr hw
     (_, GamePakROM) -> return ()
     (_, GamePakSRAM) -> error "Undefined memory proxy location (GamePakSRAM)!"
-    (_, Unused) -> return ()
+    (_, Unused) -> error $ Text.unpack $ format "Unused memory location (write halfword)! {}" $ Only $ showHex addr
 
 readAddressHalfWord :: AddressSpace m => Address -> m HalfWord
 readAddressHalfWord addr = do
@@ -74,7 +77,7 @@ readAddressHalfWord addr = do
     (_, ObjAttributes) -> readHalfWord (Proxy :: Proxy OAM) addr
     (_, GamePakROM) -> readHalfWord (Proxy :: Proxy ROM) addr
     (_, GamePakSRAM) -> error "Undefined memory proxy location (GamePakSRAM)!"
-    (_, Unused) -> return 0
+    (_, Unused) -> error $ Text.unpack $ format "Unused memory location (read halfword)! {}" $ Only $ showHex addr
 
 writeAddressWord :: AddressSpace m => Address -> MWord -> m ()
 writeAddressWord addr w = do
@@ -88,7 +91,7 @@ writeAddressWord addr w = do
     (_, ObjAttributes) -> writeWord (Proxy :: Proxy OAM) addr w
     (_, GamePakROM) -> return ()
     (_, GamePakSRAM) -> error "Undefined memory proxy location (GamePakSRAM)!"
-    (_, Unused) -> return ()
+    (_, Unused) -> error $ Text.unpack $ format "Unused memory location (write word)! {}" $ Only $ showHex addr
 
 readAddressWord :: AddressSpace m => Address -> m MWord
 readAddressWord addr = do
@@ -102,7 +105,7 @@ readAddressWord addr = do
     (_, ObjAttributes) -> readWord (Proxy :: Proxy OAM) addr
     (_, GamePakROM) -> readWord (Proxy :: Proxy ROM) addr
     (_, GamePakSRAM) -> error "Undefined memory proxy location (GamePakSRAM)!"
-    (_, Unused) -> return 0
+    (_, Unused) -> error $ Text.unpack $ format "Unused memory location (read word)! {}" $ Only $ showHex addr
 
 readRange :: AddressSpace m => (Address, Address) -> m (Array Address Byte)
 readRange r = listArray r <$> mapM readAddressByte (range r)
