@@ -2,10 +2,10 @@ module Emulator.Interpreter.THUMBSpec where
 
 import Emulator.CPU
 import Emulator.CPU.Instructions
-import Emulator.Types
 import Emulator.Interpreter.Monad
 import Emulator.Interpreter.THUMB
 import Emulator.Memory
+import Emulator.Types
 
 import Control.Lens
 import Test.Hspec
@@ -75,6 +75,14 @@ spec = do
         registers.pc += 2
         interpretThumb $ HiRegOperation T_MOV (RegisterName 10) (RegisterName 4)
         use (registers.r4)
+
+    context "MovAddCmpSubImmediate" $ do
+
+      system "should be able to MOV a value into a register" 0xF $ do
+        registers.pc .= 0x0807ACA4
+        registers.pc += 2
+        interpretThumb $ MovCmpAddSubImmediate MOV (RegisterName 0) 0xF
+        use (registers.r0)
 
     context "LoadStoreHalfword" $ do
 
