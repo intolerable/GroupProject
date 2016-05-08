@@ -2,6 +2,7 @@ module Emulator.Interpreter.THUMBSpec where
 
 import Emulator.CPU
 import Emulator.CPU.Instructions
+import Emulator.Types
 import Emulator.Interpreter.Monad
 import Emulator.Interpreter.THUMB
 import Emulator.Memory
@@ -50,6 +51,14 @@ spec = do
         registers.pc += 2
         interpretThumb $ PushPopRegs Store True []
         (,) <$> use (registers.sp) <*> readAddressWord 0x03007F00
+
+    context "PC Relative Load" $ do
+      system "should be able to load an address to  a register" 0x080237C4 $ do
+        registers.pc .= 0x080003A0
+        registers.pc += 2
+        interpretThumb $ PCRelativeLoad (RegisterName 0) 96
+        -- Should load address in 0x08000400, which in suite is 0x080237C4
+        use $ registers.r0
 
 system :: (Show a, Eq a) => String -> a -> SystemT Identity a -> Spec
 system label val act = do
