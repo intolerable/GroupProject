@@ -79,7 +79,7 @@ handleMoveShiftedRegister (RegisterShift nr t vr) dest = do
   registers.rn dest .= res
 
 handleAddSubtractImmediate :: IsSystem s m => AddSub -> Offset -> RegisterName -> RegisterName -> m ()
-handleAddSubtractImmediate  as immed dest source = do
+handleAddSubtractImmediate as immed source dest = do
   sVal <- use (registers.rn source)
   let result = (addSubToOperator as) sVal immed
   registers.rn dest .= result
@@ -153,7 +153,7 @@ handleThumbBranchExchange r = do
 handlePCRelativeLoad :: IsSystem s m => RegisterName -> Offset -> m ()
 handlePCRelativeLoad dest off = do
   pc' <- use $ registers.pc
-  let addr = pc' + off - 2 --Prefetch
+  let addr = pc' + off
   word <- readAddressWord addr
   registers.rn dest .= word
 
@@ -192,7 +192,7 @@ handleThumbLoadStoreSignExtHalfwordByte g ls se offR baseR destR = do
 handleThumbLoadStoreImmediateOffset :: IsSystem s m => Granularity 'Full -> LoadStore -> Offset -> RegisterName -> RegisterName -> m ()
 handleThumbLoadStoreImmediateOffset g ls offset baseR destR = do
   base <- use $ registers.rn baseR
-  let addr = base + offset
+  let addr = base + (case g of { Byte -> offset; Word -> offset `shiftL` 2 })
   case (g, ls) of
     (Byte, Load) -> do
       byte <- readAddressByte addr
@@ -291,8 +291,8 @@ handleLongBranchWLink Low off = do
   let offset = fromIntegral off `shiftL` 1 :: Int32
   oldLR <- use (registers.lr)
   oldPC <- use (registers.pc)
-  registers.pc .= fromIntegral (fromIntegral oldLR + offset + 0) -- MIGHT BE +4 ???
-  registers.lr .= ((oldPC + 4) `setBit` 0)
+  registers.pc .= fromIntegral (fromIntegral oldLR + offset + 2)
+  registers.lr .= ((oldPC + 2) `setBit` 0)
 
 addSubToOperator :: Num a => AddSub -> (a -> a -> a)
 addSubToOperator Add = (+)
