@@ -53,7 +53,7 @@ spec = do
         (,) <$> use (registers.sp) <*> readAddressWord 0x03007F00
 
     context "PC Relative Load" $ do
-      system "should be able to load an address to  a register" 0x080237C4 $ do
+      system "should be able to load an address to a register" 0x080237C4 $ do
         registers.pc .= 0x080003A0
         registers.pc += 2
         interpretThumb $ PCRelativeLoad (RegisterName 0) 96
