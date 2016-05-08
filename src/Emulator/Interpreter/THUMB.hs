@@ -258,7 +258,7 @@ handlePushPopRegs ls st rlist = do
       let rlist' = if st then rlist ++ [RegisterName 15] else rlist
       registers.sp <~ readBlocks Up stack rlist'
     Store -> do
-      let rlist' = if st then rlist ++ [RegisterName 13] else rlist
+      let rlist' = if st then rlist ++ [RegisterName 14] else rlist
       registers.sp <~ writeBlocks Down stack rlist'
 
 handleMultipleLoadStore :: IsSystem s m => LoadStore -> RegisterName -> RegisterList -> m ()

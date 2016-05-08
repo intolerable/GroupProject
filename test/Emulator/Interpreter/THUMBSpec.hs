@@ -4,6 +4,7 @@ import Emulator.CPU
 import Emulator.CPU.Instructions
 import Emulator.Interpreter.Monad
 import Emulator.Interpreter.THUMB
+import Emulator.Memory
 
 import Control.Lens
 import Test.Hspec
@@ -41,6 +42,14 @@ spec = do
         registers.pc += 2
         interpretThumb $ LongBranchWLink Low 171
         (,) <$> use (registers.pc) <*> use (registers.lr)
+
+    context "PushPopRegs" $ do
+      system "should be able to push LR to the stack" (0x03007EFC, 0x0807ACBB) $ do
+        registers.pc .= 0x0807ACA2
+        registers.lr .= 0x0807ACBB
+        registers.pc += 2
+        interpretThumb $ PushPopRegs Store True []
+        (,) <$> use (registers.sp) <*> readAddressWord 0x03007F00
 
 system :: (Show a, Eq a) => String -> a -> SystemT Identity a -> Spec
 system label val act = do
