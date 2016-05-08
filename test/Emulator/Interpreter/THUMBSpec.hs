@@ -52,13 +52,30 @@ spec = do
         interpretThumb $ PushPopRegs Store True []
         (,) <$> use (registers.sp) <*> readAddressWord 0x03007F00
 
-    context "PC Relative Load" $ do
+    context "PCRelativeLoad" $ do
       system "should be able to load an address to a register" 0x080237C4 $ do
         registers.pc .= 0x080003A0
         registers.pc += 2
         interpretThumb $ PCRelativeLoad (RegisterName 0) 96
         -- Should load address in 0x08000400, which in suite is 0x080237C4
         use $ registers.r0
+
+    context "HiRegOperation" $ do
+
+      system "should be able to execute a MOV from a lower register to an upper register" 0x00C0FFEE $ do
+        registers.pc .= 0x0801277C
+        registers.r4 .= 0x00C0FFEE
+        registers.pc += 2
+        interpretThumb $ HiRegOperation T_MOV (RegisterName 4) (RegisterName 10)
+        use (registers.r10)
+
+      system "should be able to execute a MOV from an upper register to a lower register" 0x00C0FFEE $ do
+        registers.pc .= 0x0801277C
+        registers.r10 .= 0x00C0FFEE
+        registers.pc += 2
+        interpretThumb $ HiRegOperation T_MOV (RegisterName 10) (RegisterName 4)
+        use (registers.r4)
+
 
 system :: (Show a, Eq a) => String -> a -> SystemT Identity a -> Spec
 system label val act = do
