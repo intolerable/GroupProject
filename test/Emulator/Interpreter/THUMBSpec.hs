@@ -61,13 +61,13 @@ spec = do
         interpretThumb $ PushPopRegs Load True []
         (,) <$> use (registers.pc) <*> use (registers.sp)
 
-      system "should be able to pop multiple values from the stack" (0x00C0FFEE, 0x00BADA55, 0x0D15EA5E) $ do
+      system "should be able to pop multiple values from the stack" (0x00C0FFEE, 0x00BADA55, 0x0D15EA5E, 0x0807ACA2) $ do
         registers.pc .= 0x0807ACA2
         (registers.sp <<-= 4) >>= \x -> writeAddressWord x 0x00C0FFEE
         (registers.sp <<-= 4) >>= \x -> writeAddressWord x 0x00BADA55
         (registers.sp <<-= 4) >>= \x -> writeAddressWord x 0x0D15EA5E
-        interpretThumb $ PushPopRegs Load True [RegisterName 0, RegisterName 1, RegisterName 2]
-        (,,) <$> use (registers.r0) <*> use (registers.r1) <*> use (registers.r2)
+        interpretThumb $ PushPopRegs Load False [RegisterName 0, RegisterName 1, RegisterName 2]
+        (,,,) <$> use (registers.r0) <*> use (registers.r1) <*> use (registers.r2) <*> use (registers.pc)
 
     context "PCRelativeLoad" $ do
       system "should be able to load an address to a register" 0x080237C4 $ do
