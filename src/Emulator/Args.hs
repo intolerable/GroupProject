@@ -6,12 +6,14 @@ import Options.Applicative
 
 data Args =
   Args { headless :: Bool
+       , slowMode :: Bool
        , biosFile :: FilePath
        , romFile :: FilePath }
   deriving (Show, Read, Eq, Ord)
 
 args :: Parser Args
 args = Args <$> switch (long "headless" <> help "whether to run the emulator with display disabled")
+            <*> switch (long "slow" <> help "whether to run the emulator with slow mode enabled")
             <*> strArgument (metavar "BIOS_FILE")
             <*> strArgument (metavar "ROM_FILE")
 
