@@ -247,7 +247,7 @@ handlePushPopRegs ls st rlist =
     -- Read blocks of memory, from the stack, shrinking the stack upwards
     Load -> do
       let rlist' = if st then rlist ++ [RegisterName 15] else rlist
-      mapM_ popFromStack rlist'
+      mapM_ popFromStack (reverse rlist')
     Store -> do
       let rlist' = if st then rlist ++ [RegisterName 14] else rlist
       mapM_ pushToStack rlist'
