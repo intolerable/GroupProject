@@ -21,8 +21,15 @@ setShiftFlags t v v' n = do
     LogicalRight -> flags.carry .= testBit v (n-1)
     _ -> error "Uninimplemented shift type for setShiftFlags:Thumb.Opcodes"
 
-wouldCarry :: (Word64 -> Word64 -> Word64) -> Word64 -> Word64 -> Bool
-wouldCarry op a b = ((op a b) .&. 0xFFFFFFFF00000000) > 0
+arithmeticAddOverflow :: MWord -> MWord -> MWord -> Bool
+arithmeticAddOverflow a b y = (not (a `testBit` 31) || (b `testBit` 31)) && y `testBit` 31
 
-isOverflow :: MWord -> Bool
-isOverflow v = v > 0x7FFFFFFF
+arithmeticNegative :: MWord -> Bool
+arithmeticNegative y = y `testBit` 31
+
+arithmeticCarry :: (Word64 -> Word64 -> Word64) -> Word32 -> Word32 -> Bool
+arithmeticCarry op a b = (op (fromIntegral a) (fromIntegral b)) `testBit` 32
+
+arithmeticZero :: MWord -> Bool
+arithmeticZero 0 = True
+arithmeticZero _ = False

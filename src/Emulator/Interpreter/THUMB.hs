@@ -2,6 +2,7 @@ module Emulator.Interpreter.THUMB where
 
 import Emulator.CPU hiding (CPUMode(..), Interrupt(..))
 import Emulator.CPU.Instructions
+import Emulator.CPU.Instructions.Types
 import Emulator.CPU.Instructions.Flags
 import Emulator.Interpreter.ARM (readBlocks, writeBlocks, directionToOperator)
 import Emulator.Interpreter.Monad
@@ -84,8 +85,8 @@ handleAddSubtractImmediate as immed source dest = do
   let result = (addSubToOperator as) sVal immed
   registers.rn dest .= result
   setFlagsLogic result
-  flags.carry .= wouldCarry (addSubToOperator as) (fromIntegral sVal) (fromIntegral immed)
-  flags.overflow .= isOverflow result
+  flags.carry .= arithmeticCarry (addSubToOperator as) (fromIntegral sVal) (fromIntegral immed)
+  flags.overflow .= case as of { Add -> arithmeticAddOverflow sVal immed result; Subtract -> False }
 
 handleAddSubtractRegister :: IsSystem s m => AddSub -> RegisterName -> RegisterName -> RegisterName -> m ()
 handleAddSubtractRegister as offset src dest = do
@@ -94,39 +95,15 @@ handleAddSubtractRegister as offset src dest = do
   let result = (addSubToOperator as) sVal oVal
   registers.rn dest .= result
   setFlagsLogic result
-  flags.carry .= wouldCarry (addSubToOperator as) (fromIntegral sVal) (fromIntegral oVal)
-  flags.overflow .= isOverflow result
+  flags.carry .= arithmeticCarry (addSubToOperator as) (fromIntegral sVal) (fromIntegral oVal)
+  flags.overflow .= case as of { Add -> arithmeticAddOverflow sVal oVal result; Subtract -> False }
 
 handleMovCmpAddSubImmediate :: IsSystem s m => Opcode -> RegisterName -> Offset -> m ()
 handleMovCmpAddSubImmediate op src immed = case op of
-  MOV -> do
-    let imVal = immed .&. 0xFF
-    registers.rn src .= imVal
-    flags.zero .= (immed == 0)
-    flags.negative .= testBit imVal 15
-  CMP -> do
-    let val = immed .&. 0xFF
-    sVal <- use (registers.rn src)
-    let result = sVal - val
-    setFlagsLogic result
-    flags.carry .= wouldCarry (-) (fromIntegral sVal) (fromIntegral val)
-    flags.overflow .= isOverflow result
-  ADD -> do
-    let imVal = immed .&. 0xFF
-    sVal <- use $ registers.rn src
-    let res = sVal + imVal
-    registers.rn src .= res
-    setFlagsLogic res
-    flags.carry .= wouldCarry (+) (fromIntegral sVal) (fromIntegral imVal)
-    flags.overflow .= isOverflow res
-  SUB -> do
-    let imVal = immed .&. 0xFF
-    sVal <- use $ registers.rn src
-    let res = sVal - imVal
-    registers.rn src .= res
-    setFlagsLogic res
-    flags.carry .= wouldCarry (-) (fromIntegral sVal) (fromIntegral imVal)
-    flags.overflow .= isOverflow res
+  MOV -> undefined
+  CMP -> undefined
+  ADD -> undefined
+  SUB -> undefined
   _ -> error "Incorrect arguments passed to THUMB MovCmpAddSubImmediate function."
 
 handleALUOperation :: IsSystem s m => ThumbOpcode -> RegisterName -> RegisterName -> m ()

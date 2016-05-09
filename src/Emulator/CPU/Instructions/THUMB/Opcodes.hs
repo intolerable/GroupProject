@@ -84,10 +84,10 @@ tAdc src dest = do
   let cy = if fcy then 1 else 0
   let val = v + v' + cy
   registers.rn dest .= val
-  flags.negative .= testBit val 31
-  flags.zero .= (val == 0)
-  flags.carry .= wouldCarry (+) (fromIntegral v) (fromIntegral (v'+cy))
-  flags.overflow .= isOverflow val
+  flags.negative .= arithmeticNegative val
+  flags.zero .= arithmeticZero val
+  flags.carry .= arithmeticCarry (+) (fromIntegral v) (fromIntegral (v'+cy))
+  flags.overflow .= arithmeticAddOverflow v (v' + cy) val
 
 tSbc :: IsSystem s m => RegisterName -> RegisterName -> m ()
 tSbc src dest = do
@@ -97,10 +97,10 @@ tSbc src dest = do
   let cy = if fcy then 0 else 1
   let val = v' - v - cy
   registers.rn dest .= val
-  flags.negative .= testBit val 31
-  flags.zero .= (val == 0)
-  flags.carry .= wouldCarry (-) (fromIntegral v') (fromIntegral (v-cy))
-  flags.overflow .= isOverflow val
+  flags.negative .= arithmeticNegative val
+  flags.zero .= arithmeticZero val
+  flags.carry .= arithmeticCarry (-) (fromIntegral v') (fromIntegral (v-cy))
+  flags.overflow .= False
 
 tTst :: IsSystem s m => RegisterName -> RegisterName -> m ()
 tTst src src' = do
@@ -116,21 +116,23 @@ tNeg src dest = do
   registers.rn dest .= newVal
   setFlagsLogic newVal
 
-
-doCmp :: IsSystem s m => (MWord -> MWord -> MWord) -> (Word64 -> Word64 -> Word64) -> RegisterName -> RegisterName -> m ()
-doCmp op bigOp src dest = do
+tCmp :: IsSystem s m => RegisterName -> RegisterName -> m ()
+tCmp src dest = do
   v <- use $ registers.rn dest
   v' <- use $ registers.rn src
-  let val = op v v'
+  let val = v - v'
   setFlagsLogic val
-  flags.carry .= wouldCarry bigOp (fromIntegral v) (fromIntegral v')
-  flags.overflow .= isOverflow val
-
-tCmp :: IsSystem s m => RegisterName -> RegisterName -> m ()
-tCmp = doCmp (-) (-)
+  flags.carry .= arithmeticCarry (-) v v'
+  flags.overflow .= False
 
 tCmn :: IsSystem s m => RegisterName -> RegisterName -> m ()
-tCmn = doCmp (+) (+)
+tCmn src dest = do
+  v <- use $ registers.rn dest
+  v' <- use $ registers.rn src
+  let val = v - v'
+  setFlagsLogic val
+  flags.carry .= arithmeticCarry (+) v v'
+  flags.overflow .= arithmeticAddOverflow v v' val
 
 tOrr :: IsSystem s m => RegisterName -> RegisterName -> m ()
 tOrr src dest = do
@@ -147,8 +149,8 @@ tMul src dest = do
   let val = v * v'
   registers.rn dest .= val
   setFlagsLogic val
-  flags.carry .= wouldCarry (*) (fromIntegral v) (fromIntegral v')
-  flags.overflow .= isOverflow val
+  flags.carry .= arithmeticCarry (*) (fromIntegral v) (fromIntegral v')
+  flags.overflow .= arithmeticAddOverflow v v' val -- THIS ISNT RIGHT!!!! ---
 
 tBic :: IsSystem s m => RegisterName -> RegisterName -> m ()
 tBic src dest = do
@@ -161,7 +163,7 @@ tBic src dest = do
 tMvn :: IsSystem s m => RegisterName -> RegisterName -> m ()
 tMvn src dest = do
   v <- use $ registers.rn src
-  registers.rn dest .= (negate v)
+  registers.rn dest .= (complement v)
   setFlagsLogic v
 
 tRor :: IsSystem s m => RegisterName -> RegisterName -> m ()
@@ -173,4 +175,4 @@ tRor src dest = do
   registers.rn dest .= val
   setFlagsLogic val
   flags.carry .= newCy
-  flags.overflow .= isOverflow val
+  flags.overflow .= undefined
