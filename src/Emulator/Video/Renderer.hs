@@ -7,6 +7,8 @@ import Control.Monad.IO.Class
 import Data.Array.Storable
 import Graphics.Rendering.OpenGL
 
+import Control.Monad.IO.Class
+
 renderScreenObj :: [ScreenObj] -> IO ()
 renderScreenObj [] = return ()
 renderScreenObj ((BG tiles _ _):xs) = do
@@ -19,7 +21,9 @@ renderScreenObj ((Hidden):xs) = renderScreenObj xs
 
 drawTile :: Tile -> IO ()
 drawTile (Tile pixData ((x1, y1), (x2, y2), (x3, y3), (x4, y4))) = do
+  --liftIO $ print pixData
   arr <- liftIO $ newListArray (0, length pixData) pixData
+  --liftIO $ print arr
   obj <- liftIO $ loadTexture arr
   textureFilter Texture2D $= ((Nearest, Nothing), Nearest)
   renderPrimitive Quads $ do
@@ -37,5 +41,5 @@ loadTexture :: StorableArray Int HalfWord -> IO TextureObject
 loadTexture arr = withStorableArray arr $ \ptr -> do
     tile <- genObjectName
     textureBinding Texture2D $= Just tile
-    texImage2D Texture2D NoProxy 0 RGBA' (TextureSize2D 8 8) 0 (PixelData RGB UnsignedShort ptr)
+    texImage2D Texture2D NoProxy 0 RGB5A1 (TextureSize2D 8 8) 0 (PixelData ABGR UnsignedShort ptr)
     return tile
