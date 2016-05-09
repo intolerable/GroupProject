@@ -103,7 +103,7 @@ sub dest src1 src2 cCode = do
   when cCode $ do
     setFlagsLogic val
     flags.carry .= arithmeticCarry (-) res1 res2
-    flags.overflow .= False
+    flags.overflow .= (res2 == 0)
 
 -- Arithmetic subtract reversed
 rsb :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -116,7 +116,7 @@ rsb dest src1 src2 cCode = do
   when cCode $ do
     setFlagsLogic val
     flags.carry .= arithmeticCarry (-) res2 res1
-    flags.overflow .= False
+    flags.overflow .= (res1 == 0)
 
 -- Subtract with carry
 sbc :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -130,7 +130,7 @@ sbc dest src1 src2 cCode = do
   when cCode $ do
     setFlagsLogic val
     flags.carry .= arithmeticCarry (-) res1 res2
-    flags.overflow .= False
+    flags.overflow .= (res2 == 0)
 
 -- Subtract with carry reversed
 rsc :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -144,7 +144,7 @@ rsc dest src1 src2 cCode = do
   when cCode $ do
     setFlagsLogic val
     flags.carry .= arithmeticCarry (-) res2 res1
-    flags.overflow .= False
+    flags.overflow .= (res1 == 0)
 
 -- Logical/bitwise AND
 and :: (HasFlags s, HasRegisters s, MonadState s m)
@@ -226,8 +226,8 @@ cmp _ src1 src2 True = do
   let val = res1 - res2
   -- Always update flags (for TST, TEQ, CMP, CMN)
   setFlagsLogic val
-  flags.carry .= isCarried
-  flags.overflow .= False
+  flags.carry .= arithmeticCarry (-) res1 res2
+  flags.overflow .= (res2 == 0)
 cmp _ _ _ False = return () -- MSR/MRS stuff
 
 -- Compare negative
@@ -239,7 +239,7 @@ cmn _ src1 src2 True = do
   let val = res1 + res2
   -- Always update flags (for TST, TEQ, CMP, CMN)
   setFlagsLogic val
-  flags.carry .= isCarried
+  flags.carry .= arithmeticCarry (+) res1 res2
   flags.overflow .= arithmeticAddOverflow res1 res2 val
 cmn _ _ _ False = return () -- MSR/MRS stuff
 
