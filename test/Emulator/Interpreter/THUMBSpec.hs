@@ -102,6 +102,33 @@ spec = do
           ThumbLoadStoreImmediateOffset Word Load 0 (RegisterName 2) (RegisterName 1)
         use (registers.r1)
 
+    context "MultipleLoadStore" $ do
+
+      system "should be able to write a register to an address" 0x00C0FFEE $ do
+        registers.pc .= 0x08000192
+        registers.r0 .= 0x00C0FFEE
+        registers.r2 .= 0x02000000
+        registers.pc += 2
+        interpretThumb $ MultipleLoadStore Store (RegisterName 2) [RegisterName 0]
+        readAddressWord 0x02000000
+
+      system "should be able to multiple registers to an address" (0x00C0FFEE, 0xDEADBEEF) $ do
+        registers.pc .= 0x08000192
+        registers.r0 .= 0x00C0FFEE
+        registers.r1 .= 0xDEADBEEF
+        registers.r2 .= 0x02000000
+        registers.pc += 2
+        interpretThumb $ MultipleLoadStore Store (RegisterName 2) [RegisterName 0, RegisterName 1]
+        (,) <$> readAddressWord 0x02000000 <*> readAddressWord 0x02000004
+
+      system "should be able to read a register from an address" 0x00C0FFEE $ do
+        registers.pc .= 0x08000192
+        writeAddressWord 0x02000000 0x00C0FFEE
+        registers.r2 .= 0x02000000
+        registers.pc += 2
+        interpretThumb $ MultipleLoadStore Load (RegisterName 2) [RegisterName 0]
+        use (registers.r0)
+
 system :: (Show a, Eq a) => String -> a -> SystemT Identity a -> Spec
 system label val act = do
   romFile <- runIO $ ByteString.readFile "./res/suite.gba"
