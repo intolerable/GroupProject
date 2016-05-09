@@ -146,6 +146,13 @@ spec = do
         interpretThumb $ MultipleLoadStore Load (RegisterName 2) [RegisterName 0]
         use (registers.r0)
 
+    context "MovCmpAddSubImmediate" $ do
+      -- (n, z, c, v)
+      system "Should be able to compare some things" (True, False, False, False) $ do
+        registers.r0 .= 0x0
+        interpretThumb $ MovCmpAddSubImmediate CMP (RegisterName 0) 1
+        (,,,) <$> use (flags.negative) <*> use (flags.zero) <*> use (flags.carry) <*> use (flags.overflow)
+
 system :: (Show a, Eq a) => String -> a -> SystemT Identity a -> Spec
 system label val act = do
   romFile <- runIO $ ByteString.readFile "./res/suite.gba"
