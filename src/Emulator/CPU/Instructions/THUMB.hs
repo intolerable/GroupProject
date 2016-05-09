@@ -22,7 +22,7 @@ data THUMBInstruction
   | SPAddOffset OffsetDirection Offset
   | PushPopRegs LoadStore StoreLR RegisterList
   | MultipleLoadStore LoadStore RegisterName RegisterList
-  | ConditionalBranch Condition Offset
+  | ConditionalBranch Condition BranchOffset
   | ThumbSoftwareInterrupt Value
   | ThumbBranch BranchOffset
   | LongBranchWLink LowHigh HalfWord

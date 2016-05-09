@@ -273,7 +273,7 @@ handleMultipleLoadStore ls baseR rlist = do
     Load -> readBlocks Up base rlist
     Store -> writeBlocks Up base rlist)
 
-handleConditionalBranch :: IsSystem s m => Condition -> Offset -> m ()
+handleConditionalBranch :: IsSystem s m => Condition -> BranchOffset -> m ()
 handleConditionalBranch cond off =
   conditionally cond $
     registers.r15 %= \x -> fromIntegral $ (fromIntegral x) + off + 2
