@@ -32,7 +32,7 @@ main :: IO ()
 main = do
   args <- getArgs
   chan <- newEmptyTXChanIO
-  withAsync (loadROM (slowMode args) chan (romFile args) (biosFile args)) $ \thread -> do
+  withAsync (loadROM chan args) $ \thread -> do
     if headless args
       then
         wait thread
@@ -71,15 +71,15 @@ reshape (Size x y) = do
   viewport $= (GLUT.Position 0 0, Size x y)
 
 -- | Load a ROM from a given file path, and then start executing the ROM.
-loadROM :: Bool -> TXChan SystemState -> FilePath -> FilePath -> IO ()
-loadROM isSlow chan fp bios =
-  readROM fp >>= \case
+loadROM :: TXChan SystemState -> Args -> IO ()
+loadROM chan args =
+  readROM (romFile args) >>= \case
     Left err -> putStrLn err
     Right (rh, _, bs) -> do
-      biosBS <- LBS.readFile bios
+      biosBS <- LBS.readFile $ biosFile args
       case parseARM (mwordFromBS (rh ^. startLocation)) of
         Right (AL, Branch (Link False) _) ->
-          void $ runSystemT (interpretLoop isSlow 100 chan) $
+          void $ runSystemT (interpretLoop args 100 chan) $
             buildInitialState bs biosBS
         _ -> error "loadROM: undefined"
 

@@ -1,6 +1,7 @@
 module Emulator.Interpreter
   ( interpretLoop ) where
 
+import Emulator.Args
 import Emulator.CPU
 import Emulator.CPU.Instructions
 import Emulator.Debug
@@ -20,12 +21,17 @@ import Control.Monad.IO.Class
 import Control.Monad.State.Class
 import Data.Text.Format hiding (print)
 
-interpretLoop :: Bool -> Int -> TXChan SystemState -> MonadIO m => SystemT m ()
-interpretLoop isSlow 0 chan = do
+interpretLoop :: Args -> Int -> TXChan SystemState -> MonadIO m => SystemT m ()
+interpretLoop args 0 chan = do
   get >>= liftIO . atomically . writeTXChan chan
-  interpretLoop isSlow 100 chan
-interpretLoop isSlow n chan = do
-  when isSlow $ liftIO $ threadDelay 250000
+  interpretLoop args 100 chan
+interpretLoop args n chan = do
+  when (slowMode args) $ liftIO $ threadDelay 250000
+  when (verbose args) $ do
+    liftIO $ putStrLn ""
+    _debugRegisters
+    use flags >>= liftIO . print
+  when (debugMode args) $ _debugger (interpretLoop args n chan)
   isTHUMB <- use (registers.flags.thumbStateBit)
   if isTHUMB
     then do
@@ -41,7 +47,7 @@ interpretLoop isSlow n chan = do
           debug Info $ format "{THUMB}: pc: {}, instr: {}\n        {}"
             (showHex pc, showHex newInstr, show instr)
           interpretThumb instr
-          interpretLoop isSlow (pred n) chan
+          interpretLoop args (pred n) chan
     else do
       sysRegisters.r15 += 4
       pc <- prefetchedARM <$> use (sysRegisters.r15) -- adjusted for prefetch
@@ -56,7 +62,7 @@ interpretLoop isSlow n chan = do
           debug Info $ format "{ARM}: addr: {}, instr: {}, condition: {} ({})\n        {}"
             (showHex pc, showHex newInstr, show cond, yesNo shouldRun, show instr)
           conditionally cond $ interpretARM instr
-          interpretLoop isSlow (pred n) chan
+          interpretLoop args (pred n) chan
 
 prefetchedARM :: Address -> Address
 prefetchedARM addr = addr - 8
