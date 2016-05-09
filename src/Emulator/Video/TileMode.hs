@@ -22,33 +22,37 @@ tileModes cnt = do
     _ -> mode2 palette cnt
 
 mode0 :: AddressSpace m => Palette -> LCDControl -> m [ScreenObj]
-mode0 palette _ = do
+mode0 palette cnt = do
   bg0Data <- readTextBG 0x04000008 0x04000010 0x04000012
   bg1Data <- readTextBG 0x0400000A 0x04000014 0x04000016
   bg2Data <- readTextBG 0x0400000C 0x04000018 0x0400001A
   bg3Data <- readTextBG 0x0400000E 0x0400001C 0x0400001E
-  let bg0 = textBG bg0Data palette 0
-  let bg1 = textBG bg1Data palette 1
-  let bg2 = textBG bg2Data palette 2
-  let bg3 = textBG bg3Data palette 3
+  -- let bg0 = if screenDispBG0 cnt then textBG bg0Data palette 0 else Hidden
+  -- let bg1 = if screenDispBG1 cnt then textBG bg1Data palette 1 else Hidden
+  -- let bg2 = if screenDispBG2 cnt then textBG bg2Data palette 2 else Hidden
+  -- let bg3 = if screenDispBG3 cnt then textBG bg3Data palette 3 else Hidden
+  let bg0 = if screenDispBG0 cnt then textBG bg0Data palette 0 else textBG bg0Data palette 0
+  let bg1 = if screenDispBG1 cnt then textBG bg1Data palette 1 else textBG bg1Data palette 1
+  let bg2 = if screenDispBG2 cnt then textBG bg2Data palette 2 else textBG bg2Data palette 2
+  let bg3 = if screenDispBG3 cnt then textBG bg3Data palette 3 else textBG bg3Data palette 3
   return [bg0, bg1, bg2, bg3]
 
 mode1 :: AddressIO m => Palette -> LCDControl -> m [ScreenObj]
-mode1 palette _ = do
+mode1 palette cnt = do
   bg0Data <- readTextBG 0x04000008 0x04000010 0x04000012
   bg1Data <- readTextBG 0x0400000A 0x04000014 0x04000016
   bg2Data <- readAffineBG 0x0400000C 0x04000028 0x04000020
-  let bg0 = textBG bg0Data palette 1
-  let bg1 = textBG bg1Data palette 2
-  let bg2 = affineBG bg2Data palette 3
+  let bg0 = if screenDispBG0 cnt then textBG bg0Data palette 0 else Hidden
+  let bg1 = if screenDispBG1 cnt then textBG bg1Data palette 1 else Hidden
+  let bg2 = if screenDispBG2 cnt then affineBG bg2Data palette 2 else Hidden
   return [bg0, bg1, bg2]
 
 mode2 :: AddressIO m => Palette -> LCDControl -> m [ScreenObj]
-mode2 palette _ = do
+mode2 palette cnt = do
   bg2Data <- readAffineBG 0x0400000C 0x04000028 0x04000020
   bg3Data <- readAffineBG 0x0400000E 0x04000038 0x04000030
-  let bg2 = affineBG bg2Data palette 2
-  let bg3 = affineBG bg3Data palette 3
+  let bg2 = if screenDispBG2 cnt then affineBG bg2Data palette 2 else Hidden
+  let bg3 = if screenDispBG3 cnt then affineBG bg3Data palette 3 else Hidden
   return [bg2, bg3]
 
 readTextBG :: AddressSpace m => Address -> Address -> Address -> m (BGControl, TileOffset, ([TileMap], TileSet))
