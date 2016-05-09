@@ -22,8 +22,8 @@ display = do
   clear [GLUT.ColorBuffer]
   GLUT.swapBuffers
 
-animate' :: TXChan SystemState -> GLUT.IdleCallback
-animate' chan = do
+animate :: TXChan SystemState -> GLUT.IdleCallback
+animate chan = do
   liftIO $ putStrLn "waiting"
   mem <- atomically $ takeTXChan chan
   liftIO $ putStrLn "got memory"
@@ -37,10 +37,6 @@ animate' chan = do
     liftIO $ renderScreenObj screenObjs
     liftIO $ GLUT.swapBuffers
 
-animate :: TXChan SystemState -> GLUT.IdleCallback
-animate _ = do
-  clear [GLUT.ColorBuffer]
-  GLUT.swapBuffers
 
 -- right end of list will be drawn last therefore will appear on top
 -- left = low, right = high priority
