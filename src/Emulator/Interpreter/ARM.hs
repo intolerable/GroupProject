@@ -20,7 +20,9 @@ interpretARM instr =
   case instr of
     Branch (Link l) offset -> do
       -- if the link bit is set, we put the current pc into r14
-      when l $ registers.r14 <~ use (registers.r15)
+      when l $ do
+        registers.r14 <~ use (registers.r15)
+        registers.r14 -= 4
       -- this is maybe broken but we will never know
       registers.r15 %= \x -> fromIntegral (fromIntegral x + offset + 4)
     DataProcessing _ _ _ (RegisterName 15) (Left (RegisterShift _ _ _)) -> error "interpretARM: invalid r15 usage!"

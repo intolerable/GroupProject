@@ -26,7 +26,7 @@ spec = do
         interpretARM $ Branch (Link False) 24
         (,) <$> use (registers.pc) <*> use (registers.lr)
 
-      system "should be able to branch with link" (0x00000024, 0x00000008) $ do
+      system "should be able to branch with link" (0x00000024, 0x00000004) $ do
         registers.pc .= 0x00000004
         registers.pc += 4
         interpretARM $ Branch (Link True) 24
