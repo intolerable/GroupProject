@@ -154,7 +154,7 @@ tBic :: IsSystem s m => RegisterName -> RegisterName -> m ()
 tBic src dest = do
   v <- use $ registers.rn src
   v' <- use $ registers.rn dest
-  let val = v' .&. (negate v)
+  let val = v' .&. (complement v)
   registers.rn dest .= val
   setFlagsLogic val
 

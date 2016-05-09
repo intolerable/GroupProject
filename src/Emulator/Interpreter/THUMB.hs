@@ -146,9 +146,10 @@ handleHiRegOperation op src dest = do
 handleThumbBranchExchange :: IsSystem s m => RegisterName -> m ()
 handleThumbBranchExchange r = do
   addr <- use $ registers.rn r
+  let thumb = addr `testBit` 0
   let realAddr = clearBit addr 0
-  registers.r15 .= (realAddr + 4)
-  flags.thumbStateBit .= addr `testBit` 0
+  registers.r15 .= if thumb then (realAddr + 2) else (realAddr + 4)
+  flags.thumbStateBit .= thumb
 
 handlePCRelativeLoad :: IsSystem s m => RegisterName -> Offset -> m ()
 handlePCRelativeLoad dest off = do

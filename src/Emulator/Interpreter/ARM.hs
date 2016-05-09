@@ -220,7 +220,7 @@ handleBranchExchange opReg = do
   op' <- use (registers.rn opReg)
   let thumb = op' `testBit` 0
   let realOp = op' .&. 0xFFFFFFFE
-  registers.pc .= (realOp + 4)
+  registers.pc .= if thumb then (realOp + 2) else (realOp + 4)
   flags.thumbStateBit .= thumb
 
 getShiftedRegister :: IsSystem s m => Shifted RegisterName -> m MWord
