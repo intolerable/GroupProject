@@ -1,5 +1,6 @@
 module Emulator.Video.Display where
 
+import Emulator.Memory
 import Emulator.Video.BitmapModes
 import Emulator.Video.Renderer
 import Emulator.Video.Sprite
@@ -32,11 +33,15 @@ animate chan = do
     liftIO $ clear [GLUT.ColorBuffer]
     record <- recordLCDControl
     backgrounds <- if bgMode record <= 2 then tileModes record else bitmapModes record
-    sprites <- readOAM $ objCharacterVRAMMapping record
+    sprites <- displaySprites record
     let screenObjs = sortBy comparePrio (sprites ++ backgrounds)
     liftIO $ renderScreenObj screenObjs
     liftIO $ GLUT.swapBuffers
 
+displaySprites :: AddressSpace m => LCDControl -> m [ScreenObj]
+displaySprites cnt
+  | screenDispBGOBJ cnt = readOAM $ objCharacterVRAMMapping cnt
+  | otherwise = return [Hidden]
 
 -- right end of list will be drawn last therefore will appear on top
 -- left = low, right = high priority
