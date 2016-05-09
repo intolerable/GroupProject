@@ -153,6 +153,11 @@ spec = do
         interpretThumb $ MovCmpAddSubImmediate CMP (RegisterName 0) 1
         (,,,) <$> use (flags.negative) <*> use (flags.zero) <*> use (flags.carry) <*> use (flags.overflow)
 
+      system "Should be able to set the zero and carry happily" (True, True) $ do
+        registers.r0 .= 0
+        interpretThumb $ MovCmpAddSubImmediate CMP (RegisterName 0) 0
+        (,) <$> use (flags.zero) <*> use (flags.carry)
+
 system :: (Show a, Eq a) => String -> a -> SystemT Identity a -> Spec
 system label val act = do
   romFile <- runIO $ ByteString.readFile "./res/suite.gba"
