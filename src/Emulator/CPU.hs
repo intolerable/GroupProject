@@ -36,6 +36,7 @@ module Emulator.CPU
   , applyShiftTypeWithCarry
   , registerLens
   , rn
+  , destRegisterLens
   , shiftedRegisterLens
   , shiftedCarryRegisterLens
   , operand2Lens
@@ -240,6 +241,10 @@ registerLens (RegisterName n) =
     14 -> r14
     15 -> r15
     _ -> error $ "registerLens: undefined register label: #" ++ show n
+
+destRegisterLens :: RegisterName -> ASetter' Registers MWord
+destRegisterLens (RegisterName 15) = r15.iso (subtract 4) (+4)
+destRegisterLens x = registerLens x
 
 -- | 'rn' is just a shorter name for 'registerLens' which is easier to use when writing
 --     instruction handling code.

@@ -40,6 +40,15 @@ spec = do
         interpretARM $ BranchExchange (RegisterName 14)
         use (registers.pc)
 
+      system "should be able to branch with link, then MOV PC, LR back" 0x00000008 $ do
+        registers.pc .= 0x00000004
+        registers.pc += 4
+        interpretARM $ Branch (Link True) 24
+        registers.pc += 4
+        interpretARM $
+          DataProcessing MOV (SetCondition False) (RegisterName 15) (RegisterName 0) (Left (AmountShift 0 LogicalLeft (RegisterName 14)))
+        use (registers.pc)
+
 system :: (Show a, Eq a) => String -> a -> SystemT Identity a -> Spec
 system label val act = do
   romFile <- runIO $ ByteString.readFile "./res/suite.gba"
