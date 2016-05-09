@@ -11,6 +11,7 @@ import Emulator.Types
 import Utilities.Bits
 import Utilities.Parser.TemplateHaskell
 import qualified Emulator.CPU.Instructions.THUMB.Opcodes as Op
+import qualified Emulator.CPU.Instructions.ARM.Opcodes as ARM
 
 import Control.Lens hiding (op)
 import Data.Bits
@@ -99,12 +100,14 @@ handleAddSubtractRegister as offset src dest = do
   flags.overflow .= case as of { Add -> arithmeticAddOverflow sVal oVal result; Subtract -> False }
 
 handleMovCmpAddSubImmediate :: IsSystem s m => Opcode -> RegisterName -> Offset -> m ()
-handleMovCmpAddSubImmediate op src immed = case op of
-  MOV -> undefined
-  CMP -> undefined
-  ADD -> undefined
-  SUB -> undefined
-  _ -> error "Incorrect arguments passed to THUMB MovCmpAddSubImmediate function."
+handleMovCmpAddSubImmediate op src immed = do
+  oldCarry <- use (flags.carry)
+  case op of
+    MOV -> ARM.mov (destRegisterLens src) () (to $ const (oldCarry, immed)) True
+    CMP -> ARM.cmp (destRegisterLens src) (registerLens src) (to $ const (oldCarry, immed)) True
+    ADD -> ARM.add (destRegisterLens src) (registerLens src) (to $ const (oldCarry, immed)) True
+    SUB -> ARM.sub (destRegisterLens src) (registerLens src) (to $ const (oldCarry, immed)) True
+    _ -> error "Incorrect arguments passed to THUMB MovCmpAddSubImmediate function."
 
 handleALUOperation :: IsSystem s m => ThumbOpcode -> RegisterName -> RegisterName -> m ()
 handleALUOperation opcode src dest =

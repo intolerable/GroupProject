@@ -7,41 +7,14 @@ import Emulator.Types
 import Control.Lens
 import Control.Monad.State.Class (MonadState(..))
 import Control.Monad.Trans.State
-import Data.Bits
 import Data.Default.Class
 import Test.Hspec
-import Test.Hspec.QuickCheck
 
 main :: IO ()
 main = hspec spec
 
 spec :: Spec
 spec = do
-
-  describe "checkCarry" $ do
-
-    prop "x + y > maxBound == checkCarry x y" $ \x y ->
-      (fromIntegral x + fromIntegral y > (0x00000000FFFFFFFF :: DWord)) == checkCarry x y
-
-    it "should detect a set carry" $ do
-     checkCarry 0 0 `shouldBe` False
-     checkCarry 0 maxBound `shouldBe` False
-     checkCarry maxBound 0 `shouldBe` False
-     checkCarry maxBound 1 `shouldBe` True
-     checkCarry maxBound maxBound `shouldBe` True
-
-  describe "isNegative" $ do
-
-    prop "x & 0x80000000 == isNegative x" $ \x ->
-      (x .&. 0x80000000 > 0) == isNegative x
-
-    it "should detect the sign bit" $ do
-      isNegative 0 `shouldBe` False
-      isNegative 1 `shouldBe` False
-      isNegative 100 `shouldBe` False
-      isNegative (-1) `shouldBe` True
-      isNegative (-100) `shouldBe` True
-      isNegative maxBound `shouldBe` True
 
   describe "cmp" $ do
 
@@ -69,6 +42,14 @@ spec = do
       it "should not set zero" $
         res ^. flags.zero `shouldBe` True
       it "should not set negative" $
+        res ^. flags.negative `shouldBe` False
+
+    context "CMP _ (r1 = a) a" $ do
+      let res = exec (def & r1 .~ 0xA) $ cmp () r1 (operand2Lens $ Right $ Rotated 0 0xA) True
+      it "should set the zero flag, false the negative, carry and overflow" $ do
+        res ^. flags.carry `shouldBe` False
+        res ^. flags.zero `shouldBe` True
+        res ^. flags.overflow `shouldBe` False
         res ^. flags.negative `shouldBe` False
 
   describe "mov" $ do
@@ -146,8 +127,8 @@ spec = do
       let res = exec (def & r1 .~ 0xFFFFFFFF & r2 .~ 0xFFFFFFFF) $ add r0 r1 (operand2Lens $ Left $ AmountShift 0 LogicalLeft $ RegisterName 2) True
       it "should not set result" $
         res ^. r0 `shouldBe` 0xFFFFFFFE
-      it "should not affect carry" $
-        res ^. flags.carry `shouldBe` False
+      it "should set carry" $
+        res ^. flags.carry `shouldBe` True
       it "should set overflow" $
         res ^. flags.overflow `shouldBe` True
       it "should not set zero" $

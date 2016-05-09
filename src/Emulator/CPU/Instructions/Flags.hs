@@ -4,11 +4,12 @@ import Emulator.CPU
 import Emulator.Interpreter.Monad
 import Emulator.Types
 
+import Control.Monad.State.Class
 import Control.Lens hiding (op)
 import Data.Bits
 import Data.Word
 
-setFlagsLogic :: IsSystem s m => MWord -> m ()
+setFlagsLogic :: (HasFlags s, MonadState s m) => MWord -> m ()
 setFlagsLogic v = do
   flags.zero .= (v == 0)
   flags.negative .= testBit v 31

@@ -1,7 +1,6 @@
 module Emulator.CPU.Instructions.THUMB.Opcodes where
 
 import Emulator.CPU hiding (CPUMode(..), Interrupt(..))
-import Emulator.CPU.Instructions.ARM.Opcodes (isSignedOverflow, isUnsignedOverflow)
 import Emulator.CPU.Instructions.THUMB
 import Emulator.CPU.Instructions.Types
 import Emulator.CPU.Instructions.Flags
