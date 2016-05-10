@@ -241,6 +241,11 @@ pushToStack r = do
   registers.sp -= 4
 
 popFromStack :: IsSystem s m => RegisterName -> m ()
+popFromStack (RegisterName 15) = do
+  registers.sp += 4
+  currentStackPointer <- use $ registers.sp
+  val <- readAddressWord currentStackPointer
+  registers.r15 .= ((val + 2) `clearBit` 0)
 popFromStack r = do
   registers.sp += 4
   currentStackPointer <- use (registers.sp)

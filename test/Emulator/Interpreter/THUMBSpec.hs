@@ -53,7 +53,7 @@ spec = do
         interpretThumb $ PushPopRegs Store True []
         (,) <$> use (registers.sp) <*> readAddressWord 0x03007F00
 
-      system "should be able to pop PC from the stack" (0x00C0FFEE, 0x03007F00) $ do
+      system "should be able to pop PC from the stack" (0x00C0FFF0, 0x03007F00) $ do
         registers.pc .= 0x0807ACA2
         currentSP <- use (registers.sp)
         writeAddressWord currentSP 0x00C0FFEE
@@ -68,6 +68,11 @@ spec = do
         (registers.sp <<-= 4) >>= \x -> writeAddressWord x 0x0D15EA5E
         interpretThumb $ PushPopRegs Load False [RegisterName 0, RegisterName 1, RegisterName 2]
         (,,,) <$> use (registers.r0) <*> use (registers.r1) <*> use (registers.r2) <*> use (registers.pc)
+
+      system "should be able to pop program counter from the stack correctly" 0x00C0FFF0 $ do
+        (registers.sp <<-= 4) >>= \x -> writeAddressWord x 0x00C0FFEF
+        interpretThumb $ PushPopRegs Load True []
+        use $ registers.pc
 
     context "PCRelativeLoad" $ do
       system "should be able to load an address to a register" 0x080237C4 $ do
