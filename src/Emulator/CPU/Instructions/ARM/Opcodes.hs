@@ -102,7 +102,7 @@ sub dest src1 src2 cCode = do
   registers.dest .= val
   when cCode $ do
     setFlagsLogic val
-    flags.carry .= ((res1 > (val - res2)) || (res1 == 0 && res2 == 0))
+    flags.carry .= ((res1 > (val - res2)) || res2 == 0)
     flags.overflow .= False
 
 -- Arithmetic subtract reversed
@@ -115,7 +115,7 @@ rsb dest src1 src2 cCode = do
   registers.dest .= val
   when cCode $ do
     setFlagsLogic val
-    flags.carry .= ((res2 > (val - res1)) || (res1 == 0 && res2 == 0))
+    flags.carry .= ((res2 > (val - res1)) || res1 == 0)
     flags.overflow .= False
 
 -- Subtract with carry
@@ -129,7 +129,7 @@ sbc dest src1 src2 cCode = do
   registers.dest .= val
   when cCode $ do
     setFlagsLogic val
-    flags.carry .= ((res1 > (val - res2)) || (res1 == 0 && res2 == 0))
+    flags.carry .= ((res1 > (val - res2)) || res2 == 0)
     flags.overflow .= False
 
 -- Subtract with carry reversed
@@ -143,7 +143,7 @@ rsc dest src1 src2 cCode = do
   registers.dest .= val
   when cCode $ do
     setFlagsLogic val
-    flags.carry .= ((res2 > (val - res1)) || (res1 == 0 && res2 == 0))
+    flags.carry .= ((res2 > (val - res1)) || res1 == 0)
     flags.overflow .= False
 
 -- Logical/bitwise AND
@@ -226,7 +226,7 @@ cmp _ src1 src2 True = do
   let val = res1 - res2
   -- Always update flags (for TST, TEQ, CMP, CMN)
   setFlagsLogic val
-  flags.carry .= ((res1 > (val - res2)) || (res1 == 0 && res2 == 0))
+  flags.carry .= ((res1 > (val - res2)) || res2 == 0)
   flags.overflow .= False
 cmp _ _ _ False = return () -- MSR/MRS stuff
 

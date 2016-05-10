@@ -22,8 +22,8 @@ spec = do
       let res = exec (def & r1 .~ 0x5) $ cmp () r1 (operand2Lens $ Right $ Rotated 0 0) True
       it "should not set result" $
         res ^. r0 `shouldBe` 0x0
-      it "should not affect carry" $
-        res ^. flags.carry `shouldBe` False
+      it "should set carry" $
+        res ^. flags.carry `shouldBe` True
       it "should not set overflow" $
         res ^. flags.overflow `shouldBe` False
       it "should not set zero" $
