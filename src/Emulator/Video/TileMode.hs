@@ -163,7 +163,7 @@ readAffineBG bgCNTAddr refBaseAddr paramBaseAddr = do
   let refPoint@(x, y) = (referencePoint xWord, referencePoint yWord)
   let params = affineParameters paramBaseAddr (paramBaseAddr + 0x00000002) (paramBaseAddr + 0x00000004) (paramBaseAddr + 0x00000006) paramMem
   let size@(w, h) = affineBGSize (screenSize bg)
-  let centre = (x + ((fromIntegral w)/2), y + ((fromIntegral h)/2))
+  let centre = (x + (fromIntegral w * 4), y + (((fromIntegral h * 4))))
   tileSet <- readCharBlocks (characterBaseBlock bg) (colorsPalettes bg)
   let mapSize = fromIntegral ((w * h * 2) - 1) :: Address
   tileMap <- readRange ((screenBaseBlock bg), (screenBaseBlock bg) + mapSize)
