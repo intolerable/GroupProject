@@ -36,7 +36,7 @@ spec = do
         use (registers.pc)
 
     context "LongBranchWLink" $ do
-      system "should be able to long branch properly" (0x0807AE02, 0x0807ACAF) $ do
+      system "should be able to long branch properly" (0x0807AE02, 0x0807ACAB) $ do
         registers.pc .= 0x0807ACA8
         registers.pc += 2
         interpretThumb $ LongBranchWLink High 0

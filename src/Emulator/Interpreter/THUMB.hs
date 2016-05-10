@@ -277,7 +277,7 @@ handleLongBranchWLink Low off = do
   oldLR <- use (registers.lr)
   oldPC <- use (registers.pc)
   registers.pc .= fromIntegral (fromIntegral oldLR + offset + 2)
-  registers.lr .= ((oldPC + 2) `setBit` 0)
+  registers.lr .= ((oldPC - 2) `setBit` 0)
 
 addSubToOperator :: Num a => AddSub -> (a -> a -> a)
 addSubToOperator Add = (+)
