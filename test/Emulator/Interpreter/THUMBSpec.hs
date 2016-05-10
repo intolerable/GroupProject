@@ -154,7 +154,7 @@ spec = do
         (,,,) <$> use (flags.negative) <*> use (flags.zero) <*> use (flags.carry) <*> use (flags.overflow)
 
       system "Should be able to set the zero and carry happily" (True, True) $ do
-        registers.r0 .= 0
+        registers.r0 .= 0x0
         interpretThumb $ MovCmpAddSubImmediate CMP (RegisterName 0) 0
         (,) <$> use (flags.zero) <*> use (flags.carry)
 

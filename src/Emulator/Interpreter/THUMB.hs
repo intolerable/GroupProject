@@ -104,7 +104,7 @@ handleMovCmpAddSubImmediate op src immed = do
   oldCarry <- use (flags.carry)
   case op of
     MOV -> ARM.mov (destRegisterLens src) () (to $ const (oldCarry, immed)) True
-    CMP -> ARM.cmp (destRegisterLens src) (registerLens src) (to $ const (oldCarry, immed)) True
+    CMP -> ARM.cmp () (registerLens src) (to $ const (oldCarry, immed)) True
     ADD -> ARM.add (destRegisterLens src) (registerLens src) (to $ const (oldCarry, immed)) True
     SUB -> ARM.sub (destRegisterLens src) (registerLens src) (to $ const (oldCarry, immed)) True
     _ -> error "Incorrect arguments passed to THUMB MovCmpAddSubImmediate function."

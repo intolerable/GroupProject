@@ -29,7 +29,8 @@ arithmeticNegative :: MWord -> Bool
 arithmeticNegative y = y `testBit` 31
 
 arithmeticCarry :: (Word64 -> Word64 -> Word64) -> Word32 -> Word32 -> Bool
-arithmeticCarry op a b = (op (fromIntegral a) (fromIntegral b)) `testBit` 32
+arithmeticCarry op a b =
+  ((op (fromIntegral a) (fromIntegral b)) .&. 0xFFFFFFFF00000000) > 0
 
 arithmeticZero :: MWord -> Bool
 arithmeticZero 0 = True
