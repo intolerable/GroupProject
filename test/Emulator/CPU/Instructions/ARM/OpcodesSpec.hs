@@ -24,8 +24,8 @@ spec = do
         res ^. r0 `shouldBe` 0x0
       it "should not affect carry" $
         res ^. flags.carry `shouldBe` False
-      it "should set overflow" $
-        res ^. flags.overflow `shouldBe` True
+      it "should not set overflow" $
+        res ^. flags.overflow `shouldBe` False
       it "should not set zero" $
         res ^. flags.zero `shouldBe` False
       it "should not set negative" $
@@ -37,8 +37,8 @@ spec = do
         res ^. r0 `shouldBe` 0x0
       it "should set carry" $
         res ^. flags.carry `shouldBe` True
-      it "should set overflow" $
-        res ^. flags.overflow `shouldBe` True
+      it "should not set overflow" $
+        res ^. flags.overflow `shouldBe` False
       it "should not set zero" $
         res ^. flags.zero `shouldBe` True
       it "should not set negative" $
