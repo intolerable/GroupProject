@@ -5,6 +5,7 @@ import Emulator.Video.Util
 import Utilities.Parser.TemplateHaskell
 
 import Data.Array.IArray
+import Data.Bits
 
 type Palette = Array Address Byte
 
@@ -33,10 +34,10 @@ palette16 bank tile palBankBaseAddr tileAddr n = col1:col2:palette16 bank tile p
     nib2 = 2 * (fromIntegral $ $(bitmask 7 4) byt :: Address)
     col1Byt1 = bank!(nib1 + palBankBaseAddr)
     col1Byt2 = bank!(nib1 + palBankBaseAddr + 0x00000001)
-    col1 = bytesToHalfWord col1Byt1 col1Byt2
+    col1 = testTransparency $ bytesToHalfWord col1Byt1 col1Byt2
     col2Byt1 = bank!(nib2 + palBankBaseAddr)
     col2Byt2 = bank!(nib2 + palBankBaseAddr + 0x00000001)
-    col2 = bytesToHalfWord col2Byt1 col2Byt2
+    col2 = testTransparency $ bytesToHalfWord col2Byt1 col2Byt2
 
 palette256 :: Palette -> TilePixData -> Address -> Int -> [HalfWord]
 palette256 _ _ _ 0 = []
@@ -46,4 +47,11 @@ palette256 palette tile tileAddr n = col:palette256 palette tile (tileAddr + 0x0
     addr = palLowBound + 2 * (fromIntegral $ tile!tileAddr :: Address)
     colByt1 = palette!addr
     colByt2 = palette!(addr + 0x00000001)
-    col = bytesToHalfWord colByt1 colByt2
+    col = testTransparency $ bytesToHalfWord colByt1 colByt2
+
+testTransparency :: HalfWord -> HalfWord
+testTransparency pixData
+  | pixValue == 0 = pixData `setBit` 15
+  | otherwise = pixData `clearBit` 15
+  where
+    pixValue = (fromIntegral $ $(bitmask 14 0) pixData) :: Int
