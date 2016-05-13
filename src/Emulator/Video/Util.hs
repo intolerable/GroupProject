@@ -24,9 +24,9 @@ type Priority = Int
 type AddressIO m = (AddressSpace m, MonadIO m)
 type AffineParameters = (GLdouble, GLdouble, GLdouble, GLdouble)
 type AffineRefPoints = (GLdouble, GLdouble)
-type PixFormat = Bool
+type PaletteFormat = Bool
 type QuadCoords = ((GLdouble, GLdouble), (GLdouble, GLdouble), (GLdouble, GLdouble), (GLdouble, GLdouble))
-type TilePixData = Array Address Byte
+type PixData = Array Address Byte
 type TileMapBaseAddress = Address
 type TileOffset = (GLdouble, GLdouble)
 type TileSet = Array Address Byte
@@ -58,16 +58,15 @@ bytesToHalfWord lower upper = ((fromIntegral upper :: HalfWord) `shiftL` 8) .|. 
 
 -- If pixel format is 8bpp then the tileIndex read from the map is in steps of 40h
 -- If pixel format is 4bpp then the tileIndex read from the map is in steps of 20h
-convIntToAddr :: Int -> PixFormat -> Address
-convIntToAddr 0 _ = 0x00000000
+convIntToAddr :: Int -> PaletteFormat -> Address
 convIntToAddr n True = (0x00000040 * fromIntegral n)
 convIntToAddr n _ = (0x00000020 * fromIntegral n)
 
 -- If pixel format is 8bpp then TileSet is read in chunks of 40h
 -- If not then TileSet is read in chunks of 20h
-getTile :: PixFormat -> Address -> TileSet -> TilePixData
-getTile True tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000003F) (id) tileSet :: TilePixData)
-getTile _ tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000001F) (id) tileSet :: TilePixData)
+getTile :: PaletteFormat -> Address -> TileSet -> PixData
+getTile True tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000003F) (id) tileSet :: PixData)
+getTile _ tileIdx tileSet = (ixmap (tileIdx, tileIdx + 0x0000001F) (id) tileSet :: PixData)
 
 convToFixedNum :: Byte -> Byte -> GLdouble
 convToFixedNum low up
