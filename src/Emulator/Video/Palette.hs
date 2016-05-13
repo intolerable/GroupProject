@@ -10,25 +10,25 @@ type Palette = Array Address Byte
 
 pixelData :: PaletteFormat -> Palette -> PixData -> Address -> [HalfWord]
 -- 256/1 palette format
-pixelData True palette tile _ = tilePixelDataList
+pixelData True palette pixData _ = tilePixelDataList
   where
-    tilePixelDataList = palette256 palette tile (fst tileBounds) 64
-    tileBounds = bounds tile
+    tilePixelDataList = palette256 palette pixData (fst tileBounds) 64
+    tileBounds = bounds pixData
 
 -- 16/16 palette format
-pixelData _ palette tile palBank = tilePixelDataList
+pixelData _ palette pixData palBank = tilePixelDataList
   where
     bank = ixmap (palBankAddr, (palBankAddr + 0x0000001F)) (id) palette :: Palette
-    tilePixelDataList = palette16 bank tile palBankAddr (fst tileBounds) 32
-    tileBounds = bounds tile
+    tilePixelDataList = palette16 bank pixData palBankAddr (fst tileBounds) 32
+    tileBounds = bounds pixData
     palLowBound = fst $ bounds palette
     palBankAddr = palLowBound + palBank
 
 palette16 :: Palette -> PixData -> Address -> Address -> Int -> [HalfWord]
 palette16 _ _ _ _ 0 = []
-palette16 bank tile palBankBaseAddr tileAddr n = col1:col2:palette16 bank tile palBankBaseAddr (tileAddr + 0x00000001) (n-1)
+palette16 bank pixData palBankBaseAddr pixDataAddr n = col1:col2:palette16 bank pixData palBankBaseAddr (pixDataAddr + 0x00000001) (n-1)
   where
-    byt = tile!tileAddr
+    byt = pixData!pixDataAddr
     nib1 = 2 * (fromIntegral $ $(bitmask 3 0) byt :: Address)
     nib2 = 2 * (fromIntegral $ $(bitmask 7 4) byt :: Address)
     col1Byt1 = bank!(nib1 + palBankBaseAddr)
@@ -40,10 +40,10 @@ palette16 bank tile palBankBaseAddr tileAddr n = col1:col2:palette16 bank tile p
 
 palette256 :: Palette -> PixData -> Address -> Int -> [HalfWord]
 palette256 _ _ _ 0 = []
-palette256 palette tile tileAddr n = col:palette256 palette tile (tileAddr + 0x00000001) (n-1)
+palette256 palette pixData pixDataAddr n = col:palette256 palette pixData (pixDataAddr + 0x00000001) (n-1)
   where
     palLowBound = fst $ bounds palette
-    addr = palLowBound + 2 * (fromIntegral $ tile!tileAddr :: Address)
+    addr = palLowBound + 2 * (fromIntegral $ pixData!pixDataAddr :: Address)
     colByt1 = palette!addr
     colByt2 = palette!(addr + 0x00000001)
     col = if testTransparency addr then 0B1000000000000000 else bytesToHalfWord colByt1 colByt2
