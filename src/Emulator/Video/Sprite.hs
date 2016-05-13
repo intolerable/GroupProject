@@ -16,7 +16,7 @@ type SpriteSize = (Int, Int)
 type SpriteCentre = (GLdouble, GLdouble)
 
 data SpriteAttribs =
-  SpriteAttribs { getPixFormat :: PixFormat
+  SpriteAttribs { getPaletteFormat :: PaletteFormat
                 , getTileSet :: TileSet
                 , getPal :: Palette
                 , getPalBank :: Address }
@@ -39,7 +39,7 @@ recurseOAM oam tileSet mapMode n pal objAddr = screenObj:recurseOAM oam tileSet 
     obj = ixmap (objAddr, objAddr + 0x00000005) (id) oam
 
 -- Access attributes of object
-parseObjectAttr :: OAM -> OAM -> TileSet -> MappingMode -> Address -> Palette -> ScreenObj
+parseObjectAttr :: Array Address Byte -> OAM -> TileSet -> MappingMode -> Address -> Palette -> ScreenObj
 parseObjectAttr obj oam tileSet mapMode objAddr pal
   | mode == 0 = Sprite pixData priority
   | mode == 1 = Sprite (transformCoords pixData centre affineParams) priority
@@ -51,14 +51,14 @@ parseObjectAttr obj oam tileSet mapMode objAddr pal
     shapeSize attr = (fromIntegral $ $(bitmask 15 14) attr)
     size@(h, w) = spriteSize (shapeSize attr0) (shapeSize attr1)
     centre = (xOff + (fromIntegral h*4), yOff + (fromIntegral w*4)) :: (GLdouble, GLdouble)
-    pixFormat = (testBit attr0 13)
+    palFormat = (testBit attr0 13)
     _gfx = (fromIntegral $ $(bitmask 11 10) attr0) :: Integer
-    tileIdx = 0x06010000 + convIntToAddr (fromIntegral $ $(bitmask 9 0) attr2 :: Int) pixFormat
+    tileIdx = 0x06010000 + convIntToAddr (fromIntegral $ $(bitmask 9 0) attr2 :: Int) palFormat
     _flips = (testBit attr1 12, testBit attr1 13) :: (Bool, Bool)
     affineParams = objAffine attr1 oam
     palBank = convIntToAddr (fromIntegral $ $(bitmask 15 12) attr2 :: Int) False
     priority = (fromIntegral $ $(bitmask 11 10) attr2) :: Int
-    attribs = SpriteAttribs pixFormat tileSet pal palBank
+    attribs = SpriteAttribs palFormat tileSet pal palBank
     pixData = concat $ spriteTiles size (xOff, yOff) tileIdx mapMode attribs
 
 spriteTiles :: SpriteSize -> TileOffset -> TileSetBaseAddress -> MappingMode -> SpriteAttribs -> [[Tile]]
@@ -66,21 +66,21 @@ spriteTiles (0, _) _ _ _ _ = []
 spriteTiles (rows, cols) offset@(x, y) tileIdx mapMode attribs = row:spriteTiles (rows - 1, cols) (x, y + 8) nextTile mapMode attribs
   where
     row = spriteRow cols offset tileIdx attribs
-    nextTile = nextTileIdx tileIdx cols (getPixFormat attribs) mapMode
+    nextTile = nextTileIdx tileIdx cols (getPaletteFormat attribs) mapMode
 
 spriteRow :: Int -> TileOffset -> TileSetBaseAddress -> SpriteAttribs -> [Tile]
 spriteRow 0 _ _ _ = []
 spriteRow cols (xOff, yOff) tileIdx attribs = Tile pixData tileCoords:spriteRow (cols - 1) (xOff + 8, yOff) nextTile attribs
   where
-    pixData = pixelData pixFormat (getPal attribs) tile (getPalBank attribs)
-    tile = getTile pixFormat tileIdx (getTileSet attribs)
-    nextTile = if pixFormat then tileIdx + 0x00000040 else tileIdx + 0x00000020
+    pixData = pixelData palFormat (getPal attribs) tile (getPalBank attribs)
+    tile = getTile palFormat tileIdx (getTileSet attribs)
+    nextTile = if palFormat then tileIdx + 0x00000040 else tileIdx + 0x00000020
     tileCoords = ((xOff, yOff), (xOff+8, yOff), (xOff, yOff+8), (xOff+8, yOff+8))
-    pixFormat = getPixFormat attribs
+    palFormat = getPaletteFormat attribs
 
-nextTileIdx :: TileSetBaseAddress -> Int -> PixFormat -> MappingMode -> TileSetBaseAddress
+nextTileIdx :: TileSetBaseAddress -> Int -> PaletteFormat -> MappingMode -> TileSetBaseAddress
 -- 1D mapping. Each row of tiles in a sprite follows on from the last in the charBlock
-nextTileIdx tileIdx cols pixFormat True = tileIdx + (convIntToAddr cols pixFormat)
+nextTileIdx tileIdx cols palFormat True = tileIdx + (convIntToAddr cols palFormat)
 -- 2D mapping. Each row of tiles is at a 4000h offset from eachother
 nextTileIdx tileIdx _ _ False = tileIdx + 0x00004000
 

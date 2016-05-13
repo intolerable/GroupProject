@@ -91,65 +91,65 @@ textBG (bg, offset, mapSet) palette layer = BG bgTiles priority layer
 affineBG :: (BGControl, AffineRefPoints, AffineParameters, (Int, Int), TileMap, TileSet, Centre) -> Palette -> Layer -> ScreenObj
 affineBG (bg, refPoint, param, size, tileMap, tileSet, centre) pal layer = BG affineBgTiles priority layer
   where
-    bgTiles = concat $ mapToTileSet size (colorsPalettes bg) tileMap tileSet refPoint pal (screenBaseBlock bg) (characterBaseBlock bg)
+    bgTiles = concat $ mapTileSet size (colorsPalettes bg) tileMap tileSet refPoint pal (screenBaseBlock bg) (characterBaseBlock bg)
     priority = bgPriority bg
     affineBgTiles = transformCoords bgTiles centre param
 
-getTextBGTiles :: Int -> PixFormat -> TileOffset -> Palette -> ([TileMap], TileSet) -> TileMapBaseAddress -> TileSetBaseAddress -> [Tile]
-getTextBGTiles 0 pixFormat offSet pal (maps, tileSet) tileMapAddr tileSetAddr = bgTiles
+getTextBGTiles :: Int -> PaletteFormat -> TileOffset -> Palette -> ([TileMap], TileSet) -> TileMapBaseAddress -> TileSetBaseAddress -> [Tile]
+getTextBGTiles 0 palFormat offSet pal (maps, tileSet) tileMapAddr tileSetAddr = bgTiles
   where
-    bgTiles = concat $ mapToTileSet (32, 32) pixFormat (maps!!0) tileSet offSet pal tileMapAddr tileSetAddr
-getTextBGTiles 1 pixFormat (x, y) pal (maps, tileSet) tileMapAddr tileSetAddr = bgTiles0 ++ bgTiles1
+    bgTiles = concat $ mapTileSet (32, 32) palFormat (maps!!0) tileSet offSet pal tileMapAddr tileSetAddr
+getTextBGTiles 1 palFormat (x, y) pal (maps, tileSet) tileMapAddr tileSetAddr = bgTiles0 ++ bgTiles1
   where
-    bgTiles0 = concat $ mapToTileSet (32, 32) pixFormat (maps!!0) tileSet (x, y) pal tileMapAddr tileSetAddr
-    bgTiles1 = concat $ mapToTileSet (32, 32) pixFormat (maps!!1) tileSet (x+32, y) pal tileMapAddr tileSetAddr
-getTextBGTiles 2 pixFormat (x, y) pal (maps, tileSet) tileMapAddr tileSetAddr = bgTiles0 ++ bgTiles1
+    bgTiles0 = concat $ mapTileSet (32, 32) palFormat (maps!!0) tileSet (x, y) pal tileMapAddr tileSetAddr
+    bgTiles1 = concat $ mapTileSet (32, 32) palFormat (maps!!1) tileSet (x+32, y) pal tileMapAddr tileSetAddr
+getTextBGTiles 2 palFormat (x, y) pal (maps, tileSet) tileMapAddr tileSetAddr = bgTiles0 ++ bgTiles1
   where
-    bgTiles0 = concat $ mapToTileSet (32, 32) pixFormat (maps!!0) tileSet (x, y) pal tileMapAddr tileSetAddr
-    bgTiles1 = concat $ mapToTileSet (32, 32) pixFormat (maps!!1) tileSet (x, y+32) pal tileMapAddr tileSetAddr
-getTextBGTiles _ pixFormat (x, y) pal (maps, tileSet) tileMapAddr tileSetAddr = bgTiles0 ++ bgTiles1 ++ bgTiles2 ++ bgTiles3
+    bgTiles0 = concat $ mapTileSet (32, 32) palFormat (maps!!0) tileSet (x, y) pal tileMapAddr tileSetAddr
+    bgTiles1 = concat $ mapTileSet (32, 32) palFormat (maps!!1) tileSet (x, y+32) pal tileMapAddr tileSetAddr
+getTextBGTiles _ palFormat (x, y) pal (maps, tileSet) tileMapAddr tileSetAddr = bgTiles0 ++ bgTiles1 ++ bgTiles2 ++ bgTiles3
   where
-    bgTiles0 = concat $ mapToTileSet (32, 32) pixFormat (maps!!0) tileSet (x, y) pal tileMapAddr tileSetAddr
-    bgTiles1 = concat $ mapToTileSet (32, 32) pixFormat (maps!!1) tileSet (x+32, y) pal tileMapAddr tileSetAddr
-    bgTiles2 = concat $ mapToTileSet (32, 32) pixFormat (maps!!2) tileSet (x, y+32) pal tileMapAddr tileSetAddr
-    bgTiles3 = concat $ mapToTileSet (32, 32) pixFormat (maps!!3) tileSet (x+32, y+32) pal tileMapAddr tileSetAddr
+    bgTiles0 = concat $ mapTileSet (32, 32) palFormat (maps!!0) tileSet (x, y) pal tileMapAddr tileSetAddr
+    bgTiles1 = concat $ mapTileSet (32, 32) palFormat (maps!!1) tileSet (x+32, y) pal tileMapAddr tileSetAddr
+    bgTiles2 = concat $ mapTileSet (32, 32) palFormat (maps!!2) tileSet (x, y+32) pal tileMapAddr tileSetAddr
+    bgTiles3 = concat $ mapTileSet (32, 32) palFormat (maps!!3) tileSet (x+32, y+32) pal tileMapAddr tileSetAddr
 
 readTileMap :: AddressSpace m => Address -> m (TileMap)
 readTileMap addr = readRange (addr, addr + 0x000007FF)
 
-readCharBlocks :: AddressSpace m => Address -> PixFormat -> m TileSet
+readCharBlocks :: AddressSpace m => Address -> PaletteFormat -> m TileSet
 readCharBlocks addr False = readRange (addr, addr + 0x00007FFF)
 readCharBlocks addr True = readRange (addr, addr + 0x0000FFFF)
 
 -- Draw 32x32 tiles at a time
-mapToTileSet :: (Int, Int) -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileMapBaseAddress -> TileSetBaseAddress -> [[Tile]]
-mapToTileSet (0, _) _ _ _ _ _ _ _ = []
-mapToTileSet (rows, cols) pixFormat tileMap tileSet bgOffset@(xOff, yOff) palette baseAddr setBaseAddr = row:mapToTileSet (rows-1, cols) pixFormat tileMap tileSet (xOff, yOff + 8) palette (baseAddr + tileMapRowWidth) setBaseAddr
+mapTileSet :: (Int, Int) -> PaletteFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileMapBaseAddress -> TileSetBaseAddress -> [[Tile]]
+mapTileSet (0, _) _ _ _ _ _ _ _ = []
+mapTileSet (rows, cols) palFormat tileMap tileSet bgOffset@(xOff, yOff) palette baseAddr setBaseAddr = row:mapTileSet (rows-1, cols) palFormat tileMap tileSet (xOff, yOff + 8) palette (baseAddr + tileMapRowWidth) setBaseAddr
   where
-    row = mapRow cols baseAddr pixFormat tileMapRow tileSet bgOffset palette setBaseAddr
+    row = mapRow cols baseAddr palFormat tileMapRow tileSet bgOffset palette setBaseAddr
     tileMapRow = ixmap (baseAddr, baseAddr + (tileMapRowWidth - 0x00000001)) (id) tileMap :: TileMap
     tileMapRowWidth = (fromIntegral cols) * 0x00000002
 
 -- Need to recurse using int instead
-mapRow :: Int -> Address -> PixFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileSetBaseAddress -> [Tile]
+mapRow :: Int -> Address -> PaletteFormat -> TileMap -> TileSet -> TileOffset -> Palette -> TileSetBaseAddress -> [Tile]
 mapRow 0 _ _ _ _ _ _ _ = []
-mapRow column mapIndex pixFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr =
-  Tile pixData tileCoords:mapRow (column-1) (mapIndex + 0x00000002) pixFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
+mapRow column mapIndex palFormat tileMapRow tileSet (xOff, yOff) palette setBaseAddr =
+  Tile pixData tileCoords:mapRow (column-1) (mapIndex + 0x00000002) palFormat tileMapRow tileSet (xOff + 8, yOff) palette setBaseAddr
   where
-    pixData = pixelData pixFormat palette tile palBank
-    tile = getTile pixFormat tileIdx tileSet
+    pixData = pixelData palFormat palette tile palBank
+    tile = getTile palFormat tileIdx tileSet
     upperByte = (tileMapRow!(mapIndex + 0x00000001))
     lowerByte = (tileMapRow!mapIndex)
-    (tileIdx, _hFlip, _vFlip, palBank) = parseScreenEntry lowerByte upperByte pixFormat setBaseAddr
+    (tileIdx, _hFlip, _vFlip, palBank) = parseScreenEntry lowerByte upperByte palFormat setBaseAddr
     tileCoords = ((xOff, yOff), (xOff+8, yOff), (xOff, yOff+8), (xOff+8, yOff+8))
 -- NEED TO SORT HFLIP AND VFLIP WHEN GRAPHICS RUN
 
 -- a is the lower byte, b is the upper
-parseScreenEntry :: Byte -> Byte -> PixFormat -> TileSetBaseAddress -> ScreenEntry
-parseScreenEntry a b pixFormat setBaseAddr = (tileIdx, hFlip, vFlip, palBank)
+parseScreenEntry :: Byte -> Byte -> PaletteFormat -> TileSetBaseAddress -> ScreenEntry
+parseScreenEntry a b palFormat setBaseAddr = (tileIdx, hFlip, vFlip, palBank)
   where
     hword = bytesToHalfWord a b
-    tileIdx = setBaseAddr + convIntToAddr (fromIntegral $ $(bitmask 9 0) hword :: Int) pixFormat
+    tileIdx = setBaseAddr + convIntToAddr (fromIntegral $ $(bitmask 9 0) hword :: Int) palFormat
     hFlip = (testBit hword 10)
     vFlip = (testBit hword 11)
     palBank = convIntToAddr (fromIntegral $ $(bitmask 15 12) hword :: Int) False
