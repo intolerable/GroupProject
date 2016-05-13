@@ -5,7 +5,6 @@ import Emulator.Video.Util
 import Utilities.Parser.TemplateHaskell
 
 import Data.Array.IArray
-import Data.Bits
 
 type Palette = Array Address Byte
 
